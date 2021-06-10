@@ -4,7 +4,7 @@
 
 Перед выполнением следующих действий склонируйте репозиторий и перейдите в папку с исходниками проекта.
 
-### Linux
+### Установка на Linux
 
 ``` bash
 python3 -m venv ./.venv
@@ -12,7 +12,7 @@ python3 -m venv ./.venv
 pip3 install -r requirements.txt
 ```
 
-### Windows
+### Установка на Windows
 
 ``` batch
 python -m venv ./.venv
@@ -27,14 +27,14 @@ pip install -r requirements.txt
 Внимание, для работы проекта требуется установленная СУБД PostgreSQL с созданной в ней БД.
 Не забудьте внести соответствующую информацию в файл config.py
 
-### Linux
+### Запуск на Linux
 
 ``` bash
 ./.venv/Scripts/activate
 python3 run.py
 ```
 
-### Windows
+### Запуск на Windows
 
 ``` batch
 "./.venv/Scripts/activate"
