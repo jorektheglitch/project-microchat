@@ -1,0 +1,9 @@
+.gitignore
+.pyenv
+.vscode
+.venv
+__pycache__
+*_.html
+*.db
+future/*
+users_media
