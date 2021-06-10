@@ -229,6 +229,12 @@ class User(Model):
         if isinstance(other, User):
             other = other.id
         binding = users_messages.c
+        order_by = Message.time_sent
+        if offset < 0:
+            offset = ~offset
+            ordering = order_by.desc()
+        else:
+            ordering = order_by.asc()
         messages = select(
                 func.row_number().over(order_by=binding.message).label('id'),
                 Message.id.label('real_id'),
@@ -247,7 +253,7 @@ class User(Model):
                 )
             )\
             .limit(limit).offset(offset)\
-            .order_by(Message.time_sent.desc())\
+            .order_by(ordering)\
             .subquery()
         message = messages.c
         attachments = func.to_json(

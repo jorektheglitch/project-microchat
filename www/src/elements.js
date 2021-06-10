@@ -177,13 +177,19 @@ class Chat {
 		});
 		this.messages = new Promise((resolve, reject)=>{
 			api.messages.get({
-				'user_id': uid
+				'user_id': uid,
+				'offset': -1,
 			}).then(messages=>{
-				resolve(messages.sort((a, b)=>a.id-b.id));
+				let messages_sorted = messages.sort((a, b)=>a.id-b.id);
+				if (messages_sorted)
+					this.earliestLoadedMessage = messages_sorted[0].id;
+				resolve(messages_sorted);
 			}, reject);
 		});
 	};
 	async newMessage(message) {
+		if (!this.earliestLoadedMessage)
+			this.earliestLoadedMessage = message.id;
 		let messages = await this.messages;
 		messages.push(message);
 		if (Chat.nowShow===this) {
@@ -191,10 +197,16 @@ class Chat {
 		}
 	};
 	async oldMessage(message) {
+		if (this.earliestLoadedMessage) {
+		    if (message.id < this.earliestLoadedMessage) 
+				this.earliestLoadedMessage = message.id;
+		} else {
+			this.earliestLoadedMessage = message.id;
+		}
 		let messages = await this.messages;
 		messages.unshift(message);
 		if (Chat.nowShow===this)
-			this.showMessage(message, prepend=true);
+			this.showMessage(message, Chat.messagesbox.childNodes[0], true);
 	}
 	async showMessage(packedMessage, container, prepend=false) {
 		if (!container) {
@@ -313,10 +325,29 @@ class Chat {
 
 Chat.messagesbox.addEventListener('scroll', e => {
 	let mbox = Chat.messagesbox;
+	let nowShow = Chat.nowShow;
 	let shiftTop = mbox.scrollHeight - mbox.clientHeight + mbox.scrollTop;
 	if (shiftTop > 100)
 		return;
-	console.log('onscroll!');
+	if (nowShow.loading | nowShow.earliestLoadedMessage<2)
+		return;
+	let rawOffset = nowShow.earliestLoadedMessage;
+	let offset = rawOffset ? 0 : rawOffset>0
+	let count = 100 ? rawOffset : offset<100;
+	// console.log(`onscroll! o: ${offset}; c: ${count}`);
+	if (!(offset||count))
+		return;
+	nowShow.loading = api.messages.get({
+		user_id: nowShow.uid,
+		chat_type: nowShow.type,
+		offset: offset,
+		count: count
+	}).then(messages=>{
+		let messages_sorted = messages.sort((a, b)=>a.id-b.id);
+		messages_sorted.reverse();
+		messages_sorted.map(message=>nowShow.oldMessage(message));
+		nowShow.loading = undefined;
+	});
 })
 
 
