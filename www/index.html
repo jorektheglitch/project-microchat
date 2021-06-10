@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+
+<head>
+	<title>[MicroChat]</title>
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<link rel="stylesheet" href="/styles/index.css">
+	<link rel="stylesheet" href="/styles/input.css">
+	<!-- <link rel="stylesheet" href="/styles/search.css"> -->
+	<script defer src="/src/sha256.js"></script>
+	<script defer src="/src/startup.js"></script>
+	<script defer src="/src/lifecycle.js" type="module"></script>
+</head>
+
+<body>
+	<div id="root">
+		<div id="sidebar">
+			<div id="currentUserInfo">
+				<div class="avatar centered"></div>
+				<div id="username-container">
+					<h3 id="username">unknown</h3>
+				</div>
+			</div>
+			<div id="searchform-container" class="border-bottom-darkish">
+				<form id="searchform">
+					<input type="search" name="username" placeholder="username" id="search-input" style="width: 100%; padding: 0 0 0 0.5em; border-radius: 0.5em 0 0 0.5em;">
+					<input type="submit" value="search" style="width: 10%; min-width: 5em;padding: 0; border-radius: 0 0.5em 0.5em 0;">
+				</form>
+			</div>
+			<div id="entrybox">
+				<div id="entries"></div>
+			</div>
+		</div>
+		<div id="sidebar_sizer"></div>
+		<div id="view" hidden>
+			<div id="chat_info-container">
+				<svg class="arrow-back hidden" viewBox="0 0 9 14">
+					<path class="svg-arrow" d="M6.660,8.922 L6.660,8.922 L2.350,13.408 L0.503,11.486 L4.813,7.000 L0.503,2.515 L2.350,0.592 L8.507,7.000 L6.660,8.922 Z" />
+				</svg>
+				<h3 style="align-self: center; justify-self: center; margin: 0.5em 0;"></h3>
+				<div id="chat_info"></div>
+			</div>
+			<div id="messages" style="padding: 0 0 0 0.75em;"></div>
+			<hr style="color: gray; margin: 0 0.75em; /*margin: 0; width: 90%; align-self: center;*/">
+			<div id="messagebox" style="max-height: 25%; display: grid; grid-template-areas: 'attachments attachments attachments'
+				'text attach submit'; grid-template-columns: 1fr min-content; grid-template-rows: 1fr min-content min-content;">
+				<div id="view-attachments" hidden style="overflow-y: scroll; overflow-x: hidden; min-height: 25%; grid-area: attachments;"></div>
+				<label class="input-sizer stacked" style="width: 100%; max-height: 100%; grid-area: text;">
+					<textarea form="messageform" name="text" id="messagearea" placeholder="message" oninput="this.parentNode.dataset.value = this.value"></textarea>
+				</label>
+				<button id="fileLoadButton" style="padding: 0; border: 0; grid-area: attach; background: inherit;">
+					<img src="/images/pictorgams/paper_clip.svg" style="height: 2em"></img>
+				</button>
+				<input
+					form="messageform" type="submit" style="
+						width: 10%;
+						min-width: 6em;
+						padding: 1px 3px;
+						border: 0;
+						background-color: transparent;
+						grid-area: submit;
+					">
+				<form hidden id="messageform">
+					<input form="messageform" name="to" type="number">
+					<input form="messageform" name="attachments">
+					<input form="messageform" name="chat_type" type="number" value="1">
+					<input form="messageform" name="reply_to" type="number">
+				</form>
+			</div>
+		</div>
+		<div id="footer">
+			<h6 style="margin: -2px 0 0 0; text-align: center;"><b>[MicroChat]</b> by jorektheglitch</h6>
+		</div>
+	</div>
+	<div id="login-popup" class="overlay" hidden>
+		<div id="login" class="login-popup-block overlay-content">
+			<form id="login-credentials" onsubmit="return login(this);" style="margin: 0 auto; min-width: 200px; text-align: center;">
+				<label style="grid-area: ulabel;">Username: </label>
+				<label style="grid-area: plabel;">Password: </label>
+				<input required name="username" type="text" placeholder="username" style="grid-area: uname;"></input>
+				<input required name="password" type="password" placeholder="password" style="grid-area: pwd;"></input>
+				<input type="submit" value="Login" style="grid-area: submit;"></input>
+			</form>
+			<pre style="margin: 10px 0 0; text-align: center; white-space: normal;">Does not have account?
+				<a href="#register" onclick="return switchToRegister();">Register</a>
+			</pre>
+		</div>
+		<div id="register" class="login-popup-block overlay-content" hidden>
+			<form id="reg-credentials" onsubmit="return register(this);" style="margin: 0 auto; min-width: 200px; text-align: center;">
+				<label style="grid-area: ulabel;">Username: </label>
+				<label style="grid-area: plabel;">Password: </label>
+				<label style="grid-area: rlabel;">Repeat password: </label>
+				<input required name="username" type="text" placeholder="username" style="grid-area: uname;"></input>
+				<input required name="password" type="password" placeholder="password" style="grid-area: pwd;" oninput="
+					let repeat = this.parentNode.repeat;
+					if (!repeat.value)
+						return
+					if (this.value!=repeat.value)
+						repeat.style.border = '2px solid #F00';
+					else
+						repeat.style.border = '2px solid #4C4';
+				"></input>
+				<input required name="repeat" type="password" placeholder="password" style="grid-area: rpwd;" oninput="
+					if (this.value!=this.parentNode.password.value)
+						this.style.border = '2px solid #F00';
+					else
+						this.style.border = '2px solid #4C4';
+					"></input>
+				<input type="submit" value="Register" style="grid-area: submit;"></input>
+			</form>
+		</div>
+	</div>
+	<noscript>
+		<div class="overlay">
+			<div id="noscript-message" class="overlay-content">
+				<h1>Please enable JavaScript!</h1>
+				<h4>This site doen't work without JS.</h4>
+			</div>
+		</div>
+	</noscript>
+</body>
