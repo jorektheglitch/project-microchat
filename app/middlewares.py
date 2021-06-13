@@ -26,7 +26,7 @@ async def server_timing(request: Request, handler: Handler) -> Response:
     raw_timings = request.get('server_timing')
     if raw_timings:
         timings = [
-            f"{desc}; dur={duration:.2f}" for desc, duration in raw_timings
+            f"{desc}; dur={duration:.3f}" for desc, duration in raw_timings
         ]
         server_timing_str = ", ".join(timings)
         response.headers.update({
