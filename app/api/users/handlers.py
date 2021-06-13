@@ -29,15 +29,7 @@ async def get_by_id(request: web.Request):
             'name': user.username
         }
     except UserDoesntExists:
-        return web.json_response({
-            "status": 0,
-            "result": {}
-        })
-    except Exception as e:
-        return web.json_response({
-            "status": 1,
-            "error": e.__class__.__name__
-        })
+        info = {}
     return web.json_response({
         "status": 0,
         "result": info
@@ -57,20 +49,8 @@ async def explore_users(request: web.Request):
 async def search_user(request: web.Request):
     data = await request.post()
     username = data.get('username')
-    if username is None:
-        return web.json_response(
-            status=400, reason="Incorrect arguments", data={
-                "status": 1,
-                "error": "username doesn't specified",
-            }
-        )
-    elif not username:
-        return web.json_response(
-            status=400, reason="Incorrect arguments", data={
-                "status": 1,
-                "error": "username is empty",
-            }
-        )
+    if username is None or not username:
+        raise ValueError('username is missing or incorrect')
     userlist = await users.search(username)
     return web.json_response({
         "status": 0,

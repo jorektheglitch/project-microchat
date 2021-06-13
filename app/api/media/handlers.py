@@ -24,10 +24,7 @@ async def store(request: web.Request):
                         break
                     tmpstore.append_content(chunk)
         if not tmpstore.filename:
-            return web.json_response({
-                "status": 1,
-                "error": "file name does not specified"
-            })
+            raise ValueError("file name does not specified")
     file_id = await media.store(tmpstore)
     return web.json_response({
         "status": 0,
@@ -42,17 +39,8 @@ async def load(request: web.Request):
     data = request.rel_url.query
     message_id = data.get('message')
     attach_id = data.get('id')
-    try:
-        message_id, attach_id = map(int, (message_id, attach_id))
-        file_hash, file_name = await media.resolve(message_id, attach_id)
-    except ValueError:
-        return web.json_response(
-            {
-                "status": 1,
-                "error": "incorrect message or attachment id"
-            },
-            status=400
-        )
+    message_id, attach_id = map(int, (message_id, attach_id))
+    file_hash, file_name = await media.resolve(message_id, attach_id)
     headers = {
         "Content-disposition": "attachment; filename={}".format(file_name)
     }
