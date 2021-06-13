@@ -9,6 +9,66 @@ function search_user(submit_event) {
 	return false;
 }
 
+const searchHeader = document.querySelector('#sidebar-menu > .search-h');
+const createHeader = document.querySelector('#sidebar-menu > .create-h');
+const actionForms = document.querySelector('#actionforms-container');
+const searchForm = document.querySelector('#searchform');
+const createForm = document.querySelector('#createform');
+
+for (let searchEl of [searchHeader, searchForm]) {
+	searchEl.onmouseover = function (event) {
+		for (let el of [searchHeader, createHeader])
+			if (el.timer){
+				clearTimeout(el.timer);
+				el.timer = undefined;
+			};
+		actionForms.viewed = this;
+		createform.style.display = 'none';
+		searchform.style.display = 'flex';
+		createHeader.style.background = 'transparent';
+		searchHeader.style.background = 'rgb(216, 216, 216)';
+	};
+	searchEl.onmouseout = function (event) {
+		searchHeader.timer = setTimeout(()=>{
+			searchform.style.display = 'none';
+			searchHeader.style.background = 'transparent';
+		}, 500);
+	};
+};
+for (let createEl of [createHeader, createForm]) {
+	createEl.onmouseover = function (event) {
+		for (let el of [searchHeader, createHeader])
+			if (el.timer){
+				clearTimeout(el.timer);
+				el.timer = undefined;
+			};
+		actionForms.viewed = this;
+		searchform.style.display = 'none';
+		createform.style.display = 'flex';
+		searchHeader.style.background = 'transparent';
+		createHeader.style.background = 'rgb(216, 216, 216)';
+	};
+	createEl.onmouseout = function (event) {
+		createHeader.timer = setTimeout(()=>{
+			createform.style.display = 'none';
+			createHeader.style.background = 'transparent';
+		}, 500);
+	};
+};
+createHeader.onmouseover = function (event) {
+	for (let el of [searchHeader, createHeader])
+		if (el.timer){
+			clearTimeout(el.timer);
+			el.timer = undefined;
+		};
+	searchform.style.display = 'none';
+	createform.style.display = 'flex';
+}
+createHeader.onmouseout = function (event) {
+	this.timer = setTimeout(()=>{
+		createform.style.display = 'none';
+	}, 500)
+}
 
 async function mainloop() {
 	api.messages.overview().then(entryBox.render_messages);

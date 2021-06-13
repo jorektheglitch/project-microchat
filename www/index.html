@@ -20,11 +20,20 @@
 					<h3 id="username">unknown</h3>
 				</div>
 			</div>
-			<div id="searchform-container" class="border-bottom-darkish">
-				<form id="searchform">
-					<input type="search" name="username" placeholder="username" id="search-input" style="width: 100%; padding: 0 0 0 0.5em; border-radius: 0.5em 0 0 0.5em;">
-					<input type="submit" value="search" style="width: 10%; min-width: 5em;padding: 0; border-radius: 0 0.5em 0.5em 0;">
-				</form>
+			<div id="sidebar-menu">
+				<h4 class="search-h">Search</h4>
+				<h4 class="create-h">Create</h4>
+				<div id="actionforms-container" class="border-bottom-darkish">
+					<form hidden id="createform">
+						<select>
+							<option>Conference</option>
+						</select>
+					</form>
+					<form hidden id="searchform">
+						<input type="search" name="username" placeholder="username" id="search-input" style="width: 100%; padding: 0 0 0 0.5em; border-radius: 0.5em 0 0 0.5em;">
+						<input type="submit" value="search" style="width: 10%; min-width: 5em;padding: 0; border-radius: 0 0.5em 0.5em 0;">
+					</form>
+				</div>
 			</div>
 			<div id="entrybox">
 				<div id="entries"></div>
