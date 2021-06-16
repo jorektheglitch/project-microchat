@@ -46,8 +46,6 @@ async def users_stats(*, session):
         func.avg(personal_messages.c.received).label("received_avg"),
         func.median(personal_messages.c.received).label("received_med"),
     ).select_from(personal_messages)
-    print(personal_messages)
-    print(general_messages)
     exact = await execute(personal_messages, session=session)
     generalized = await execute(general_messages, session=session)
     return {
