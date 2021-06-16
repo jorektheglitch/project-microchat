@@ -3,7 +3,7 @@ from sqlalchemy import MetaData
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from sqlalchemy.sql.expression import select
+from sqlalchemy.sql.expression import select, text
 
 
 metadata = MetaData()
@@ -32,6 +32,38 @@ def with_session(async_func):
 async def with_temp_session(async_func, *args, **kwargs):
     async with new_session() as session:
         return await async_func(*args, session=session, **kwargs)
+
+
+async def create_median_function(conn):
+    await conn.execute(text("""
+        CREATE OR REPLACE FUNCTION _final_median(anyarray) RETURNS float8 AS $$
+            WITH
+                q AS (
+                    SELECT val
+                    FROM unnest($1) val
+                    WHERE VAL IS NOT NULL
+                    ORDER BY 1
+                ),
+                cnt AS (
+                    SELECT COUNT(*) as c FROM q
+                )
+            SELECT
+                AVG(val)::float8
+            FROM (
+                SELECT val FROM q
+                LIMIT  2 - MOD((SELECT c FROM cnt), 2)
+                OFFSET GREATEST(CEIL((SELECT c FROM cnt) / 2.0) - 1,0)  
+            ) q2;
+            $$ LANGUAGE sql IMMUTABLE;
+    """))
+    await conn.execute(text("""
+        CREATE OR REPLACE AGGREGATE median(anyelement) (
+            SFUNC=array_append,
+            STYPE=anyarray,
+            FINALFUNC=_final_median,
+            INITCOND='{}'
+        );
+    """))
 
 
 class Model(DeclarativeBase):

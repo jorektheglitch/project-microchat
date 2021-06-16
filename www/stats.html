@@ -1,0 +1,13 @@
+<html>
+<head>
+    <title>[MicroChat] Stats</title>
+    <script defer>
+        fetch('/api/stats', {
+            headers: { 'Authorization': `Bearer ${localStorage.getItem("token")}`}
+        });
+    </script>
+</head>
+<body>
+    <div></div>
+</body>
+</html>

@@ -21,7 +21,7 @@ from sqlalchemy.sql.expression import (
 )
 from sqlalchemy import or_, and_
 
-from .base import Model, metadata, with_session
+from .base import Model, metadata, with_session, create_median_function
 from .base import CASCADE, RESTRICT
 from .bindings import conferences_users, conferences_messages, users_messages
 from .bindings import roles_permissions
@@ -39,6 +39,7 @@ async def init(db, **options) -> AsyncEngine:
     metadata.bind = engine
     async with engine.begin() as conn:
         await conn.run_sync(metadata.create_all)
+        await create_median_function(conn)
         await conn.commit()
     return engine
 
