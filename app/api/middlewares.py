@@ -16,6 +16,8 @@ async def errors_handling(
         status_code = 500
         if isinstance(e, (ValueError, TypeError)):
             status_code = 400
+        elif issubclass(type(e), web.HTTPException):
+            raise
         tb = traceback.format_exc()
         return web.json_response({
                 "status": 1,
