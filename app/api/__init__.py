@@ -1,6 +1,7 @@
 from aiohttp import web
 
 from app.models.analytics import users_stats
+from utils import json_dumps
 
 from .middlewares import errors_handling
 
@@ -48,6 +49,7 @@ async def stats(request: web.Request) -> web.Response:
             } for row in exact
         ]
     }
-    return web.json_response(stats)
+    return web.json_response(stats, dumps=json_dumps)
+
 
 api.router.add_get("/stats", stats)
