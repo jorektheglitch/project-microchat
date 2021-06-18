@@ -231,19 +231,18 @@ class User(Model):
         if isinstance(other, User):
             other = other.id
         binding = users_messages.c
-        order_by = Message.time_sent
-        if offset < 0:
+        order_by = Message.id
+        reverse = offset < 0
+        if reverse:
             offset = ~offset
             ordering = order_by.desc()
         else:
             ordering = order_by.asc()
+        message_number = func.row_number().over(order_by=binding.message)
+        external_id = message_number.label('external_id')
         messages = select(
-                func.row_number().over(order_by=binding.message).label('id'),
-                Message.id.label('real_id'),
-                Message.text,
-                Message.time_edit,
-                Message.time_sent,
-                Message.reply_to,
+                external_id,
+                Message,
                 users_messages
             )\
             .select_from(users_messages)\
@@ -254,7 +253,6 @@ class User(Model):
                     and_(binding.sender == other, binding.receiver == self.id),
                 )
             )\
-            .limit(limit).offset(offset)\
             .order_by(ordering)\
             .subquery()
         message = messages.c
@@ -269,14 +267,19 @@ class User(Model):
                     ))
                 .select_from(Attachment)
                 .join(File)
-                .filter(Attachment.message == message.real_id)
+                .filter(Attachment.message == message.id)
                 .order_by(Attachment.position)
             )).label('attachments')
+        query_ordering = message.external_id
+        if reverse:
+            query_ordering = query_ordering.desc()
         query = select(
-                [*message, attachments]
+                messages, attachments
             )\
             .select_from(messages)\
-            .order_by(message.id)
+            .filter(not_(message.deleted))\
+            .limit(limit).offset(offset)\
+            .order_by(query_ordering)
         return await execute(query, session=session)
 
     @with_session
