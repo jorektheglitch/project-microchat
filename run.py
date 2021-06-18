@@ -1,14 +1,14 @@
 import logging
-from ipaddress import ip_network
 
 from aiohttp import web
 from aiohttp_remotes import setup, XForwardedStrict
 from utils.fixes import fix_js_contenttype_header
 
 from app import get_app
+from config import HOST, PORT
+from config import PROXIFIED, PROXY_SUBNET
+from config import SERVE_STATIC, STATIC_DIRECTORY_PATH
 
-
-PROXIFIED = False
 
 log = logging.getLogger()
 log.setLevel(logging.DEBUG)
@@ -20,15 +20,17 @@ log.addHandler(logger_handler)
 async def app_factory() -> web.Application:
     app = await get_app()
     fix_js_contenttype_header(app)
+    if SERVE_STATIC:
+        app.router.add_static('/', STATIC_DIRECTORY_PATH)
     if PROXIFIED:
         await setup(
             app,
             XForwardedStrict([
-                ip_network("::/127")
+                PROXY_SUBNET
             ])
         )
     return app
 
 
 if __name__ == "__main__":
-    web.run_app(app_factory(), host='::', port=8081)
+    web.run_app(app_factory(), host=HOST, port=PORT)
