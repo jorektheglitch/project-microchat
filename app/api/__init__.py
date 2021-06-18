@@ -32,12 +32,12 @@ async def stats(request: web.Request) -> web.Response:
     stats = {
         "general": {
             "sended": {
-                "avg": float(general.sended_avg),
-                "median":  float(general.sended_med)
+                "avg": general.sended_avg,
+                "median": general.sended_med
             },
             "received": {
-                "avg": float(general.received_avg),
-                "median": float(general.received_med)
+                "avg": general.received_avg,
+                "median": general.received_med
             },
         },
         "exact": [
