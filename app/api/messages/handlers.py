@@ -15,7 +15,7 @@ async def send_message(request: web.Request):
     raw_attachments = data.get('attachments', '')
     attachments = [int(attach) for attach in raw_attachments.split()]
     chat_type = int(data.get('chat_type', 1))
-    reply_to = int(reply_to) if reply_to is not None else reply_to
+    reply_to = int(reply_to) if reply_to else None
     if is_empty(text) and not raw_attachments:
         raise ValueError('empty message')
     await store_pm(from_id, to_id, text, attachments, chat_type)
@@ -30,11 +30,11 @@ async def get_messages(request: web.Request):
     data = await request.json()
     user_id = request['user_id']
     chat_id = data.get('user_id')
-    if chat_id is None:
-        raise ValueError('missing user_id')
     offset = data.get('offset', 0)
     count = data.get('count', 100)
     chat_type = data.get('chat_type', 1)
+    if chat_id is None:
+        raise ValueError('missing user_id')
     chat_id, offset, count = map(int, (chat_id, offset, count))
     messages = await get_pms(user_id, chat_id, offset, count, chat_type)
     return web.json_response({
