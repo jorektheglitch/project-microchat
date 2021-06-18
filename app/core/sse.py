@@ -1,7 +1,7 @@
 import asyncio
 from typing import List, Dict, Set, Callable
 
-from .events import MessageReceive, MessageDelete
+from .events import MessageReceive, MessageEdit, MessageDelete
 from .events import ChatCreate, ChatDelete
 from .events import NewUser, UserOnline, UserOffline, UserDelete
 from .events import SSEStart, SSEEnd
@@ -85,16 +85,16 @@ class ServerSentEventsAPI:
         EMPTY = set()
         while self.is_working:
             event = await events_queue.get()
-            if isinstance(event, MessageReceive):
-                queues = set()
+            queues = set()
+            if isinstance(event, (MessageReceive, MessageEdit, MessageDelete)):
                 sender = int(event.sender)
                 receiver = int(event.receiver)
                 queues.update(self.listener_queues.get(sender, EMPTY))
                 queues.update(self.listener_queues.get(receiver, EMPTY))
-                for queue in queues:
-                    await queue.put(event)
             elif event is None:
                 break
+            for queue in queues:
+                await queue.put(event)
 
     def get_events_queue(self, user_id) -> asyncio.Queue:
         user_queues: set = self.listener_queues.setdefault(user_id, set())

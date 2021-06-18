@@ -4,10 +4,10 @@ from aiohttp.web import Request
 
 from .event_mixin import EventMixin
 
-from .messages import MessageReceive, MessageRequest, MessageDelete  # noqa
-from .messages import ChatCreate, ChatsRequest, ChatDelete           # noqa
-from .users import NewUser, UserChanged, UserDelete                  # noqa
-from .users import UserOnline, UserOffline                           # noqa
+from .messages import MessageReceive, MessageRequest, MessageEdit, MessageDelete  # noqa
+from .messages import ChatCreate, ChatsRequest, ChatDelete                        # noqa
+from .users import NewUser, UserChanged, UserDelete                               # noqa
+from .users import UserOnline, UserOffline                                        # noqa
 
 
 @dataclass

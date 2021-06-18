@@ -5,6 +5,7 @@ from app.models import store
 
 from .sse import event_emitter
 from .events import MessageReceive
+from .events import MessageEdit
 from .events import MessageDelete
 
 
@@ -25,6 +26,7 @@ async def store_pm(
     return m, await store(*attachments)
 
 
+@event_emitter(MessageEdit)
 async def edit(
     from_: int,
     to: int,
@@ -36,7 +38,7 @@ async def edit(
     await User(id=from_).update_pm(to, id, text, attachments)
 
 
-# @event_emitter(MessageDelete)
+@event_emitter(MessageDelete)
 async def delete(from_: int, to: int, id: int):
     await User(id=from_).delete_pm(to, id)
 
