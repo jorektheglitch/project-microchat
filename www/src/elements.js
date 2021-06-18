@@ -262,14 +262,14 @@ class Chat {
 				resolve(result.name);
 			}, reject);
 		});
-		this.messages = new Promise((resolve, reject)=>{
+		this.messages = new Promise(function (resolve, reject) {
 			api.messages.get({
 				'user_id': uid,
 				'offset': -1,
-			}).then(messages=>{
+			}).then(function(messages) {
 				let messages_sorted = messages.sort((a, b)=>a.id-b.id);
-				if (messages_sorted)
-					this.earliestLoadedMessage = messages_sorted[0].id;
+				if (messages_sorted.length)
+					new Chat(uid, type).earliestLoadedMessage = messages_sorted[0].id;
 				resolve(messages_sorted);
 			}, reject);
 		});
@@ -436,6 +436,7 @@ Chat.messagesbox.addEventListener('scroll', e => {
 		messages_sorted.reverse();
 		messages_sorted.map(message=>nowShow.oldMessage(message));
 		nowShow.loading = undefined;
+		return true;
 	});
 })
 
