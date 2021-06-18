@@ -310,7 +310,7 @@ class User(Model):
         other: int,
         message_id: int,
         new_text: str,
-        attachments,
+        attachments: Optional[Iterable[int]] = None,
         *,
         session: AsyncSession
     ):
@@ -511,9 +511,9 @@ class AuthData(Model):
     @with_session
     async def get_user(
         cls,
-        username,
-        method,
-        data,
+        username: str,
+        method: str,
+        data: bytes,
         *,
         session
     ) -> User:
@@ -628,7 +628,13 @@ class Conference(Model):
     messages = relationship("Message", secondary=conferences_messages)
 
     @with_session
-    async def create(self, owner: int, users=(), *, session: AsyncSession):
+    async def create(
+        self,
+        owner: int,
+        users: Iterable[Union[User, int]] = (),
+        *,
+        session: AsyncSession
+    ):
         """
         Creates a conference with selected users.
         """

@@ -2,6 +2,8 @@
 Module for model's bases - useful functions, constants and Model base class.
 """
 
+from functools import wraps
+
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import MetaData
 
@@ -31,6 +33,7 @@ def with_session(async_func):
     Decorator that passes AsyncSession instance to 'session' keyword argument
     if function called without it.
     """
+    @wraps(async_func)
     async def wrapped(*args, **kwargs):
         if "session" in kwargs:
             result = await async_func(*args, **kwargs)
