@@ -139,6 +139,7 @@ body {
 	grid-area: actions;
 	background: rgb(216, 216, 216);
 	border-bottom: 0px solid rgb(160, 160, 160);
+	border-radius: 0 0 0.5rem 0.5rem;
 }
 #createform {
 	width: 100%;
