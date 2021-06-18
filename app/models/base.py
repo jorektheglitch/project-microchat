@@ -1,3 +1,7 @@
+"""
+Module for model's bases - useful functions, constants and Model base class.
+"""
+
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import MetaData
 
@@ -16,10 +20,17 @@ SET_NULL = "SET NULL"
 
 
 def new_session(metadata: MetaData = metadata, **kwargs) -> AsyncSession:
+    """
+    Creates a new session for DB.
+    """
     return AsyncSession(metadata._bind, expire_on_commit=False, **kwargs)
 
 
 def with_session(async_func):
+    """
+    Decorator that passes AsyncSession instance to 'session' keyword argument
+    if function called without it.
+    """
     async def wrapped(*args, **kwargs):
         if "session" in kwargs:
             result = await async_func(*args, **kwargs)
@@ -67,6 +78,9 @@ async def create_median_function(conn):
 
 
 class Model(DeclarativeBase):
+    """
+    Base class for DB models.
+    """
 
     __abstract__ = True
 

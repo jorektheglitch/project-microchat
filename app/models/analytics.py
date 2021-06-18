@@ -1,3 +1,7 @@
+"""
+Module with functions for getting analytics about users, messages, etc
+"""
+
 from app.models.base import with_session
 from sqlalchemy.sql.expression import or_, select, case
 from sqlalchemy.sql.functions import func

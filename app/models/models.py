@@ -32,10 +32,11 @@ from .types import sha512
 logger = logging.getLogger(__name__)
 
 
-async def init(db, **options) -> AsyncEngine:
+async def init(db: str, **options) -> AsyncEngine:
     """
-    Инициализация соединения с базой данных, создание таблиц.
+    Initialize connection to DB, creating tables
     """
+
     engine = create_async_engine(db, **options)
     metadata.bind = engine
     async with engine.begin() as conn:
@@ -47,8 +48,9 @@ async def init(db, **options) -> AsyncEngine:
 
 async def drop(metadata: MetaData) -> None:
     """
-    Удаление всех таблиц из базы данных.
+    Drop all tables from DB.
     """
+
     engine = metadata.bind
     async with engine.begin() as conn:
         await conn.run_sync(metadata.drop_all)
@@ -57,14 +59,21 @@ async def drop(metadata: MetaData) -> None:
 
 class Message(Model):
     """
-    Модель сообщения в БД.
-      id (int) - идентификатор сообщения
-      text (str) - текст сообщения
-      time_sent (datetime) - время отправки сообщения
-      time_edit (datetime) - время последнего редактирования сообщения
-      reply_to (int) - ссылка на сообщение, к которому данное сообщение ответ
+    Message model for DB.
+
+      id (int) - message's internal identifier
+
+      text (str) - message's text
+
+      time_sent (datetime) - message's send time (UTC)
+
+      time_edit (datetime) - message's last edit time (UTC)
+
+      reply_to (int) - link to message which replied to
     """
+
     __tablename__ = "messages"
+
     id = Column(Integer, primary_key=True, autoincrement=True)
     text = Column(Text, nullable=False)
     time_sent = Column(DateTime, nullable=False, default=dt.now)
@@ -90,6 +99,10 @@ class Message(Model):
         session: AsyncSession,
         chat_type: int = 1
     ) -> None:
+        """
+        Binds a message to it's sender and receiver.
+        """
+
         session.add(self)
         await session.flush()
         params = {}
@@ -108,16 +121,17 @@ class Message(Model):
 
 class User(Model):
     """
-    Модель пользователя в БД.
+    User model for DB.
 
-      id (int) - идентификатор пользователя
+      id (int) - user's internal identifier
 
-      username (str) - никнейм пользователя ()
+      username (str) -
 
-      name (str) - имя пользователя ()
+      name (str) - user's name (visible in profile)
 
-      surname (str) - фамилия пользователя
+      surname (str) - user's surname (visible in profile)
     """
+
     __tablename__ = "users"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
@@ -155,6 +169,10 @@ class User(Model):
 
     @with_session
     async def pm_overview(self, *, session: AsyncSession) -> Tuple:
+        """
+        Gets a list of user's conversations with it's last messages.
+        """
+
         def ent_type(value):
             return literal(value).label('type')
         pms = users_messages
@@ -228,6 +246,10 @@ class User(Model):
         *,
         session: AsyncSession
     ) -> Tuple:
+        """
+        Gets a personal conversation history.
+        """
+
         if isinstance(other, User):
             other = other.id
         binding = users_messages.c
@@ -292,6 +314,10 @@ class User(Model):
         *,
         session: AsyncSession
     ):
+        """
+        Updates a personal message.
+        """
+
         binding = users_messages.c
         id = func.row_number().over(order_by=binding.message).label('id')
         messages = select(
@@ -326,6 +352,10 @@ class User(Model):
         *,
         session: AsyncSession
     ):
+        """
+        Deletes a personal message.
+        """
+
         binding = users_messages.c
         id = func.row_number().over(order_by=binding.message).label('id')
         messages = select(
@@ -379,6 +409,10 @@ class User(Model):
         *,
         session: AsyncSession
     ) -> Optional[User]:
+        """
+        Gets a user's ID from it's username.
+        """
+
         lst = await execute(
             cls.filter(User.username == username),
             session=session
@@ -403,6 +437,10 @@ class User(Model):
 
     @with_session
     async def get_token(self, *, session: AsyncSession) -> str:
+        """
+        Creates a access auth token for user.
+        """
+
         raw_token = secrets.token_bytes(32)
         binding = Token(user=self.id, token=raw_token)
         await binding.store(session=session)
@@ -412,11 +450,15 @@ class User(Model):
 
 class Token(Model):
     """
-    Модель access токена в БД. Токены используются для аутентификации сессии.
-      token (bytes) - токен
-      user (int) - ссылка на пользователя, к которому привязан токен
+    Access token model for DB. Tokens is used for authenticate API requests.
+
+      token (bytes) -
+
+      user (int) - link to user which owns this token
     """
+
     __tablename__ = "tokens"
+
     token = Column(LargeBinary, primary_key=True)
     user = Column(
         Integer,
@@ -426,6 +468,10 @@ class Token(Model):
     @classmethod
     @with_session
     async def get_user(cls, token, *, session: AsyncSession) -> User:
+        """
+        Gets user which owns this token.
+        """
+
         rows = await execute(
             select(User)
             .select_from(cls)
@@ -441,13 +487,18 @@ class Token(Model):
 
 class AuthData(Model):
     """
-    Модель аутентификационных данных в БД. Аутентификационные используются
-    для проверки пользователя перед выдачей ему токена.
-      user (int) - ссылка на пользователя
-      method (str) - метод аутентификации
-      data (bytes) - данные, необходимые для аутентификации
+    Authentication data model for DB. Authentication data is used for check
+    user before grant access token to it.
+
+      user (int) - link to user
+
+      method (str) - authentication method
+
+      data (bytes) - data for authentication performing
     """
+
     __tablename__ = "authentication"
+
     user = Column(
         Integer,
         ForeignKey(User.id, onupdate=RESTRICT, ondelete=CASCADE),
@@ -483,14 +534,21 @@ class AuthData(Model):
 
 class File(Model):
     """
-    Модель файла в БД.
-      id - идентификатор файла
-      hash - SHA-512 хеш файла
-      size - размер файла (в байтах)
-      type - MIME-тип файла
-      name - имя файла (используется при вложении файла в сообщение)
+    File model for DB.
+
+      id - file's internal identifier
+
+      hash - file's SHA-512 hash
+
+      size - size of file
+
+      type - file's MIME-type
+
+      name - file name (for attaching file to message)
     """
+
     __tablename__ = "files"
+
     id = Column(Integer, primary_key=True, autoincrement=True)
     hash = Column(sha512)
     size = Column(Integer)
@@ -505,12 +563,17 @@ class File(Model):
 
 class Attachment(Model):
     """
-    Модель вложений в сообщение в БД.
-      file - ссылка на файл
-      message - ссылка на сообщение
-      position - позиция данного вложения среди прочих вложений
+    Message's attachment model for DB.
+
+      file - link to File row
+
+      message - link to message
+
+      position - attachments's position in message
     """
+
     __tablename__ = "attachments"
+
     file = Column(
         Integer,
         ForeignKey(File.id, onupdate=RESTRICT, ondelete=RESTRICT),
@@ -526,6 +589,9 @@ class Attachment(Model):
     @classmethod
     @with_session
     async def resolve(cls, message, file, *, session):
+        """
+        Gets a bound file info.
+        """
         query = select(File)\
             .select_from(cls)\
             .join(File)\
@@ -540,7 +606,15 @@ class Attachment(Model):
 
 class Conference(Model):
     """
+    Conference model for DB.
+
+      id (int) - conference's internal identifier
+
+      username (str) -
+
+      title (str) - conferece's visible name
     """
+
     __tablename__ = "conferences"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
@@ -555,6 +629,9 @@ class Conference(Model):
 
     @with_session
     async def create(self, owner: int, users=(), *, session: AsyncSession):
+        """
+        Creates a conference with selected users.
+        """
         session.add(self)
         await session.flush()
         coros = [execute(insert(
@@ -577,7 +654,15 @@ class Conference(Model):
 
 
 class Role(Model):
+    """
+    User's role model for DB.
+
+      id (int) - role's internal identifier
+      title (str) - role's visible title
+    """
+
     __tablename__ = "roles"
+
     id = Column(Integer, primary_key=True, autoincrement=True)
     title = Column(Text)
     permissions = relationship(
@@ -588,7 +673,15 @@ class Role(Model):
 
 
 class Permission(Model):
+    """
+    Role's permission table for DB.
+
+      id (int) - permission's internal identifier
+      title (str) - permission's visible title
+    """
+
     __tablename__ = "permissions"
+
     id = Column(Integer, primary_key=True, autoincrement=True)
     title = Column(Text)
     roles = relationship(
@@ -606,6 +699,11 @@ async def execute(
     fetch=True,
     commit=True
 ) -> Optional[Tuple]:
+    """
+    Executes given query. Fetch results and commits changes if otherwise
+    don't specified.
+    """
+
     raw = await session.execute(query)
     if commit:
         await session.commit()
@@ -615,6 +713,10 @@ async def execute(
 
 @with_session
 async def store(*objects: Iterable[Model], session: AsyncSession):
+    """
+    Adds all given object to DB and commits changes.
+    """
+
     session.add_all(objects)
     await session.commit()
     return objects

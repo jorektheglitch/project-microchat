@@ -1,3 +1,7 @@
+"""
+Module that do all sorts of interactions with DB.
+"""
+
 from .models import User, AuthData, Token
 from .models import Message, Conference, Role, Permission
 from .models import File, Attachment

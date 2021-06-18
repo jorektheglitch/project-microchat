@@ -1,3 +1,7 @@
+"""
+Module for binding table's models.
+"""
+
 from sqlalchemy import Table, Column, ForeignKey
 from sqlalchemy import Integer, Boolean
 
@@ -5,6 +9,9 @@ from .base import Model
 from .base import CASCADE, RESTRICT, SET_DEFAULT
 
 
+# User-Conference binding model
+#  This table contain info about conferences which users are member of and
+#  roles which was granted to users
 conferences_users = Table(
     "conferences_users", Model.metadata,
     Column("user", Integer,
@@ -21,6 +28,8 @@ conferences_users = Table(
     Column("creator", Boolean)
 )
 
+# User-Conference-Message binding model
+#  This table contains a conference's messages
 conferences_messages = Table(
     "conferences_messages", Model.metadata,
     Column("message", Integer,
@@ -34,6 +43,8 @@ conferences_messages = Table(
            primary_key=True)
 )
 
+# User-User-Message binding model
+#  This table contains personal messages
 users_messages = Table(
     "personal_messages", Model.metadata,
     Column("message", Integer,
@@ -47,6 +58,8 @@ users_messages = Table(
            primary_key=True)
 )
 
+# Roles-Permissions binding model
+#  This table contains info about which permissions have each role
 roles_permissions = Table(
     "roles_permissions", Model.metadata,
     Column("role", Integer,
