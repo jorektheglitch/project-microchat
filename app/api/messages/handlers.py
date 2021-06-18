@@ -2,7 +2,7 @@ from aiohttp import web
 
 from app.utils import is_empty
 from app.core.auth import auth_required
-from app.core.messages import store_pm, get_pms, overview_pms
+from app.core.messages import delete, edit, store_pm, get_pms, overview_pms
 
 
 @auth_required
@@ -40,6 +40,35 @@ async def get_messages(request: web.Request):
     return web.json_response({
         "status": 0,
         "result": messages
+    })
+
+
+@auth_required
+async def edit_message(request: web.Request) -> web.Response:
+    data = await request.json()
+    user_id = request['user_id']
+    chat_id = data.get('user_id')
+    message_id = data.get('message_id')
+    if chat_id is None:
+        raise ValueError('missing user_id')
+    text = data.get('text')
+    await edit(user_id, chat_id, message_id, text)
+    return web.json_response({
+        "status": 0
+    })
+
+
+@auth_required
+async def delete_message(request: web.Request) -> web.Response:
+    data = await request.json()
+    user_id = request['user_id']
+    chat_id = data.get('user_id')
+    message_id = data.get('message_id')
+    if chat_id is None:
+        raise ValueError('missing user_id')
+    await delete(user_id, chat_id, message_id)
+    return web.json_response({
+        "status": 0
     })
 
 

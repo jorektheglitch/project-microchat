@@ -1,4 +1,4 @@
-from typing import Iterable
+from typing import Iterable, Optional
 
 from app.models import User, Message, Attachment, Conference
 from app.models import store
@@ -25,9 +25,20 @@ async def store_pm(
     return m, await store(*attachments)
 
 
-@event_emitter(MessageDelete)
-async def delete(to: int, id: int):
-    pass
+async def edit(
+    from_: int,
+    to: int,
+    id: int,
+    text: Optional[str] = None,
+    attachments: Optional[Iterable[int]] = None,
+    chat_type: int = 1
+):
+    await User(id=from_).update_pm(to, id, text, attachments)
+
+
+# @event_emitter(MessageDelete)
+async def delete(from_: int, to: int, id: int):
+    await User(id=from_).delete_pm(to, id)
 
 
 async def get_pms(
@@ -46,7 +57,7 @@ async def get_pms(
         pass
     msgs = [
         {
-            "id": msg.id,
+            "id": msg.external_id,
             "sender": msg.sender,
             "text": msg.text,
             "sent": msg.time_sent.timestamp(),

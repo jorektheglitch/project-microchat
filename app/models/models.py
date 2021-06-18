@@ -13,11 +13,12 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import MetaData
 
 from sqlalchemy import Column, ForeignKey
-from sqlalchemy import Integer, Text, DateTime, LargeBinary
+from sqlalchemy import Boolean, Integer, Text, DateTime, LargeBinary
 from sqlalchemy.orm import relationship
+from sqlalchemy.sql.elements import not_
 
 from sqlalchemy.sql.expression import (
-    insert, select, case, func, literal, union
+    insert, select, case, func, literal, union, update
 )
 from sqlalchemy import or_, and_
 
@@ -73,7 +74,7 @@ class Message(Model):
         ForeignKey(id, onupdate=RESTRICT, ondelete=RESTRICT),
         nullable=True
     )
-    # deleted = Column(Boolean, nullable=False, default=False)
+    deleted = Column(Boolean, nullable=False, default=False)
 
     # attachments = relationship(
     #    "Attachment",
@@ -277,6 +278,76 @@ class User(Model):
             .select_from(messages)\
             .order_by(message.id)
         return await execute(query, session=session)
+
+    @with_session
+    async def update_pm(
+        self,
+        other: int,
+        message_id: int,
+        new_text: str,
+        attachments,
+        *,
+        session: AsyncSession
+    ):
+        binding = users_messages.c
+        id = func.row_number().over(order_by=binding.message).label('id')
+        messages = select(
+                id,
+                Message.id.label('real_id')
+            )\
+            .select_from(users_messages)\
+            .join(Message)\
+            .filter(
+                or_(
+                    and_(binding.sender == self.id, binding.receiver == other),
+                    and_(binding.sender == other, binding.receiver == self.id),
+                )
+            )\
+            .subquery()
+        query = update(
+                Message
+            )\
+            .values(text=new_text, time_edit=dt.now())\
+            .where(
+                messages.c.id == message_id,
+                messages.c.real_id == Message.id
+            )\
+            .execution_options(synchronize_session="fetch")
+        await execute(query, session=session, fetch=False)
+
+    @with_session
+    async def delete_pm(
+        self,
+        other: int,
+        message_id: int,
+        *,
+        session: AsyncSession
+    ):
+        binding = users_messages.c
+        id = func.row_number().over(order_by=binding.message).label('id')
+        messages = select(
+                id,
+                Message.id.label('real_id')
+            )\
+            .select_from(users_messages)\
+            .join(Message)\
+            .filter(
+                or_(
+                    and_(binding.sender == self.id, binding.receiver == other),
+                    and_(binding.sender == other, binding.receiver == self.id),
+                )
+            )\
+            .subquery()
+        query = update(
+                Message
+            )\
+            .values(deleted=True)\
+            .where(
+                messages.c.id == message_id,
+                messages.c.real_id == Message.id
+            )\
+            .execution_options(synchronize_session="fetch")
+        await execute(query, session=session, fetch=False)
 
     @with_session
     async def get_conversation_history(
