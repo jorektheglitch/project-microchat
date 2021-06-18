@@ -7,7 +7,7 @@ from utils.fixes import fix_js_contenttype_header
 from app import get_app
 from config import HOST, PORT
 from config import PROXIFIED, PROXY_SUBNET
-from config import SERVE_STATIC, STATIC_DIRECTORY_PATH
+from config import SERVE_STATIC, STATIC_PATH
 
 
 log = logging.getLogger()
@@ -21,7 +21,7 @@ async def app_factory() -> web.Application:
     app = await get_app()
     fix_js_contenttype_header(app)
     if SERVE_STATIC:
-        app.router.add_static('/', STATIC_DIRECTORY_PATH)
+        app.router.add_static('/', STATIC_PATH)
     if PROXIFIED:
         await setup(
             app,
