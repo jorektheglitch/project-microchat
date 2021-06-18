@@ -19,12 +19,20 @@ class MessageReceive(EventMixin):  # OK
     time_sent: int
     time_edit: int
     attachments: list
-    chat_type: bool = 1
+    chat_type: int = 1
 
     __handlers__ = set()
 
     @classmethod
-    async def emit(cls, from_, to, text, attachments, *args, **kwargs):
+    async def emit(
+        cls,
+        from_: int,
+        to: int,
+        text: str,
+        attachments: Iterable[int],
+        *args,
+        **kwargs
+    ):
         sender = kwargs.get('from_', from_)
         receiver = kwargs.get('to', to)
         text = kwargs.get('text', text)
