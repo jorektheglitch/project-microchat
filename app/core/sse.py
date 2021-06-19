@@ -1,6 +1,7 @@
 import asyncio
 from typing import List, Dict, Set, Callable
 
+from .events.event_mixin import EventMixin
 from .events import MessageReceive, MessageEdit, MessageDelete
 from .events import ChatCreate, ChatDelete
 from .events import NewUser, UserOnline, UserOffline, UserDelete
@@ -17,7 +18,7 @@ sse_event_types = (
 )
 
 
-def event_emitter(event, method=False, prefire=False) -> Callable:
+def event_emitter(event: EventMixin, method=False, prefire=False) -> Callable:
 
     def extract_args(args):
         if method:
@@ -30,9 +31,10 @@ def event_emitter(event, method=False, prefire=False) -> Callable:
             e_args = extract_args(args)
             result = await coro(*args, **kwargs)
             if event is MessageReceive:
-                message, attachments = result
+                message, id, attachments = result
                 time = message.time_sent
                 kwargs['time_sent'] = time.timestamp()
+                kwargs['id'] = id
             await event.emit(*e_args, **kwargs)
             return result
 

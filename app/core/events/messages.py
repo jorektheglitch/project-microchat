@@ -15,6 +15,7 @@ class MessageReceive(EventMixin):  # OK
 
     sender: int
     receiver: int
+    id: int
     text: str
     time_sent: int
     time_edit: int
@@ -30,6 +31,8 @@ class MessageReceive(EventMixin):  # OK
         to: int,
         text: str,
         attachments: Iterable[int],
+        chat_type: int,
+        id: int,
         *args,
         **kwargs
     ):
@@ -39,10 +42,12 @@ class MessageReceive(EventMixin):  # OK
         attachments = kwargs.get('attachments', attachments)
         time_sent = kwargs.get('time_sent', dt.now(tz.utc).timestamp())
         time_edit = kwargs.get('time_edit')
-        chat_type = kwargs.get('chat_type', 1)
+        chat_type = kwargs.get('chat_type', chat_type)
+        id = kwargs.get('id', id)
         return cls(
             sender,
             receiver,
+            id,
             text,
             time_sent,
             time_edit,

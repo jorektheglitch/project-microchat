@@ -18,12 +18,12 @@ async def store_pm(
     chat_type: int = 1
 ):
     m = Message(text=text.strip())
-    await m.bind(sender=from_, receiver=to, chat_type=chat_type)
+    id = await m.bind(sender=from_, receiver=to, chat_type=chat_type)
     attachments = [
         Attachment(file=attachment, message=m.id, position=i)
         for i, attachment in enumerate(attachments)
     ]
-    return m, await store(*attachments)
+    return m, id, await store(*attachments)
 
 
 @event_emitter(MessageEdit)

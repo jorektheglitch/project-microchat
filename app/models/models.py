@@ -117,6 +117,28 @@ class Message(Model):
             **params
         )
         await execute(query, session=session, fetch=False)
+        message_number = func.row_number().over(order_by=binding.c.message)
+        messages = select(
+                message_number.label('external_id'),
+                Message
+            )\
+            .select_from(users_messages)\
+            .join(Message)\
+            .filter(
+                or_(
+                    and_(binding.c.sender == sender, binding.c.receiver == receiver),  # noqa
+                    and_(binding.c.sender == receiver, binding.c.receiver == sender),  # noqa
+                )
+            )\
+            .order_by(Message.id)\
+            .subquery()
+        external_id_row = await execute(
+            select(messages.c.external_id).where(messages.c.id == self.id),
+            session=session,
+            commit=False
+        )
+        external_id = external_id_row[0].external_id
+        return external_id
 
 
 class User(Model):
