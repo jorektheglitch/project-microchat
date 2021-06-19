@@ -214,6 +214,97 @@ document.getElementById("fileLoadButton").onclick = (click) => {
 	file.click();
 }
 
+function getEditArea(messageTextElement, message_id, interlocutor) {
+	let messageText = messageTextElement.innerText;
+	let container = createElement('div', {class: 'view-message-editarea'});
+	let label = createElement('label', {
+		classList: ['input-sizer', 'stacked'],
+		style: {
+			width: '100%',
+			maxHeight: '100%',
+			padding: 0,
+		}
+	});
+	let textarea = createElement('textarea');
+	label.append(textarea);
+	textarea.oninput = function () {
+		this.parentNode.dataset.value = this.value;
+	}
+	label.dataset.value = textarea.value = messageText;
+	let button_params = {style: {height: '100%', border: 0}};
+	let ok_button = createElement('button', button_params);
+	ok_button.innerText = '✔';
+	let mark_error = () => {
+		let stdBorder = container.style.border;
+		container.style.border = '2px solid #F00';
+		setTimeout(()=>{
+			container.style.border = stdBorder;
+		}, 2000);
+		textarea.disabled = false;
+		textarea.focus();
+	};
+	ok_button.onclick = () => {
+		textarea.disabled = true;
+		api.messages.edit({
+			user_id: interlocutor,
+			message_id: message_id,
+			text: textarea.value
+		}).then(
+			(response)=>{
+				if (response.ok) {
+					messageTextElement.innerText = textarea.value
+					container.replaceWith(messageTextElement);
+				} else {
+					mark_error();
+				};
+			},
+			mark_error
+		);
+	}
+	let cancel_button = createElement('button', button_params);
+	cancel_button.innerText = '✘';
+	cancel_button.style.borderRadius = '0 0.5rem 0.5rem 0';
+	cancel_button.onclick = () => {container.replaceWith(messageTextElement)};
+	container.append(label, ok_button, cancel_button);
+	return container;
+}
+
+document.getElementById('messages').addEventListener('click', function (event) {
+	const {chat_id, chat_type} = this;
+	const target = event.target;
+	const message_content = target.parentNode.parentNode;
+	const message_container = message_content.parentNode;
+	const message_id = message_container.message_id;
+	const action = target.action;
+	if (!(chat_id&&chat_type&&message_id&&action))
+		return;
+	switch (action) {
+		case 'edit':
+			let messageTextElement = message_content.querySelector('.view-message-text');
+			let editArea = getEditArea(messageTextElement, message_id, chat_id);
+			messageTextElement.replaceWith(editArea);
+			break;
+		case 'delete':
+			api.messages.delete({
+				user_id: chat_id,
+				message_id: message_id
+			}).then(
+				(response)=>{
+					if (response.ok) {
+						message_container.parentNode.removeChild(message_container);
+					}
+				},
+				console.error
+			);
+			break;
+		case 'reply':
+			break;
+		default:
+			break;
+	}
+	console.log(message_id, chat_id, chat_type, action);
+});
+
 window.addEventListener('hashchange', router);
 window.addEventListener('load', router);
 

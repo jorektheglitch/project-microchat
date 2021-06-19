@@ -28,99 +28,6 @@ function lJust(number, lenght=2) {
 	  })	
 }
 
-function enableMessagesForm() {
-	for (let child of document.getElementById('messageform').childNodes) {
-		child.disabled = false
-	}
-}
-
-/*
-<label class="input-sizer stacked" style="width: 100%; max-height: 100%; grid-area: text;">
-	<textarea form="messageform" name="text" id="messagearea" placeholder="message" oninput="this.parentNode.dataset.value = this.value"></textarea>
-</label>
-*/
-
-function getEditArea(messageTextElement, message_id, interlocutor) {
-	let messageText = messageTextElement.innerText;
-	let container = createElement('div', {class: 'view-message-editarea'});
-	let label = createElement('label', {
-		classList: ['input-sizer', 'stacked'],
-		style: {
-			width: '100%',
-			maxHeight: '100%',
-			padding: 0,
-		}
-	});
-	let textarea = createElement('textarea');
-	label.append(textarea);
-	textarea.oninput = function () {
-		this.parentNode.dataset.value = this.value;
-	}
-	label.dataset.value = textarea.value = messageText;
-	let button_params = {style: {height: '100%', border: 0}};
-	let ok_button = createElement('button', button_params);
-	ok_button.innerText = '✔';
-	let mark_error = () => {
-		let stdBorder = container.style.border;
-		container.style.border = '2px solid #F00';
-		setTimeout(()=>{
-			container.style.border = stdBorder;
-		}, 2000);
-		textarea.disabled = false;
-		textarea.focus();
-	};
-	ok_button.onclick = () => {
-		textarea.disabled = true;
-		api.messages.edit({
-			user_id: interlocutor,
-			message_id: message_id,
-			text: textarea.value
-		}).then(
-			(response)=>{
-				if (response.ok) {
-					messageTextElement.innerText = textarea.value
-					container.replaceWith(messageTextElement);
-				} else {
-					mark_error();
-				};
-			},
-			mark_error
-		);
-	}
-	let cancel_button = createElement('button', button_params);
-	cancel_button.innerText = '✘';
-	cancel_button.style.borderRadius = '0 0.5rem 0.5rem 0';
-	cancel_button.onclick = () => {container.replaceWith(messageTextElement)};
-	container.append(label, ok_button, cancel_button);
-	return container;
-}
-
-function edit_message(message_id, chat_id, message_content) {
-	function callback() {
-		let messageTextElement = message_content.querySelector('.view-message-text');
-		let editArea = getEditArea(messageTextElement, message_id, chat_id);
-		messageTextElement.replaceWith(editArea);
-	}
-	return callback;
-}
-
-function delete_message(message_id, chat_id, message_container) {
-	function callback() {
-		api.messages.delete({
-			user_id: chat_id,
-			message_id: message_id
-		}).then(
-			(response)=>{
-				if (response.ok) {
-					message_container.parentNode.removeChild(message_container);
-				}
-			},
-			console.error
-		);
-	};
-	return callback;
-}
-
 const entryBox = {
 	root: entries,
 	chatsInfo: [],
@@ -253,8 +160,8 @@ class Chat {
 			Chat.instances.set(type, new Map());
 		}
 		Chat.instances.get(type).set(uid, this);
-		this.uid = uid;
-		this.type = type;
+		this.uid = Chat.messagesbox.chat_id = uid;
+		this.type = Chat.messagesbox.chat_type = type;
 		this.uname = new Promise((resolve, reject)=>{
 			api.users.by_id({
 				'uid': uid
@@ -330,15 +237,14 @@ class Chat {
 		let fulldate = `${lJust(datetime.getDate())}.${lJust(datetime.getMonth()+1)}`;
 		let fulltime = `${lJust(datetime.getHours())}:${lJust(datetime.getMinutes())}`;
 		time.innerText = `${fulldate} ${fulltime}`;
+		message_container.message_id = mid;
 		const actions = createElement('div', {class: 'view-message-actions'} );
 		let reply = createElement('a');
 		reply.innerText = 'reply';
 		let edit = createElement('a');
-		edit.onclick = edit_message(mid, this.uid, message_content);
-		edit.innerText = 'edit';
+		edit.innerText = edit.action = 'edit';
 		let del = createElement('a');
-		del.onclick = delete_message(mid, this.uid, message_container);
-		del.innerText = 'delete';
+		del.innerText = del.action = 'delete';
 		let sender_name = (sender_uid==current_uid) ? current_uname : uname;
 		if (sender_uid==current_uid) {
 			actions.append(edit, del);
