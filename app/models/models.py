@@ -197,9 +197,21 @@ class User(Model):
 
         def ent_type(value):
             return literal(value).label('type')
-        pms = users_messages
+        pms = select(
+                users_messages
+            )\
+            .select_from(users_messages)\
+            .join(Message, Message.id == users_messages.c.message)\
+            .where(not_(Message.deleted))\
+            .subquery()
         pm = pms.c
-        cms = conferences_messages
+        cms = select(
+                conferences_messages
+            )\
+            .select_from(conferences_messages)\
+            .join(Message, Message.id == conferences_messages.c.message)\
+            .where(not_(Message.deleted))\
+            .subquery()
         cm = cms.c
         interlocutor = case(
                 (pm.receiver == self.id, pm.sender),
