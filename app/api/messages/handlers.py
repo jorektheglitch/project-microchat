@@ -2,7 +2,27 @@ from aiohttp import web
 
 from app.utils import is_empty
 from app.core.auth import auth_required
-from app.core.messages import delete, edit, store_pm, get_pms, overview_pms
+from app.core.messages import delete, edit, store_pm, get_pms
+from app.core.messages import create_conference
+from app.core.messages import overview_pms
+
+
+@auth_required
+async def get_messages(request: web.Request):
+    data = await request.json()
+    user_id = request['user_id']
+    chat_id = data.get('user_id')
+    offset = data.get('offset', 0)
+    count = data.get('count', 100)
+    chat_type = data.get('chat_type', 1)
+    if chat_id is None:
+        raise ValueError('missing user_id')
+    chat_id, offset, count = map(int, (chat_id, offset, count))
+    messages = await get_pms(user_id, chat_id, offset, count, chat_type)
+    return web.json_response({
+        "status": 0,
+        "result": messages
+    })
 
 
 @auth_required
@@ -26,24 +46,6 @@ async def send_message(request: web.Request):
 
 
 @auth_required
-async def get_messages(request: web.Request):
-    data = await request.json()
-    user_id = request['user_id']
-    chat_id = data.get('user_id')
-    offset = data.get('offset', 0)
-    count = data.get('count', 100)
-    chat_type = data.get('chat_type', 1)
-    if chat_id is None:
-        raise ValueError('missing user_id')
-    chat_id, offset, count = map(int, (chat_id, offset, count))
-    messages = await get_pms(user_id, chat_id, offset, count, chat_type)
-    return web.json_response({
-        "status": 0,
-        "result": messages
-    })
-
-
-@auth_required
 async def edit_message(request: web.Request) -> web.Response:
     data = await request.json()
     user_id = request['user_id']
@@ -51,7 +53,7 @@ async def edit_message(request: web.Request) -> web.Response:
     message_id = data.get('message_id')
     if chat_id is None:
         raise ValueError('missing user_id')
-    text = data.get('text')
+    text = data.get('text', '').strip()
     await edit(user_id, chat_id, message_id, text)
     return web.json_response({
         "status": 0
@@ -79,3 +81,12 @@ async def get_chats(request: web.Request):
         "status": 0,
         "result": await overview_pms(user_id)
     })
+
+
+@auth_required
+async def create_conversation(request: web.Request):
+    data = await request.json()
+    user_id = request['user_id']
+    username = data.get('username')
+    users = data.get('users', '')
+    await create_conference(username, owner=user_id, users=users)
