@@ -1,5 +1,4 @@
 from __future__ import annotations
-import asyncio
 
 from datetime import datetime as dt
 import secrets
@@ -18,7 +17,7 @@ from sqlalchemy.orm import relationship
 from sqlalchemy.sql.elements import not_
 
 from sqlalchemy.sql.expression import (
-    insert, select, case, func, literal, union, update
+    select, update, union, func, case, literal
 )
 from sqlalchemy import or_, and_
 
@@ -112,11 +111,7 @@ class Message(Model):
         elif chat_type == 2:
             binding = conferences_messages
             params.update(user=sender, conference=receiver)
-        query = binding.insert().values(
-            message=self.id,
-            **params
-        )
-        await execute(query, session=session, fetch=False)
+        session.add(binding(message=self.id, **params))
         message_number = func.row_number().over(order_by=binding.c.message)
         messages = select(
                 message_number.label('external_id'),
@@ -674,22 +669,12 @@ class Conference(Model):
         """
         session.add(self)
         await session.flush()
-        coros = [execute(insert(
-            conferences_users,
-            user=owner,
-            conference=self.id,
-            creator=True
-        ), commit=False)]
-        for user in users:
-            query = insert(
-                conferences_users,
-                user=user,
-                conference=self.id,
-                creator=False
-            )
-            coro = execute(query, commit=False)
-            coros.append(coro)
-        await asyncio.gather(*coros)
+        members = [conferences_users(user=owner, conference=self.id, creator=True)]  # noqa
+        members.extend(
+            conferences_users(user=user, conference=self.id, creator=False)
+            for user in users
+        )
+        await session.add_all(members)
         await session.commit()
 
 
