@@ -84,10 +84,11 @@ class Message(Model):
     )
     deleted = Column(Boolean, nullable=False, default=False)
 
-    # attachments = relationship(
-    #    "Attachment",
-    #    back_populates="message"
-    # )
+    attachments = relationship(
+        "Attachment",
+        foreign_keys="Attachment.message_id",
+        lazy="selectin"
+    )
 
     @with_session
     async def bind(
@@ -282,7 +283,7 @@ class User(Model):
         if isinstance(other, User):
             other = other.id
         binding = users_messages.c
-        order_by = Message.id
+        order_by = binding.message
         reverse = offset < 0
         if reverse:
             offset = ~offset
@@ -293,11 +294,9 @@ class User(Model):
         external_id = message_number.label('external_id')
         messages = select(
                 external_id,
-                Message,
                 users_messages
             )\
             .select_from(users_messages)\
-            .join(Message)\
             .filter(
                 or_(
                     and_(binding.sender == self.id, binding.receiver == other),
@@ -307,30 +306,20 @@ class User(Model):
             .order_by(ordering)\
             .subquery()
         message = messages.c
-        attachments = func.to_json(
-            func.ARRAY(
-                select(
-                    func.json_build_object(
-                        literal('id'), File.id,
-                        literal('name'), File.name,
-                        literal('size'), File.size,
-                        literal('type'), File.type
-                    ))
-                .select_from(Attachment)
-                .join(File)
-                .filter(Attachment.message == message.id)
-                .order_by(Attachment.position)
-            )).label('attachments')
         query_ordering = message.external_id
         if reverse:
             query_ordering = query_ordering.desc()
         query = select(
-                messages, attachments
+                Message,
+                message.sender,
+                message.external_id,
             )\
             .select_from(messages)\
-            .filter(not_(message.deleted))\
+            .join(Message, Message.id == message.message)\
+            .filter(not_(Message.deleted))\
             .limit(limit).offset(offset)\
             .order_by(query_ordering)
+        print(query)
         return await execute(query, session=session)
 
     @with_session
@@ -589,6 +578,12 @@ class File(Model):
         ForeignKey(User.id)
     )
 
+    attached = relationship(
+        'Attachment',
+        foreign_keys='Attachment.file_id',
+        back_populates='file'
+    )
+
 
 class Attachment(Model):
     """
@@ -603,17 +598,21 @@ class Attachment(Model):
 
     __tablename__ = "attachments"
 
-    file = Column(
+    file_id = Column(
+        "file",
         Integer,
         ForeignKey(File.id, onupdate=RESTRICT, ondelete=RESTRICT),
         primary_key=True
     )
-    message = Column(
+    message_id = Column(
+        "message",
         Integer,
         ForeignKey(Message.id, onupdate=RESTRICT, ondelete=CASCADE),
         primary_key=True
     )
     position = Column(Integer)
+
+    file = relationship(File, back_populates='attached', lazy='joined')
 
     @classmethod
     @with_session

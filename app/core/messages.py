@@ -59,13 +59,20 @@ async def get_pms(
         pass
     msgs = [
         {
-            "id": msg.external_id,
-            "sender": msg.sender,
-            "text": msg.text,
-            "sent": msg.time_sent.timestamp(),
-            "edit": msg.time_edit.timestamp() if msg.time_edit else None,
-            "attachments": msg.attachments
-        } for msg in message_rows
+            "id": row.external_id,
+            "sender": row.sender,
+            "text": row.Message.text,
+            "sent": row.Message.time_sent.timestamp(),
+            "edit": row.Message.time_edit.timestamp() if row.Message.time_edit else None,  # noqa
+            "attachments": [
+                {
+                    "id": attach.file.id,
+                    "name": attach.file.name,
+                    "size": attach.file.size,
+                    "type": attach.file.type
+                } for attach in row.Message.attachments
+            ]
+        } for row in message_rows
     ]
     return msgs
 
