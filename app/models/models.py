@@ -319,7 +319,6 @@ class User(Model):
             .filter(not_(Message.deleted))\
             .limit(limit).offset(offset)\
             .order_by(query_ordering)
-        print(query)
         return await execute(query, session=session)
 
     @with_session
