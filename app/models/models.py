@@ -139,6 +139,7 @@ class Message(Model):
             commit=False
         )
         external_id = external_id_row[0].external_id
+        await session.commit()
         return external_id
 
 
