@@ -113,7 +113,11 @@ class Message(Model):
         elif chat_type == 2:
             binding = conferences_messages
             params.update(user=sender, conference=receiver)
-        session.add(binding(message=self.id, **params))
+        await execute(
+            binding.insert().values(message=self.id, **params),
+            session=session,
+            fetch=False, commit=False
+        )
         message_number = func.row_number().over(order_by=binding.c.message)
         messages = select(
                 message_number.label('external_id'),
