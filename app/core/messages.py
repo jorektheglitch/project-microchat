@@ -77,9 +77,10 @@ async def get_pms(
     return msgs
 
 
-async def create_conference(username, owner, users):
+async def create_conference(username, owner, users, conf_type):
     c = Conference(username=username)
     await c.create(owner, users)
+    return c.id
 
 
 async def overview_pms(user):

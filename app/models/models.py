@@ -1,8 +1,9 @@
 from __future__ import annotations
 
-from datetime import datetime as dt
+import asyncio
 import secrets
 import logging
+from datetime import datetime as dt
 from typing import Tuple, Iterable
 from typing import Optional, Union
 
@@ -667,12 +668,14 @@ class Conference(Model):
         """
         session.add(self)
         await session.flush()
-        members = [conferences_users(user=owner, conference=self.id, creator=True)]  # noqa
+        members = [conferences_users.insert().values(user=owner, conference=self.id, creator=True)]  # noqa
         members.extend(
-            conferences_users(user=user, conference=self.id, creator=False)
+            conferences_users.insert().values(user=user, conference=self.id, creator=False)  # noqa
             for user in users
         )
-        await session.add_all(members)
+        coros = [execute(query, session=session, fetch=False) for query in members]  # noqa
+        await asyncio.gather(*coros)
+        # await session.add_all(members)
         await session.commit()
 
 

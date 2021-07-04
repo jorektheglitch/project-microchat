@@ -88,5 +88,11 @@ async def create_conversation(request: web.Request):
     data = await request.json()
     user_id = request['user_id']
     username = data.get('username')
-    users = data.get('users', '')
-    await create_conference(username, owner=user_id, users=users)
+    users = data.get('users', [])
+    conf_type = data.get('type', 2)
+    conference = await create_conference(
+        username, owner=user_id, users=users, conf_type=conf_type
+    )
+    return web.json_response({
+        "conference": conference
+    })
