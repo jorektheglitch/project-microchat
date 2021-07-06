@@ -302,7 +302,9 @@ class Chat {
 				return;
 			console.log('onscroll!');
 		})//*/
-		document.getElementById('messageform').to.value = this.uid;
+		let messageform = document.getElementById('messageform');
+		messageform.to.value = this.uid;
+		messageform.chat_type.value = this.type;
 		let messages = await this.messages;
 		let uname = await this.uname;
 		let chat_header = chat_info.previousElementSibling;

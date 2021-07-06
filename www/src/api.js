@@ -45,6 +45,7 @@ var api = {
 		send: castRequester("/api/messages/send", "POST"),
 		edit: castRequester("/api/messages/edit", "POST"),
 		delete: castRequester("/api/messages/delete", "POST"),
+		create_conversation: castRequester("/api/messages/create_conversation", "POST"),
 	},
 	users: {
 		search: castRequester("/api/users/search", "POST"),

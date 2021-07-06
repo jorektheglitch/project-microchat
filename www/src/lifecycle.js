@@ -44,7 +44,7 @@ for (let createEl of [createHeader, createForm]) {
 			};
 		actionForms.viewed = this;
 		searchform.style.display = 'none';
-		createform.style.display = 'flex';
+		createform.style.display = 'grid';
 		searchHeader.style.background = 'transparent';
 		createHeader.style.background = 'rgb(216, 216, 216)';
 	};
@@ -62,7 +62,7 @@ createHeader.onmouseover = function (event) {
 			el.timer = undefined;
 		};
 	searchform.style.display = 'none';
-	createform.style.display = 'flex';
+	createform.style.display = 'grid';
 }
 createHeader.onmouseout = function (event) {
 	this.timer = setTimeout(()=>{
@@ -87,17 +87,31 @@ async function mainloop() {
 		if (!data.edit)
 			data.edit = time_edit;
 		if (sender==current_uid) {
-			entryBox.newMessage(receiver, sender, text, time_sent);
+			entryBox.newMessage(receiver, sender, text, time_sent, chat_type);
 			new Chat(receiver, chat_type).newMessage(data);
 		} else {
-			entryBox.newMessage(sender, sender, text, time_sent);
+			entryBox.newMessage(sender, sender, text, time_sent, chat_type);
 			new Chat(sender, chat_type).newMessage(data);
 		}
 		console.log(e);
 	})
 };
 
-searchform.addEventListener('submit', search_user);
+searchForm.addEventListener('submit', search_user);
+createForm.addEventListener('submit', function (event) {
+	event.preventDefault();
+	let {username, type} = event.target;
+	console.log(username.value, type.value);
+	api.messages.create_conversation({
+		username: username.value,
+		type: type.value,
+		users: []
+	}).then(info => {
+		new Chat(info.conference, type);
+		entryBox.newMessage(info.conference, localStorage.getItem("current_uid"), 'conversation created', new Date(), type);
+	})
+	return false;
+})
 
 document.getElementById('search-input').addEventListener('search', e => {
 	let target = e.target;

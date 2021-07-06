@@ -110,9 +110,14 @@ class Message(Model):
         if chat_type == 1:
             binding = users_messages
             params.update(sender=sender, receiver=receiver)
+            query_filter = or_(
+                and_(binding.c.sender == sender, binding.c.receiver == receiver),  # noqa
+                and_(binding.c.sender == receiver, binding.c.receiver == sender),  # noqa
+            )
         elif chat_type == 2:
             binding = conferences_messages
-            params.update(user=sender, conference=receiver)
+            params.update(sender=sender, conference=receiver)
+            query_filter = (binding.c.conference == receiver)
         await execute(
             binding.insert().values(message=self.id, **params),
             session=session,
@@ -123,13 +128,10 @@ class Message(Model):
                 message_number.label('external_id'),
                 Message
             )\
-            .select_from(users_messages)\
+            .select_from(binding)\
             .join(Message)\
             .filter(
-                or_(
-                    and_(binding.c.sender == sender, binding.c.receiver == receiver),  # noqa
-                    and_(binding.c.sender == receiver, binding.c.receiver == sender),  # noqa
-                )
+                query_filter
             )\
             .order_by(Message.id)\
             .subquery()
@@ -329,6 +331,51 @@ class User(Model):
         return await execute(query, session=session)
 
     @with_session
+    async def get_conversation_history(
+        self,
+        conference: Union[Conference, int],
+        offset: int,
+        limit: int,
+        *,
+        session: AsyncSession
+    ) -> Tuple:
+        binding = conferences_messages.c
+        order_by = binding.message
+        reverse = offset < 0
+        if reverse:
+            offset = ~offset
+            ordering = order_by.desc()
+        else:
+            ordering = order_by.asc()
+        message_number = func.row_number().over(order_by=binding.message)
+        external_id = message_number.label('external_id')
+        messages = select(
+                external_id,
+                conferences_messages
+            )\
+            .select_from(conferences_messages)\
+            .filter(
+                binding.conference == conference
+            )\
+            .order_by(ordering)\
+            .subquery()
+        message = messages.c
+        query_ordering = message.external_id
+        if reverse:
+            query_ordering = query_ordering.desc()
+        query = select(
+                Message,
+                message.sender,
+                message.external_id,
+            )\
+            .select_from(messages)\
+            .join(Message, Message.id == message.message)\
+            .filter(not_(Message.deleted))\
+            .limit(limit).offset(offset)\
+            .order_by(query_ordering)
+        return await execute(query, session=session)
+
+    @with_session
     async def update_pm(
         self,
         other: int,
@@ -405,25 +452,6 @@ class User(Model):
             )\
             .execution_options(synchronize_session="fetch")
         await execute(query, session=session, fetch=False)
-
-    @with_session
-    async def get_conversation_history(
-        self,
-        conference: Union[Conference, int],
-        offset: int,
-        limit: int,
-        *,
-        session: AsyncSession
-    ) -> Tuple:
-        binding = conferences_messages.c
-        return await execute(
-            self.conference_messages.filter(
-                binding.conference == conference
-            )
-            .limit(limit).offset(offset)
-            .order_by(Message.time_sent.desc()),
-            session=session
-        )
 
     @classmethod
     @with_session
