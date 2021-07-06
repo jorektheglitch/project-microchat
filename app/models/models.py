@@ -207,14 +207,6 @@ class User(Model):
             .where(not_(Message.deleted))\
             .subquery()
         pm = pms.c
-        cms = select(
-                conferences_messages
-            )\
-            .select_from(conferences_messages)\
-            .join(Message, Message.id == conferences_messages.c.message)\
-            .where(not_(Message.deleted))\
-            .subquery()
-        cm = cms.c
         interlocutor = case(
                 (pm.receiver == self.id, pm.sender),
                 else_=pm.receiver
@@ -231,37 +223,46 @@ class User(Model):
             )\
             .group_by('interlocutor')
         personal_overview = select(
+                User.username,
                 personal.c.interlocutor,
                 personal.c.last_message,
-                personal.c.type,
                 pm.sender,
-                User.username
+                personal.c.type,
             ).select_from(personal)\
             .join(pms, pm.message == personal.c.last_message)\
             .join(User, User.id == personal.c.interlocutor)
-        conference = select(
-                cm.conference.label('interlocutor'),
-                func.max(cm.message).label('last_message'),
+        last_messages = select(
+                func.last_value(conferences_messages.c.message).over(
+                    partition_by=conferences_messages.c.conference,
+                    order_by=conferences_messages.c.message
+                ).label('last_message'),
+                func.last_value(conferences_messages.c.sender).over(
+                    partition_by=conferences_messages.c.conference,
+                    order_by=conferences_messages.c.message
+                ).label('sender'),
+                conferences_messages.c.conference
+            )\
+            .select_from(conferences_messages)\
+            .subquery()
+        confs_messages = select(
+                last_messages
+            )\
+            .join(Message, Message.id == last_messages.c.last_message)\
+            .filter(not_(Message.deleted))\
+            .subquery()
+        confs_overview = select(
+                Conference.username,
+                Conference.id.label('interlocutor'),
+                confs_messages.c.last_message,
+                confs_messages.c.sender,
                 literal(2).label('type')
             )\
             .select_from(conferences_users)\
-            .join(cms, cm.conference == conferences_users.c.conference)\
-            .join(Conference, Conference.id == cm.conference)\
-            .filter(
-                conferences_users.c.user == self.id,
-            )\
-            .group_by('interlocutor')
-        conference_overview = select(
-                conference.c.interlocutor,
-                conference.c.last_message,
-                conference.c.type,
-                cm.sender,
-                Conference.username
-            ).select_from(conference)\
-            .join(cms, cm.message == conference.c.last_message)\
-            .join(Conference, Conference.id == conference.c.interlocutor)
+            .outerjoin(confs_messages, confs_messages.c.conference == conferences_users.c.conference)\
+            .join(Conference, Conference.id == conferences_users.c.conference)\
+            .filter(conferences_users.c.user == self.id)
         conversations = union(
-            personal_overview, conference_overview
+            personal_overview, confs_overview
         ).subquery()
         conv = conversations.c
         query = select(
@@ -269,7 +270,7 @@ class User(Model):
                 conversations
             )\
             .select_from(conversations)\
-            .join(Message, Message.id == conv.last_message)\
+            .outerjoin(Message, Message.id == conv.last_message)\
             .order_by(Message.id.desc())
         return await execute(query, session=session)
 

@@ -56,7 +56,9 @@ async def get_pms(
             interlocutor, offset, count
         )
     elif chat_type == 2:
-        pass
+        message_rows = await u.get_conversation_history(
+            interlocutor, offset, count
+        )
     msgs = [
         {
             "id": row.external_id,
@@ -94,9 +96,10 @@ async def overview_pms(user):
                 'chat_type': chat.type
             },
             'message': {
-                'sender': chat.sender,
-                'text': chat.Message.text,
-                'sent': chat.Message.time_sent.timestamp(),
+                'sender': chat.sender if chat.sender else '',
+                'text': chat.Message.text if chat.Message else '',
+                'sent': chat.Message.time_sent.timestamp() if chat.Message else None,  # noqa
+                # TODO: set 'sent' to creation date if message doesn't exists
             }
         } for chat in chat_rows
     ]

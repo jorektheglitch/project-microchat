@@ -2,7 +2,7 @@ from hashlib import sha256
 from typing import List, Optional
 
 import errors
-from app.models import User as UserModel
+from app.models import User as UserModel, Conference
 from app.models import AuthData
 from app.models import new_session
 
@@ -11,8 +11,11 @@ class User:
     pass
 
 
-async def get_by_id(user_id) -> Optional[UserModel]:
-    user = await UserModel.get(user_id)
+async def get_by_id(user_id, type) -> Optional[UserModel]:
+    if type == 1:
+        user = await UserModel.get(user_id)
+    elif type == 2:
+        user = await Conference.get(user_id)
     return user
 
 
