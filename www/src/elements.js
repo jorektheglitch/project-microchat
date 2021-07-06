@@ -71,7 +71,7 @@ const entryBox = {
 				entryBox.nowSelected.style.background = '#A0A0A0';
 			row.style.background = '#F0F0F0';
 			entryBox.nowSelected = row;
-			setLocationHashParam('c', uid);
+			setLocationHashParam('c', `${uid}_${chat_type}`);
 		};
 		const datetime = new Date(time_sent*1000);
 		let fulldate = `${lJust(datetime.getDate())}.${lJust(datetime.getMonth()+1)}`;
@@ -152,6 +152,7 @@ class Chat {
 	static prevShow = undefined;
 	constructor (uid, type=1) {
 		uid = Number.parseInt(uid);
+		type = Number.parseInt(type);
 		if (Chat.instances.has(type)) {
 			const chats = Chat.instances.get(type);
 			if (chats.has(uid))
@@ -164,7 +165,8 @@ class Chat {
 		this.type = Chat.messagesbox.chat_type = type;
 		this.uname = new Promise((resolve, reject)=>{
 			api.users.by_id({
-				'uid': uid
+				'eid': uid,
+				'etype': type,
 			}).then(result=>{
 				resolve(result.name);
 			}, reject);
@@ -173,6 +175,7 @@ class Chat {
 			api.messages.get({
 				'user_id': uid,
 				'offset': -1,
+				'chat_type': type,
 			}).then(function(messages) {
 				let messages_sorted = messages.sort((a, b)=>a.id-b.id);
 				if (messages_sorted.length)
@@ -356,8 +359,8 @@ const router = (event) => {
 	let search = (oldSearch==newSearch) ? undefined : newSearch;
 	let oldChatId = oldHashParams.get('c');
 	let newChatId = newHashParams.get('c');
-	let chatId = (oldChatId==newChatId) ? undefined : newChatId;
-	console.log(search, chatId);
+	let chatInfo = (oldChatId==newChatId) ? undefined : newChatId;
+	console.log(search, chatInfo);
 	if (search) {
 		searchform.username.value = search;
 		let form = new FormData();
@@ -365,8 +368,9 @@ const router = (event) => {
 		api.users.search(form, false)
 		.then(entryBox.render_query_results);
 	}
-	if (chatId) {
-		let chat = new Chat(chatId);
+	if (chatInfo) {
+		let [chatId, chatType=1] = chatInfo.split('_');
+		let chat = new Chat(chatId, chatType);
 		chat.render().then( ()=>{
 			if (entryBox.nowSelected)
 				entryBox.nowSelected.style.background = '#A0A0A0';

@@ -22,14 +22,16 @@ async def get_self(request: web.Request):
 async def get_by_id(request: web.Request):
     data = await request.json()
     try:
-        uid = data.get('uid')
-        user = await users.get_by_id(uid)
+        uid = data.get('eid')
+        type = data.get('etype', 1)
+        _info = await users.get_by_id(uid, type)
         info = {
-            'id': user.id,
-            'name': user.username
+            'id': _info.id,
+            'name': _info.username,
+            'type': type,
         }
-    except UserDoesntExists:
-        info = {}
+    except (TypeError, ValueError) as e:
+        raise UserDoesntExists from e
     return web.json_response({
         "status": 0,
         "result": info
