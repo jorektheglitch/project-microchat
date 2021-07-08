@@ -266,7 +266,6 @@ class User(Model):
             ).select_from(conference)\
             .outerjoin(cms, cm.message == conference.c.last_message)\
             .join(Conference, Conference.id == conference.c.interlocutor)
-        print(conference_overview)
         conversations = union(
             personal_overview, conference_overview
         ).subquery()
