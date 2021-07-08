@@ -35,7 +35,7 @@ async def edit(
     attachments: Optional[Iterable[int]] = None,
     chat_type: int = 1
 ):
-    await User(id=from_).update_pm(to, id, text, attachments)
+    await User(id=from_).update_pm(to, id, text, attachments, chat_type)
 
 
 @event_emitter(MessageDelete)

@@ -228,7 +228,7 @@ document.getElementById("fileLoadButton").onclick = (click) => {
 	file.click();
 }
 
-function getEditArea(messageTextElement, message_id, interlocutor) {
+function getEditArea(messageTextElement, message_id, interlocutor, chat_type) {
 	let messageText = messageTextElement.innerText;
 	let container = createElement('div', {class: 'view-message-editarea'});
 	let label = createElement('label', {
@@ -262,7 +262,8 @@ function getEditArea(messageTextElement, message_id, interlocutor) {
 		api.messages.edit({
 			user_id: interlocutor,
 			message_id: message_id,
-			text: textarea.value
+			text: textarea.value,
+			chat_type: chat_type
 		}).then(
 			(response)=>{
 				if (response.ok) {
@@ -295,7 +296,7 @@ document.getElementById('messages').addEventListener('click', function (event) {
 	switch (action) {
 		case 'edit':
 			let messageTextElement = message_content.querySelector('.view-message-text');
-			let editArea = getEditArea(messageTextElement, message_id, chat_id);
+			let editArea = getEditArea(messageTextElement, message_id, chat_id, chat_type);
 			messageTextElement.replaceWith(editArea);
 			break;
 		case 'delete':
