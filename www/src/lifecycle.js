@@ -302,7 +302,8 @@ document.getElementById('messages').addEventListener('click', function (event) {
 		case 'delete':
 			api.messages.delete({
 				user_id: chat_id,
-				message_id: message_id
+				message_id: message_id,
+				chat_type: chat_type,
 			}).then(
 				(response)=>{
 					if (response.ok) {

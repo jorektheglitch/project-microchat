@@ -67,9 +67,10 @@ async def delete_message(request: web.Request) -> web.Response:
     user_id = request['user_id']
     chat_id = data.get('user_id')
     message_id = data.get('message_id')
+    chat_type = data.get('chat_type', 1)
     if chat_id is None:
         raise ValueError('missing user_id')
-    await delete(user_id, chat_id, message_id)
+    await delete(user_id, chat_id, message_id, chat_type)
     return web.json_response({
         "status": 0
     })

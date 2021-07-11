@@ -39,8 +39,8 @@ async def edit(
 
 
 @event_emitter(MessageDelete)
-async def delete(from_: int, to: int, id: int):
-    await User(id=from_).delete_pm(to, id)
+async def delete(from_: int, to: int, id: int, chat_type: int = 1):
+    await User(id=from_).delete_pm(to, id, chat_type)
 
 
 async def get_pms(

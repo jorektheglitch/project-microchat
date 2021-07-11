@@ -430,6 +430,7 @@ class User(Model):
         self,
         other: int,
         message_id: int,
+        chat_type: int = 1,
         *,
         session: AsyncSession
     ):
@@ -437,19 +438,25 @@ class User(Model):
         Deletes a personal message.
         """
 
-        binding = users_messages.c
+        if chat_type == 1:
+            bindings = users_messages
+            binding_filter = or_(
+                and_(bindings.c.sender == self.id, bindings.c.receiver == other),  # noqa
+                and_(bindings.c.sender == other, bindings.c.receiver == self.id),  # noqa
+            )
+        elif chat_type == 2:
+            bindings = conferences_messages
+            binding_filter = (bindings.c.conference == other)
+        binding = bindings.c
         id = func.row_number().over(order_by=binding.message).label('id')
         messages = select(
                 id,
                 Message.id.label('real_id')
             )\
-            .select_from(users_messages)\
+            .select_from(bindings)\
             .join(Message)\
             .filter(
-                or_(
-                    and_(binding.sender == self.id, binding.receiver == other),
-                    and_(binding.sender == other, binding.receiver == self.id),
-                )
+                binding_filter
             )\
             .subquery()
         query = update(
