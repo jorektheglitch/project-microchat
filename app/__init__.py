@@ -1,5 +1,6 @@
 from aiohttp import web
 
+import config
 from app.middlewares import disable_caching, server_timing
 from utils import redirect
 
@@ -10,8 +11,7 @@ from .models import init
 from config import DB, DB_OPTIONS
 
 
-# TODO: remove DB address overwrite
-DB = "postgresql+asyncpg://microchat_admin:microchat@127.0.0.1:6543/future"  # noqa
+DB = f"{config.dbms}+{config.driver}://{config.user}:{config.password}@{config.domain}:{config.port}/{config.database}"  # noqa
 
 
 async def startup(app):
