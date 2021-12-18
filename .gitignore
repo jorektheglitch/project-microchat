@@ -7,3 +7,4 @@ __pycache__
 *.db
 future/*
 users_media
+config.json
