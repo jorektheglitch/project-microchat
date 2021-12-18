@@ -1,6 +1,5 @@
 from aiohttp import web
 
-import config
 from app.middlewares import disable_caching, server_timing
 from utils import redirect
 
@@ -9,9 +8,6 @@ from .api.sse.handlers import sse_api
 from .models import init
 
 from config import DB, DB_OPTIONS
-
-
-DB = f"{config.dbms}+{config.driver}://{config.user}:{config.password}@{config.domain}:{config.port}/{config.database}"  # noqa
 
 
 async def startup(app):
