@@ -517,6 +517,17 @@ class User(Model):
         return token
 
 
+class Relation(Model):
+
+    __tablename__ = "users_relations"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    subject_id = Column(Integer, ForeignKey(User.id))
+    object_id = Column(Integer, ForeignKey(User.id))
+    name = Column(Text)
+    surname = Column(Text)
+
+
 class Token(Model):
     """
     Access token model for DB. Tokens is used for authenticate API requests.

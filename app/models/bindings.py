@@ -43,6 +43,14 @@ conferences_messages = Table(
            primary_key=True)
 )
 
+relations_messages = Table(
+    "relations_messages", Model.metadata,
+    Column("id", Integer, primary_key=True, autoincrement=True),
+    Column("message_id", Integer, ForeignKey("messages.id")),
+    Column("relation_id", Integer, ForeignKey("users_relations.id"))
+)
+relations_message = relations_messages.c
+
 # User-User-Message binding model
 #  This table contains personal messages
 users_messages = Table(
