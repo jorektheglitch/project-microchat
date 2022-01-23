@@ -20,7 +20,7 @@ async def store_pm(
     m = Message(text=text.strip())
     id = await m.bind(sender=from_, receiver=to, chat_type=chat_type)
     attachments = [
-        Attachment(file=attachment, message=m.id, position=i)
+        Attachment(file_id=attachment, message_id=id, position=i)
         for i, attachment in enumerate(attachments)
     ]
     return m, id, await store(*attachments)
