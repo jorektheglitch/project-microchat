@@ -4,7 +4,8 @@ from aiohttp.web_exceptions import HTTPBadRequest
 from utils.aiohttp_extracts import ExtractionMeta
 from utils.aiohttp_extracts import MatchInfo, RequestAttr, QueryAttr
 
-from app.core.messages import get_pms, User
+from app import models as db
+from app.core.entities import User, Dialog, Conference
 from app.core.auth import auth_middleware
 
 
@@ -38,8 +39,25 @@ class Chat(web.View, metaclass=ExtractionMeta):
                 } for chat in chat_rows
             ]
             return web.json_response({'chats': chats})
-        chat_id, chat_type = map(int, (chat_id, chat_type[1:]))
-        return web.json_response({'chat': {'id': chat_id, 'type': chat_type}})
+        else:
+            chat_id: int = int(chat_id)
+            chat_type: int = int(chat_type[1:])
+            conversations_types = {
+                1: user.dialogs,
+                2: user.conferences
+            }
+            conversations = conversations_types[chat_type]
+            chat = await conversations[chat_id]
+            chat_info = {
+                'id': chat.ext_id,
+                'type': chat_type,
+                'username': chat.username
+            }
+            if isinstance(chat, Dialog):
+                pass
+            elif isinstance(chat, Conference):
+                pass
+            return web.json_response({'chat': chat_info})
 
     async def post(
         self,
