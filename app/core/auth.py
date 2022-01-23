@@ -1,9 +1,11 @@
-from typing import Tuple, Callable, Optional
+from functools import wraps
+from typing import Callable, Optional
 
 from aiohttp.web import Request, Response, middleware
 from aiohttp.web import HTTPForbidden, HTTPBadRequest
 
-from app.models import User, Token
+from app.models import Token
+from app.core.entities import User
 
 
 BANNER = "Only for authorized users"
@@ -12,56 +14,48 @@ BANNER = "Only for authorized users"
 class AuthenticationReqired(Exception): ...  # noqa
 
 
-async def get_user(request: Request) -> Tuple[Optional[User], Optional[int]]:
+def get_token(request: Request) -> Optional[str]:
     """
+    Extracts auth token from request.
     """
-
-    user = None
-    user_id = None
-    auth_header = request.headers.get('Authorization')
-    if auth_header:
-        auth_type, hex_token = auth_header.split(maxsplit=1)
-        try:
-            token = bytes.fromhex(hex_token)
-        except ValueError:
-            pass
-        else:
-            if auth_type == 'Bearer':
-                user = await Token.get_user(token)
-                user_id = getattr(user, 'id', None)
-
-    return user, user_id
-
-
-async def get_user_by_cookie(request):
-    """
-    """
-
-    user = None
-    user_id = None
+    token = None
     auth_cookie = request.cookies.get('Authorization')
+    auth_header = request.headers.get('Authorization')
     if auth_cookie:
-        try:
-            token = bytes.fromhex(auth_cookie)
-        except ValueError:
-            pass
-        else:
-            user = await Token.get_user(token)
-            user = getattr(user, 'id', None)
+        token = auth_cookie
+    if auth_header:
+        auth_type, raw_token = auth_header.split(maxsplit=1)
+        if auth_type == 'Bearer':
+            token = raw_token
+    return token
 
-    return user, user_id
+
+async def get_user(request: Request) -> Optional[User]:
+    """
+    """
+
+    raw_token = get_token(request)
+    if raw_token is None:
+        return None
+    token = bytes.fromhex(raw_token)
+    user_obj = await Token.get_user(token)
+    if user_obj is None:
+        return None
+    user = User.from_object(user_obj)
+    return user
 
 
 @middleware
 async def auth_middleware(request: Request, handler) -> Response:
-    user, user_id = await get_user(request)
-    if user_id is None:
+    try:
+        user = await get_user(request)
+    except Exception:
         raise HTTPForbidden(
-            # reason="",
+            reason="InvalidToken",
             body=BANNER.encode()
         )
     request['user'] = user
-    request['user_id'] = user_id
+    request['user_id'] = user.id
     return await handler(request)
 
 
@@ -71,17 +65,17 @@ def auth_required(handler) -> Callable:
 
     banner = BANNER.encode()
 
+    @wraps(handler)
     async def wrapped(request: Request) -> Response:
-        user, user_id = await get_user(request)
-        if user_id is None:
-            user, user_id = await get_user_by_cookie(request)
-        if user_id is None:
+        try:
+            user = await get_user(request)
+        except Exception:
             raise HTTPForbidden(
                 # reason="",
                 body=banner
             )
         request['user'] = user
-        request['user_id'] = user_id
+        request['user_id'] = user.id
         return await handler(request)
 
     return wrapped
@@ -93,6 +87,7 @@ def sse_auth_required(handler):
 
     banner = BANNER.encode()
 
+    @wraps(handler)
     async def wrapped(request: Request):
         pseudo = request.clone()
         params = pseudo.query
