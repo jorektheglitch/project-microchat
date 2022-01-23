@@ -36,4 +36,4 @@ async def create_private_messages():
         sender, receiver = pairs[i % 4]
         await m.bind(sender=sender, receiver=receiver)
 
-asnc_test = async_to_sync
+async_test = async_to_sync
