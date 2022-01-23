@@ -1,12 +1,12 @@
+import json
+from argparse import ArgumentParser
 from ipaddress import ip_network
 from pathlib import Path
 from os import environ
-from argparse import ArgumentParser
-from json import load as json_load, dumps as json_dump, JSONDecodeError
 
 
 # Parsing command line arguments
-parser = ArgumentParser(description='microchat server')
+parser = ArgumentParser(description='MicroChat server')
 parser.add_argument('--config', dest='config', type=str, required=False, help='Path to config file')
 parser.add_argument('--gen-config', dest='gen_config', action='store_true', help='Generate config file?')
 parser.add_argument('--reformat-config', dest='reformat_config', action='store_true', help='Reformat config file?')
@@ -35,17 +35,17 @@ if args.gen_config:
             'options': {}
         },
     }
-    obj = json_dump(config, indent=4)
     if args.config:
-        with open(args.config, 'w') as file:
-            file.write(obj)
+        with open(args.config, 'w') as f:
+            json.dump(config, f, indent=2)
     else:
-        print(obj)
+        config_str = json.dumps(config, indent=2)
+        print(config_str)
 
-if environ.get('MICROCHAT_CONFIG'):
-    CONFIG_PATH = environ['MICROCHAT_CONFIG']
-elif args.config:
+if args.config:
     CONFIG_PATH = args.config
+elif environ.get('MICROCHAT_CONFIG'):
+    CONFIG_PATH = environ['MICROCHAT_CONFIG']
 else:
     CONFIG_PATH = 'config.json'
 
@@ -54,13 +54,13 @@ CONFIG = {}
 if Path(CONFIG_PATH).is_file():
     try:
         with open(CONFIG_PATH, 'r') as file:
-            CONFIG = json_load(file)
-        if args.reformat_config:
-            with open(CONFIG_PATH, 'w') as file:
-                file.write(json_dump(CONFIG, indent=4))
-    except JSONDecodeError:
+            CONFIG = json.load(file)
+    except json.JSONDecodeError:
         print(f'Config file broken ({CONFIG_PATH}). Exiting...')
         exit(1)
+    if args.reformat_config:
+        with open(CONFIG_PATH, 'w') as file:
+            json.dump(CONFIG, f, indent=2)
 else:
     print(f'Config file ({CONFIG_PATH}) does not exist. Create it with "--gen-config --config {CONFIG_PATH}" command.')
     exit(1)
