@@ -90,9 +90,8 @@ class TestDBModels(unittest.TestCase):
         self.assertTrue(messages, "No messages fetched")
         self.assertEqual(len(messages), 10, "Collected more/less than 10 messages")  # noqa
         users_ids = 1, 2
-        for message, mid, receiver, sender in messages:  # noqa
+        for message, sender, mid in messages:  # noqa
             self.assertIn(sender, users_ids, "Unexpected sender value")
-            self.assertIn(receiver, users_ids, "Unexpected receiver value")
 
     @async_test
     @with_session
