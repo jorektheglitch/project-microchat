@@ -39,6 +39,6 @@ class BaseEntity:
                 chain = attrmap.get(name, name)
                 if isinstance(chain, str):
                     chain = [chain]
-                value = reduce(getattr, chain, initial=obj)
+                value = reduce(getattr, chain, obj)
             info[name] = value
         return cls(**info)
