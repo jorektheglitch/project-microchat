@@ -74,6 +74,11 @@ def auth_required(handler) -> Callable:
                 # reason="",
                 body=banner
             )
+        if user is None:
+            raise HTTPForbidden(
+                # reason="",
+                body=banner
+            )
         request['user'] = user
         request['user_id'] = user.id
         return await handler(request)
