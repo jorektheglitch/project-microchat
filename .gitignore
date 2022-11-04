@@ -2,6 +2,7 @@
 .pyenv
 .vscode
 .venv
+.backup
 __pycache__
 *_.html
 *.db
