@@ -90,7 +90,7 @@ class Session:
 class Message:  # , Generic[C]):
     id: int  # internal (DB) id
     no: int  # number of message in dialog/conference  # it is just index
-    sender: User
+    sender: User | Bot
     text: str  # for futher functionality (encrypted messages)
     attachments: BoundSequence[Media]
     time_sent: dt
@@ -104,7 +104,7 @@ class Media:
     type: MIMEType  # MIME type
     subtype: str  # MIME subtype
     loaded_at: dt
-    loaded_by: User
+    loaded_by: User | Bot
 
 
 class Image(Media):
