@@ -82,6 +82,11 @@
   - ❌ GET
   - ❌ PATCH (conference admins only)
 
+## Media
+
+- `/api/media`
+  - ❌ POST
+
 ## Contacts
 
 - `/api/contacts`
