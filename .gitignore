@@ -162,6 +162,7 @@ cython_debug/
 .gitignore
 .vscode
 .backup
+linecount
 *_.html
 *.db
 future/*
