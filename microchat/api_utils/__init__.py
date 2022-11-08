@@ -27,7 +27,7 @@ class APIException(ABC, Exception):
         self,
         msg: str | None = None,
         *,
-        payload: JSON,
+        payload: JSON = None,
         reason: str | None = None
     ) -> None:
         super().__init__(msg)
@@ -63,7 +63,7 @@ class HTTPStatus(enum.Enum):
 
 @dataclass
 class APIResponse:
-    payload: JSON
+    payload: JSON = None
     status: HTTPStatus = HTTPStatus.OK
 
     @property
