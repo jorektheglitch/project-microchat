@@ -4,6 +4,7 @@ from microchat.services import ServiceSet, AccessToken
 from microchat.core.entities import User
 
 from microchat.api_utils import AccessLevel, api_handler, APIResponse
+from microchat.api_utils import BadRequest
 
 
 router = web.RouteTableDef()
@@ -16,19 +17,13 @@ async def list_sessions(
 ) -> APIResponse:
     payload = await request.json()
     if not isinstance(payload, dict):
-        return web.json_response(
-            {"error": "invalid body"},
-            status=400
-        )
+        raise BadRequest(payload={"error": "invalid body"})
     offset = payload.get("offset", 0)
     count = payload.get("count", 10)
     if not (isinstance(offset, int) or isinstance(count, int)):
-        return web.json_response(
-            {},
-            status=400
-        )
+        raise BadRequest(payload={"error": "invalid body"})
     sessions = await services.auth.list_sessions(user, offset, count)
-    return web.json_response({
+    return APIResponse({
         "response": [
             {
                 "name": session.name,
@@ -45,20 +40,14 @@ async def list_sessions(
 async def get_access_token(request: web.Request) -> APIResponse:
     payload = await request.json()
     if not isinstance(payload, dict):
-        return web.json_response(
-            {"error": "invalid body"},
-            status=400
-        )
+        raise BadRequest(payload={"error": "invalid body"})
     username: str | None = payload.get("username")
     password: str | None = payload.get("password")
     if not (username and password):
-        return web.json_response(
-            {"error": "missing username or password"},
-            status=400
-        )
+        raise BadRequest(payload={"error": "missing username or password"})
     services: ServiceSet = request["services"]
     access_token = await services.auth.new_session(username, password)
-    return web.json_response({"response": {"access_token": access_token}})
+    return APIResponse({"response": {"access_token": access_token}})
 
 
 @router.delete(r"/sessions/{token:\w+}")
@@ -68,17 +57,11 @@ async def terminate_session(
 ) -> APIResponse:
     token_raw = request.match_info.get("token")
     if not token_raw:
-        return web.json_response(
-            {"error": "invalid or missing token"},
-            status=400
-        )
+        raise BadRequest(payload={"error": "invalid or missing token"})
     token = AccessToken(token_raw)
     session = await services.auth.resolve_token(token)
     if user == session.auth.user:
         await services.auth.terminate_session(user, session)
     else:
-        return web.json_response(
-            {"error": "invalid or missing token"},
-            status=400
-        )
-    return web.Response()
+        raise BadRequest(payload={"error": "invalid or missing token"})
+    return APIResponse()
