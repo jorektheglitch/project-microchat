@@ -44,7 +44,7 @@
   - ❌ GET offset, count
   - ❌ POST
 
-- /api/chats/@{alias}/messages/{id}
+- `/api/chats/@{alias}/messages/{id}`
   - ❌ GET
   - ❌ PATCH (author only)
   - ❌ DELETE (author and conference admins only)
