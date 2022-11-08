@@ -1,13 +1,23 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from typing import Any, AsyncIterator, Generic, Protocol, TypeVar, overload
+from typing import Any, AsyncIterator, Generic, Literal, Protocol, TypeVar, overload
 from typing import Awaitable, Generator, Iterable, Sequence
 
 # type: ignore
 T = TypeVar('T')
 T_co = TypeVar('T_co', covariant=True)
 T_contra = TypeVar('T_contra', contravariant=True)
+
+MIMEType = Literal[
+    "application",
+    "audio",
+    "image",
+    "message",
+    "multipart",
+    "text",
+    "video"
+]
 
 
 class AsyncSequence(Protocol[T_co]):
