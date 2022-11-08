@@ -76,7 +76,7 @@ async def set_chat_avatar(
 
 @router.delete(r"/@{alias:\w+}/avatars/{id:\d+}")
 @api_handler
-async def revome_chat_avatar(
+async def remove_chat_avatar(
     request: web.Request, services: ServiceSet, user: User
 ) -> APIResponse:
     pass
