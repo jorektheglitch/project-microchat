@@ -229,6 +229,8 @@ def wrap_api_handler(
                     status=api_response.status_code,
                     dumps=encoder
                 )
+        else:
+            raise web.HTTPBadRequest()
         return response
     return wrapped_handler
 
