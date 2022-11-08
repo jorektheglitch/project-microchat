@@ -92,13 +92,13 @@ class Message:  # , Generic[C]):
     no: int  # number of message in dialog/conference  # it is just index
     sender: User
     text: str  # for futher functionality (encrypted messages)
-    attachments: BoundSequence[Attachment]
+    attachments: BoundSequence[Media]
     time_sent: dt
     time_edit: Optional[dt]
     reply_to: Optional[Message]
 
 
-class Attachment:
+class Media:
     file: File
     name: str  # displayed file name
     type: MIMEType  # MIME type
@@ -107,7 +107,7 @@ class Attachment:
     loaded_by: User
 
 
-class Image(Attachment):
+class Image(Media):
     type: Literal["image"]
     subtype: ImagesMIME
 
