@@ -7,7 +7,7 @@ from pathlib import Path
 from typing import Any, Optional
 from typing import Generic, TypeVar
 
-from .types import BoundSequence
+from .types import BoundSequence, MIMEType
 
 
 C = TypeVar('C', "Conference", "Dialog")  # C means Conversation
@@ -101,7 +101,8 @@ class Message:  # , Generic[C]):
 class Attachment:
     file: File
     name: str  # displayed file name
-    type: str  # MIME type
+    type: MIMEType  # MIME type
+    subtype: str  # MIME subtype
     loaded_at: dt
     loaded_by: User
 
