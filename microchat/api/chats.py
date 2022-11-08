@@ -90,3 +90,59 @@ async def remove_chat_avatar(
     request: web.Request, services: ServiceSet, user: User
 ) -> APIResponse:
     pass
+
+
+@router.get(r"/@{alias:\w+}/messages")
+@api_handler
+async def list_chat_messages(
+    request: web.Request, services: ServiceSet, user: User
+) -> APIResponse:
+    pass
+
+
+@router.post(r"/@{alias:\w+}/messages")
+@api_handler
+async def send_message(
+    request: web.Request, services: ServiceSet, user: User
+) -> APIResponse:
+    pass
+
+
+@router.get(r"/@{alias:\w+}/messages/{id:\d+}")
+@api_handler
+async def get_chat_message(
+    request: web.Request, services: ServiceSet, user: User
+) -> APIResponse:
+    pass
+
+
+@router.patch(r"/@{alias:\w+}/messages/{id:\d+}")
+@api_handler
+async def edit_chat_message(
+    request: web.Request, services: ServiceSet, user: User
+) -> APIResponse:
+    pass
+
+
+@router.delete(r"/@{alias:\w+}/messages/{id:\d+}")
+@api_handler
+async def remove_chat_message(
+    request: web.Request, services: ServiceSet, user: User
+) -> APIResponse:
+    pass
+
+
+@router.get(r"/@{alias:\w+}/messages/{media_type:(photo|video|audio|animation|file)s}")  # noqa
+@api_handler
+async def list_chat_media(
+    request: web.Request, services: ServiceSet, user: User
+) -> APIResponse:
+    pass
+
+
+@router.get(r"/@{alias:\w+}/messages/{media_type:(photo|video|audio|animation|file)s}/{id:\d+}")  # noqa
+@api_handler
+async def get_chat_media(
+    request: web.Request, services: ServiceSet, user: User
+) -> APIResponse:
+    pass
