@@ -14,6 +14,10 @@ C = TypeVar('C', "Conference", "Dialog")  # C means Conversation
 T = TypeVar('T')
 
 
+class Entity(ABC):
+    pass
+
+
 class Named(ABC):
     id: int
     username: str
@@ -29,7 +33,7 @@ class Privileges(Enum):
     ADMIN = auto()
 
 
-class User(Named):
+class User(Entity, Named):
     privileges: Optional[Privileges]
     name: str
     surname: Optional[str]
@@ -39,13 +43,13 @@ class User(Named):
     sessions: BoundSequence[Session]
 
 
-class Bot(Named, Owned[User]):
+class Bot(Entity, Named, Owned[User]):
     description: Optional[str]
     dialogs: BoundSequence[Dialog]
     conferences: BoundSequence[Conference]
 
 
-class Dialog(Owned[User]):
+class Dialog(Entity, Owned[User]):
     colocutor: User | Bot
     name: str
     surname: Optional[str]
@@ -70,7 +74,7 @@ class ConferenceBot(Bot):
     presences: BoundSequence[ConferencePresence]
 
 
-class Conference(Named, Owned[User]):
+class Conference(Entity, Named, Owned[User]):
     description: Optional[str]
     members: BoundSequence[ConferenceMember]
     bots: BoundSequence[ConferenceBot]
@@ -84,7 +88,7 @@ class Authentication:
     data: Any  # type: ignore
 
 
-class Session:
+class Session(Entity):
     name: str
     last_active: dt
     location: tuple[str, str, str] | None  # continent, country, city
@@ -93,7 +97,7 @@ class Session:
     auth: Authentication
 
 
-class Message:  # , Generic[C]):
+class Message(Entity):  # , Generic[C]):
     id: int  # internal (DB) id
     no: int  # number of message in dialog/conference  # it is just index
     sender: User | Bot
@@ -104,7 +108,7 @@ class Message:  # , Generic[C]):
     reply_to: Optional[Message]
 
 
-class Media:
+class Media(Entity):
     file: File
     name: str  # displayed file name
     type: MIMEType  # MIME type
@@ -124,7 +128,7 @@ class File:
     size: int
 
 
-class Permissions:
+class Permissions(Entity):
     read: bool
     send: bool
     delete: bool
