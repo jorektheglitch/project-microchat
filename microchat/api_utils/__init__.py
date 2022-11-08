@@ -6,7 +6,7 @@ import json
 import functools
 from dataclasses import dataclass
 
-from typing import Any, Awaitable, Callable, ClassVar, Literal, TypeGuard
+from typing import Any, Awaitable, Callable, ClassVar, Literal, Sequence, TypeGuard
 from typing import overload
 
 from aiohttp import web
@@ -16,7 +16,7 @@ from microchat.core.entities import Entity, User
 
 
 JSON = str | int | float | list[Any] | dict[str, Any] | None  # type: ignore
-APIResponseBody = Entity | list[Entity] | dict[str, Entity] | None
+APIResponseBody = Entity | Sequence[Entity] | dict[str, Entity]
 
 
 class APIException(ABC, Exception):
@@ -67,12 +67,12 @@ class HTTPStatus(enum.Enum):
 
 @dataclass
 class APIResponse:
-    payload: dict[str, APIResponseBody]
+    payload: dict[str, APIResponseBody | JSON]
     status: HTTPStatus = HTTPStatus.OK
 
     def __init__(
         self,
-        payload: APIResponseBody = None,
+        payload: APIResponseBody | JSON = None,
         status: HTTPStatus = HTTPStatus.OK
     ) -> None:
         self.payload = {"response": payload}
