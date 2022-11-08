@@ -229,7 +229,7 @@ def wrap_api_handler(
                     status=api_response.status_code,
                     dumps=encoder
                 )
-            return response
+        return response
     return wrapped_handler
 
 
