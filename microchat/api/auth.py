@@ -17,11 +17,11 @@ async def list_sessions(
 ) -> APIResponse:
     payload = await request.json()
     if not isinstance(payload, dict):
-        raise BadRequest(payload={"error": "invalid body"})
+        raise BadRequest("Invalid body")
     offset = payload.get("offset", 0)
     count = payload.get("count", 10)
     if not (isinstance(offset, int) or isinstance(count, int)):
-        raise BadRequest(payload={"error": "invalid body"})
+        raise BadRequest("Invalid body")
     sessions = await services.auth.list_sessions(user, offset, count)
     return APIResponse({
         "response": [
@@ -42,11 +42,11 @@ async def get_access_token(
 ) -> APIResponse:
     payload = await request.json()
     if not isinstance(payload, dict):
-        raise BadRequest(payload={"error": "invalid body"})
+        raise BadRequest("Invalid body")
     username: str | None = payload.get("username")
     password: str | None = payload.get("password")
     if not (username and password):
-        raise BadRequest(payload={"error": "missing username or password"})
+        raise BadRequest("Missing username or password")
     access_token = await services.auth.new_session(username, password)
     return APIResponse({"response": {"access_token": access_token}})
 
@@ -58,11 +58,11 @@ async def terminate_session(
 ) -> APIResponse:
     token_raw = request.match_info.get("token")
     if not token_raw:
-        raise BadRequest(payload={"error": "invalid or missing token"})
+        raise BadRequest("Invalid or missing token")
     token = AccessToken(token_raw)
     session = await services.auth.resolve_token(token)
     if user == session.auth.user:
         await services.auth.terminate_session(user, session)
     else:
-        raise BadRequest(payload={"error": "invalid or missing token"})
+        raise BadRequest("Invalid or missing token")
     return APIResponse()
