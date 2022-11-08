@@ -95,20 +95,20 @@ def api_handler() -> Callable[[AuthenticatedHandler], Callable[[web.Request], Aw
 def api_handler(
     access_level: Literal[AccessLevel.ANY],
     *,
-    encoder: json.JSONEncoder = APIResponseEncoder()
+    encoder: type[json.JSONEncoder] = APIResponseEncoder
 ) -> Callable[[APIHandler], Callable[[web.Request], Awaitable[web.StreamResponse]]]: ...
 @overload
 def api_handler(
     access_level: Literal[AccessLevel.USER, AccessLevel.MODERATOR, AccessLevel.ADMIN] = AccessLevel.USER,
     *,
-    encoder: json.JSONEncoder = APIResponseEncoder()
+    encoder: type[json.JSONEncoder] = APIResponseEncoder
 ) -> Callable[[AuthenticatedHandler], Callable[[web.Request], Awaitable[web.StreamResponse]]]: ...
 @overload
 def api_handler(
     handler: APIHandler,
     access_level: Literal[AccessLevel.ANY],
     *,
-    encoder: json.JSONEncoder = APIResponseEncoder()
+    encoder: type[json.JSONEncoder] = APIResponseEncoder
 ) -> Callable[[web.Request], Awaitable[web.StreamResponse]]: ...
 @overload
 def api_handler(
@@ -119,14 +119,14 @@ def api_handler(
     handler: AuthenticatedHandler,
     access_level: Literal[AccessLevel.USER, AccessLevel.MODERATOR, AccessLevel.ADMIN] = AccessLevel.USER,
     *,
-    encoder: json.JSONEncoder = APIResponseEncoder()
+    encoder: type[json.JSONEncoder] = APIResponseEncoder
 ) -> Callable[[web.Request], Awaitable[web.StreamResponse]]: ...
 
 def api_handler(  # noqa
     handler: APIHandler | AuthenticatedHandler | None = None,
     access_level: AccessLevel = AccessLevel.USER,
     *,
-    encoder: json.JSONEncoder = APIResponseEncoder()
+    encoder: type[json.JSONEncoder] = APIResponseEncoder
 ) -> Handler | Callable[[APIHandler], Handler] | Callable[[AuthenticatedHandler], Handler]:
     if handler is None:
 
@@ -150,29 +150,32 @@ def wrap_api_handler(
     handler: APIHandler,
     access_level: Literal[AccessLevel.ANY],
     *,
-    encoder: json.JSONEncoder
+    encoder: type[json.JSONEncoder]
 ) -> Callable[[web.Request], Awaitable[web.StreamResponse]]: ...
 @overload  # noqa
 def wrap_api_handler(
     handler: AuthenticatedHandler,
     access_level: Literal[AccessLevel.USER, AccessLevel.MODERATOR, AccessLevel.ADMIN],
     *,
-    encoder: json.JSONEncoder
+    encoder: type[json.JSONEncoder]
 ) -> Callable[[web.Request], Awaitable[web.StreamResponse]]: ...
 @overload  # noqa
 def wrap_api_handler(
     handler: APIHandler | AuthenticatedHandler,
     access_level: AccessLevel,
     *,
-    encoder: json.JSONEncoder
+    encoder: type[json.JSONEncoder]
 ) -> Callable[[web.Request], Awaitable[web.StreamResponse]]: ...
+
 
 def wrap_api_handler(
     handler: APIHandler | AuthenticatedHandler,
     access_level: AccessLevel,
     *,
-    encoder: json.JSONEncoder
+    encoder: type[json.JSONEncoder]
 ) -> Callable[[web.Request], Awaitable[web.StreamResponse]]:
+    dumps = functools.partial(json.dumps, cls=encoder)
+
     @functools.wraps(handler)
     async def wrapped_handler(request: web.Request) -> web.StreamResponse:
         services: ServiceSet = request["services"]
@@ -196,7 +199,7 @@ def wrap_api_handler(
                 response = web.json_response(
                     api_response.payload,
                     status=api_response.status_code,
-                    dumps=encoder
+                    dumps=dumps
                 )
         elif authenticated_handler(handler, access_level):
             token_raw = request.headers.get("Authentication")
