@@ -4,8 +4,10 @@
 .venv
 .backup
 __pycache__
+linecount
 *_.html
 *.db
 future/*
 users_media
 config.json
+*.log
