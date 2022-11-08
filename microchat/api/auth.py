@@ -37,7 +37,9 @@ async def list_sessions(
 
 @router.post("/sessions")
 @api_handler(AccessLevel.ANY)
-async def get_access_token(request: web.Request) -> APIResponse:
+async def get_access_token(
+    request: web.Request, services: ServiceSet
+) -> APIResponse:
     payload = await request.json()
     if not isinstance(payload, dict):
         raise BadRequest(payload={"error": "invalid body"})
@@ -45,7 +47,6 @@ async def get_access_token(request: web.Request) -> APIResponse:
     password: str | None = payload.get("password")
     if not (username and password):
         raise BadRequest(payload={"error": "missing username or password"})
-    services: ServiceSet = request["services"]
     access_token = await services.auth.new_session(username, password)
     return APIResponse({"response": {"access_token": access_token}})
 
