@@ -15,7 +15,7 @@ from microchat.services import ServiceError, ServiceSet, AccessToken
 from microchat.core.entities import Entity, User
 
 
-JSON = str | int | float | list[Any] | dict[str, Any] | None  # type: ignore
+JSON = str | int | float | list["JSON"] | dict[str, "JSON"] | None
 APIResponseBody = Entity | Sequence[Entity] | dict[str, Entity]
 
 
