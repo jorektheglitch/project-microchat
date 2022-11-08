@@ -31,7 +31,10 @@ class APIException(ABC, Exception):
         reason: str | None = None
     ) -> None:
         super().__init__(msg)
-        self.payload = payload
+        if payload is None and msg is not None:
+            self.payload = {"error": msg}
+        else:
+            self.payload = payload
         self.reason = reason
 
     @classmethod
