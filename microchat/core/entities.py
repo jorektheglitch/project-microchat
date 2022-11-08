@@ -64,10 +64,16 @@ class ConferenceMember(User):
     presences: BoundSequence[ConferencePresence]
 
 
+class ConferenceBot(Bot):
+    role: str
+    permissions: Permissions
+    presences: BoundSequence[ConferencePresence]
+
+
 class Conference(Named, Owned[User]):
     description: Optional[str]
     members: BoundSequence[ConferenceMember]
-    bots: BoundSequence[Bot]
+    bots: BoundSequence[ConferenceBot]
     default_permissions: Permissions
     messages: BoundSequence[Message]
 
