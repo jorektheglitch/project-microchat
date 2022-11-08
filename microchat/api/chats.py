@@ -17,11 +17,11 @@ async def list_chats(
 ) -> APIResponse:
     payload = await request.json()
     if not isinstance(payload, dict):
-        raise BadRequest(payload={"error": "invalid body"})
+        raise BadRequest("Invalid body")
     offset = payload.get("offset", 0)
     count = payload.get("count", 100)
     if not (isinstance(offset, int) or isinstance(count, int)):
-        raise BadRequest(payload={"error": "invalid parameters"})
+        raise BadRequest("Invalid parameters")
     chats = await services.chats.list_chats(user, offset, count)
     return APIResponse({
         "response": chats
@@ -35,10 +35,10 @@ async def get_chat_info(
 ) -> APIResponse:
     payload = await request.json()
     if not isinstance(payload, dict):
-        raise BadRequest(payload={"error": "invalid body"})
+        raise BadRequest("Invalid body")
     alias = request.match_info.get("alias")
     if not alias:
-        raise BadRequest(payload={"error": "empty username"})
+        raise BadRequest("Empty username")
     chat_info = await services.chats.resolve_alias(user, alias)
     return APIResponse({
         "response": chat_info
@@ -53,7 +53,7 @@ async def remove_chat(
     alias = request.match_info.get("alias")
     chat = await services.chats.resolve_alias(user, alias)
     if chat.owner != user and not user.privileges:
-        raise Forbidden(payload={"error": "Access denied"})
+        raise Forbidden("Access denied")
     await services.chats.remove_chat(user, chat)
     return APIResponse({}, HTTPStatus.NO_CONTENT)
 
