@@ -23,16 +23,14 @@ async def list_sessions(
     if not (isinstance(offset, int) or isinstance(count, int)):
         raise BadRequest("Invalid body")
     sessions = await services.auth.list_sessions(user, offset, count)
-    return APIResponse({
-        "response": [
-            {
-                "name": session.name,
-                "location": session.location,
-                "ip": session.ip_address,
-                "auth": session.auth.method
-            } for session in sessions
-        ]
-    })
+    return APIResponse([
+        {
+            "name": session.name,
+            "location": session.location,
+            "ip": session.ip_address,
+            "auth": session.auth.method
+        } for session in sessions
+    ])
 
 
 @router.post("/sessions")
@@ -48,7 +46,7 @@ async def get_access_token(
     if not (username and password):
         raise BadRequest("Missing username or password")
     access_token = await services.auth.new_session(username, password)
-    return APIResponse({"response": {"access_token": access_token}})
+    return APIResponse({"access_token": access_token})
 
 
 @router.delete(r"/sessions/{token:\w+}")

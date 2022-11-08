@@ -23,9 +23,7 @@ async def list_chats(
     if not (isinstance(offset, int) or isinstance(count, int)):
         raise BadRequest("Invalid parameters")
     chats = await services.chats.list_chats(user, offset, count)
-    return APIResponse({
-        "response": chats
-    })
+    return APIResponse(chats)
 
 
 @router.get(r"/@{alias:\w+}")
@@ -40,9 +38,7 @@ async def get_chat_info(
     if not alias:
         raise BadRequest("Empty username")
     chat_info = await services.chats.resolve_alias(user, alias)
-    return APIResponse({
-        "response": chat_info
-    })
+    return APIResponse(chat_info)
 
 
 @router.delete(r"/@{alias:\w+}")
@@ -55,7 +51,7 @@ async def remove_chat(
     if chat.owner != user and not user.privileges:
         raise Forbidden("Access denied")
     await services.chats.remove_chat(user, chat)
-    return APIResponse({}, HTTPStatus.NO_CONTENT)
+    return APIResponse(status=HTTPStatus.NO_CONTENT)
 
 
 @router.get(r"/@{alias:\w+}/avatars")
