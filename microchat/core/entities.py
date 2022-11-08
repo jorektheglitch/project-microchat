@@ -4,10 +4,10 @@ from datetime import datetime as dt
 from enum import Enum, auto
 
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any, Literal, Optional
 from typing import Generic, TypeVar
 
-from .types import BoundSequence, MIMEType
+from .types import BoundSequence, ImagesMIME, MIMEType
 
 
 C = TypeVar('C', "Conference", "Dialog")  # C means Conversation
@@ -105,6 +105,11 @@ class Attachment:
     subtype: str  # MIME subtype
     loaded_at: dt
     loaded_by: User
+
+
+class Image(Attachment):
+    type: Literal["image"]
+    subtype: ImagesMIME
 
 
 class File:
