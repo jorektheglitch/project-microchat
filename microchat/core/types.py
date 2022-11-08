@@ -19,6 +19,18 @@ MIMEType = Literal[
     "video"
 ]
 
+ImagesMIME = Literal[
+    "gif",  # GIF (RFC 2045 и RFC 2046)
+    "jpeg",  # JPEG (RFC 2045 и RFC 2046)
+    "pjpeg",  # JPEG[9]
+    "png",  # Portable Network Graphics[10](RFC 2083)
+    "svg+xml",  # SVG[11]
+    "tiff",  # TIFF (RFC 3302)
+    "vnd.microsoft.icon",  # ICO[12]
+    "vnd.wap.wbmp",  # WBMP
+    "webp",  # WebP
+]
+
 
 class AsyncSequence(Protocol[T_co]):
     @overload
