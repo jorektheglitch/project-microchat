@@ -12,8 +12,12 @@ T_contra = TypeVar('T_contra', contravariant=True)
 MIMEType = Literal[
     "application",
     "audio",
+    "chemical",
+    "example",
+    "font",
     "image",
     "message",
+    "model",
     "multipart",
     "text",
     "video"
