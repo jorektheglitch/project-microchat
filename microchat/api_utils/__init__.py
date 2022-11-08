@@ -66,8 +66,16 @@ class HTTPStatus(enum.Enum):
 
 @dataclass
 class APIResponse:
-    payload: JSON = None
+    payload: dict[str, JSON]
     status: HTTPStatus = HTTPStatus.OK
+
+    def __init__(
+        self,
+        payload: JSON = None,
+        status: HTTPStatus = HTTPStatus.OK
+    ) -> None:
+        self.payload = {"response": payload}
+        self.status = status
 
     @property
     def status_code(self) -> int:
