@@ -97,7 +97,7 @@ class Message:  # , Generic[C]):
     id: int  # internal (DB) id
     no: int  # number of message in dialog/conference  # it is just index
     sender: User | Bot
-    text: str  # for futher functionality (encrypted messages)
+    text: str
     attachments: BoundSequence[Media]
     time_sent: dt
     time_edit: Optional[dt]
