@@ -16,6 +16,7 @@ from microchat.core.entities import Entity, User
 
 
 JSON = str | int | float | list[Any] | dict[str, Any] | None  # type: ignore
+APIResponseBody = Entity | list[Entity] | dict[str, Entity] | None
 
 
 class APIException(ABC, Exception):
@@ -66,12 +67,12 @@ class HTTPStatus(enum.Enum):
 
 @dataclass
 class APIResponse:
-    payload: dict[str, JSON]
+    payload: dict[str, APIResponseBody]
     status: HTTPStatus = HTTPStatus.OK
 
     def __init__(
         self,
-        payload: JSON = None,
+        payload: APIResponseBody = None,
         status: HTTPStatus = HTTPStatus.OK
     ) -> None:
         self.payload = {"response": payload}
