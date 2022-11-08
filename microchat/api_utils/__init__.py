@@ -12,7 +12,7 @@ from typing import overload
 from aiohttp import web
 
 from microchat.services import ServiceError, ServiceSet, AccessToken
-from microchat.core.entities import User
+from microchat.core.entities import Entity, User
 
 
 JSON = str | int | float | list[Any] | dict[str, Any] | None  # type: ignore
@@ -83,7 +83,11 @@ class APIResponse:
 
 
 class APIResponseEncoder(json.JSONEncoder):
-    pass
+    def default(self, o: Any) -> Any:  # type: ignore  # Any not allowed
+        if isinstance(o, Entity):
+            # TODO: make serialization for all entity types
+            pass
+        return super().default(o)
 
 
 Handler = Callable[[web.Request], Awaitable[web.StreamResponse]]
