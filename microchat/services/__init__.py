@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import List, NewType
 
-from microchat.core.entities import Bot, Conference, Dialog, File, User, Session, Image, Media
+from microchat.core.entities import Bot, Conference, Dialog, File, Message, User, Session, Image, Media
 from microchat.storages import UoW
 
 
@@ -66,6 +66,41 @@ class Chats:
         pass
 
     async def remove_chat_avatar(
+        self, user: User, chat: Dialog | Conference, id: int
+    ) -> None:
+        pass
+
+    async def list_chat_messages(
+        self, user: User, chat: Dialog | Conference, offset: int, count: int
+    ) -> List[Message]:
+        pass
+
+    async def get_chat_message(
+        self, user: User, chat: Dialog | Conference, id: int
+    ) -> Message:
+        pass
+
+    async def add_chat_message(
+        self,
+        user: User,
+        chat: Dialog | Conference,
+        text: str,
+        attachments: List[Media],
+        reply_to: Message | None
+    ) -> Message:
+        pass
+
+    async def edit_chat_message(
+        self,
+        user: User,
+        chat: Dialog | Conference,
+        id: int,
+        text: str,
+        attachments: List[Media]
+    ) -> Message:
+        pass
+
+    async def remove_chat_message(
         self, user: User, chat: Dialog | Conference, id: int
     ) -> None:
         pass
