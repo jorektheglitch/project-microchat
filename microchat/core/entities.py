@@ -22,6 +22,7 @@ class Named(ABC):
     id: int
     username: str
     title: str
+    avatar: Image
 
 
 class Owned(ABC, Generic[T]):
