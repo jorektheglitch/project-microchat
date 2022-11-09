@@ -81,7 +81,24 @@ async def list_chat_avatars(
 async def set_chat_avatar(
     request: web.Request, services: ServiceSet, user: User
 ) -> APIResponse:
-    pass
+    payload = await request.json()
+    if not isinstance(payload, dict):
+        raise BadRequest("Invalid body")
+    alias = request.match_info.get("alias")
+    if not alias:
+        raise BadRequest("Empty username")
+    image_id = payload.get("image")
+    if not image_id or not isinstance(image_id, int):
+        raise BadRequest("Invalid parameters")
+    chat = await services.chats.resolve_alias(user, alias)
+    if chat.owner != user and not user.privileges:
+        raise Forbidden("Access denied")
+    avatar = await services.files.get_info(user, image_id)
+    if not isinstance(avatar, Image):
+        raise BadRequest("Given id does not refers to image")
+    await services.chats.set_chat_avatar(user, chat, avatar)
+    chat = await services.chats.resolve_alias(user, alias)
+    return APIResponse(avatar)
 
 
 @router.delete(r"/@{alias:\w+}/avatars/{id:\d+}")
