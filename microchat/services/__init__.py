@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import List, NewType
+from typing import List, NewType, overload
 
 from microchat.core.entities import Bot, Conference, Dialog, File, Message, User, Session, Image, Media
 from microchat.storages import UoW
@@ -80,13 +80,29 @@ class Chats:
     ) -> Message:
         pass
 
+    @overload
+    async def add_chat_message(
+        self, user: User, chat: Dialog | Conference,
+        text: str, attachments: None, reply_to: Message | None
+    ) -> Message: ...
+    @overload
+    async def add_chat_message(
+        self, user: User, chat: Dialog | Conference,
+        text: str, attachments: List[Media], reply_to: Message | None
+    ) -> Message: ...
+    @overload
+    async def add_chat_message(
+        self, user: User, chat: Dialog | Conference,
+        text: None, attachments: List[Media], reply_to: Message | None
+    ) -> Message: ...
+
     async def add_chat_message(
         self,
         user: User,
         chat: Dialog | Conference,
-        text: str,
-        attachments: List[Media],
-        reply_to: Message | None
+        text: str | None = None,
+        attachments: List[Media] | None = None,
+        reply_to: Message | None = None
     ) -> Message:
         pass
 
