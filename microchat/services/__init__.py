@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import List, NewType, overload
+from typing import Iterable, List, NewType, overload
 
 from microchat.core.entities import Bot, Conference, Dialog, File, Message, User, Session, Image, Media
 from microchat.storages import UoW
@@ -134,4 +134,7 @@ class Files:
         pass
 
     async def get_info(self, user: User, id: int) -> Media:
+        pass
+
+    async def get_infos(self, user: User, ids: Iterable[int]) -> List[Media]:
         pass
