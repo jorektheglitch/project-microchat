@@ -114,7 +114,7 @@ async def remove_chat_avatar(
     alias = request.match_info.get("alias")
     id = request.match_info.get("id", -1)
     if not (alias and isinstance(id, int)):
-        raise BadRequest("Empty username")
+        raise BadRequest("Empty username or avatar id")
     chat = await services.chats.resolve_alias(user, alias)
     if chat.owner != user and not user.privileges:
         raise Forbidden("Access denied")
