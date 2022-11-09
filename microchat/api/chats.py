@@ -127,7 +127,21 @@ async def remove_chat_avatar(
 async def list_chat_messages(
     request: web.Request, services: ServiceSet, user: User
 ) -> APIResponse:
-    pass
+    payload = await request.json()
+    if not isinstance(payload, dict):
+        raise BadRequest("Invalid body")
+    alias = request.match_info.get("alias")
+    if not alias:
+        raise BadRequest("Empty username")
+    offset = payload.get("offset", 0)
+    count = payload.get("count", 100)
+    if not (isinstance(offset, int) or isinstance(count, int)):
+        raise BadRequest("Invalid parameters")
+    chat = await services.chats.resolve_alias(user, alias)
+    messages = await services.chats.list_chat_messages(
+        user, chat, offset, count
+    )
+    return APIResponse(messages)
 
 
 @router.post(r"/@{alias:\w+}/messages")
