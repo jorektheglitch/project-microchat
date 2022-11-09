@@ -47,6 +47,8 @@ async def remove_chat(
     request: web.Request, services: ServiceSet, user: User
 ) -> APIResponse:
     alias = request.match_info.get("alias")
+    if not alias:
+        raise BadRequest("Empty username")
     chat = await services.chats.resolve_alias(user, alias)
     if chat.owner != user and not user.privileges:
         raise Forbidden("Access denied")
