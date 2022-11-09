@@ -106,7 +106,18 @@ async def set_chat_avatar(
 async def remove_chat_avatar(
     request: web.Request, services: ServiceSet, user: User
 ) -> APIResponse:
-    pass
+    payload = await request.json()
+    if not isinstance(payload, dict):
+        raise BadRequest("Invalid body")
+    alias = request.match_info.get("alias")
+    id = request.match_info.get("id", -1)
+    if not (alias and isinstance(id, int)):
+        raise BadRequest("Empty username")
+    chat = await services.chats.resolve_alias(user, alias)
+    if chat.owner != user and not user.privileges:
+        raise Forbidden("Access denied")
+    await services.chats.remove_chat_avatar(user, chat, id)
+    return APIResponse(status=HTTPStatus.NO_CONTENT)
 
 
 @router.get(r"/@{alias:\w+}/messages")
