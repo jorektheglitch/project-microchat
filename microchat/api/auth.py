@@ -20,7 +20,7 @@ async def list_sessions(
         raise BadRequest("Invalid body")
     offset = payload.get("offset", 0)
     count = payload.get("count", 10)
-    if not (isinstance(offset, int) or isinstance(count, int)):
+    if not (isinstance(offset, int) and isinstance(count, int)):
         raise BadRequest("Invalid body")
     sessions = await services.auth.list_sessions(user, offset, count)
     return APIResponse(sessions)

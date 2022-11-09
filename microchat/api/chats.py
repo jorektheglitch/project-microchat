@@ -20,7 +20,7 @@ async def list_chats(
         raise BadRequest("Invalid body")
     offset = payload.get("offset", 0)
     count = payload.get("count", 100)
-    if not (isinstance(offset, int) or isinstance(count, int)):
+    if not (isinstance(offset, int) and isinstance(count, int)):
         raise BadRequest("Invalid parameters")
     chats = await services.chats.list_chats(user, offset, count)
     return APIResponse(chats)
@@ -69,7 +69,7 @@ async def list_chat_avatars(
         raise BadRequest("Empty username")
     offset = payload.get("offset", 0)
     count = payload.get("count", 100)
-    if not (isinstance(offset, int) or isinstance(count, int)):
+    if not (isinstance(offset, int) and isinstance(count, int)):
         raise BadRequest("Invalid parameters")
     chat = await services.chats.resolve_alias(user, alias)
     avatars = await services.chats.list_chat_avatars(
@@ -135,7 +135,7 @@ async def list_chat_messages(
         raise BadRequest("Empty username")
     offset = payload.get("offset", 0)
     count = payload.get("count", 100)
-    if not (isinstance(offset, int) or isinstance(count, int)):
+    if not (isinstance(offset, int) and isinstance(count, int)):
         raise BadRequest("Invalid parameters")
     chat = await services.chats.resolve_alias(user, alias)
     messages = await services.chats.list_chat_messages(
@@ -149,7 +149,32 @@ async def list_chat_messages(
 async def send_message(
     request: web.Request, services: ServiceSet, user: User
 ) -> APIResponse:
-    pass
+    payload = await request.json()
+    if not isinstance(payload, dict):
+        raise BadRequest("Invalid body")
+    alias = request.match_info.get("alias")
+    if not alias:
+        raise BadRequest("Empty username")
+    text = payload.get("text")
+    attachments_ids = payload.get("attachments", [])
+    reply_to_id = payload.get("reply_to")
+    if not (text is None or isinstance(text, str)):
+        raise BadRequest("Message text must be a string")
+    if not isinstance(attachments_ids, list):
+        raise BadRequest("Attachments IDs must be list of integers")
+    if not all(isinstance(item, int) for item in attachments_ids):
+        raise BadRequest("Attachments IDs must be list of integers")
+    chat = await services.chats.resolve_alias(user, alias)
+    reply_to = None
+    if reply_to_id:
+        reply_to = await services.chats.get_chat_message(
+            user, chat, reply_to_id
+        )
+    attachments = await services.files.get_infos(user, attachments_ids)
+    message = await services.chats.add_chat_message(
+        user, chat, text, attachments, reply_to
+    )
+    return APIResponse(message)
 
 
 @router.get(r"/@{alias:\w+}/messages/{id:\d+}")
