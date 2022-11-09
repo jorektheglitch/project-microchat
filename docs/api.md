@@ -68,17 +68,17 @@
 
 ## Conferences
 
-- `/api/chats/@{alias}/members (conferences only)`
+- `/api/chats/@{alias}/members` (conferences only)
   - ❌ GET offset, count
   - ❌ POST
 
-- `/api/chats/@{alias}/members/{id} (conferences only)`
-- `/api/chats/@{alias}/members/@{alias} (conferences only)`
+- `/api/chats/@{alias}/members/{id}` (conferences only)
+- `/api/chats/@{alias}/members/@{alias}` (conferences only)
   - ❌ GET
   - ❌ DELETE (self-delete or conference admins only)
 
-- `/api/chats/@{alias}/members/{id}/permissions (conferences only)`
-- `/api/chats/@{alias}/members/@{alias}/permissions (conferences only)`
+- `/api/chats/@{alias}/members/{id}/permissions` (conferences only)
+- `/api/chats/@{alias}/members/@{alias}/permissions` (conferences only)
   - ❌ GET
   - ❌ PATCH (conference admins only)
 
