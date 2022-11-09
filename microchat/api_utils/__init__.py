@@ -203,6 +203,7 @@ def wrap_api_handler(
                     api_exc.payload,
                     status=api_exc.status_code,
                     reason=api_exc.reason,
+                    dumps=dumps
                 )
             except ServiceError as service_exc:
                 api_exc = APIException.from_service_exc(service_exc)
@@ -210,6 +211,7 @@ def wrap_api_handler(
                     api_exc.payload,
                     status=api_exc.status_code,
                     reason=api_exc.reason,
+                    dumps=dumps
                 )
             else:
                 response = web.json_response(
@@ -234,6 +236,7 @@ def wrap_api_handler(
                     api_exc.payload,
                     status=api_exc.status_code,
                     reason=api_exc.reason,
+                    dumps=dumps
                 )
             except ServiceError as service_exc:
                 api_exc = APIException.from_service_exc(service_exc)
@@ -241,12 +244,13 @@ def wrap_api_handler(
                     api_exc.payload,
                     status=api_exc.status_code,
                     reason=api_exc.reason,
+                    dumps=dumps
                 )
             else:
                 response = web.json_response(
                     api_response.payload,
                     status=api_response.status_code,
-                    dumps=encoder
+                    dumps=dumps
                 )
         else:
             raise web.HTTPBadRequest()
