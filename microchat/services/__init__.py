@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import List, NewType
 
-from microchat.core.entities import Bot, Conference, Dialog, User, Session, Image
+from microchat.core.entities import Bot, Conference, Dialog, File, User, Session, Image, Media
 from microchat.storages import UoW
 
 
@@ -14,6 +14,7 @@ class ServiceSet:
 
     auth: Authentication
     chats: Chats
+    files: Files
 
     def __init__(self, uow: UoW) -> None:
         pass
@@ -67,4 +68,19 @@ class Chats:
     async def remove_chat_avatar(
         self, user: User, chat: Dialog | Conference, id: int
     ) -> None:
+        pass
+
+
+class Files:
+
+    async def store(
+        self,
+        user: User,
+        file: File,
+        name: str,
+        mime_type: str
+    ) -> Media:
+        pass
+
+    async def get_info(self, user: User, id: int) -> Media:
         pass
