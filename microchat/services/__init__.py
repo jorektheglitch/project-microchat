@@ -106,13 +106,30 @@ class Chats:
     ) -> Message:
         pass
 
+
+    @overload
+    async def edit_chat_message(
+        self, user: User, chat: Dialog | Conference, id: int,
+        text: str, attachments: None
+    ) -> Message: ...
+    @overload
+    async def edit_chat_message(
+        self, user: User, chat: Dialog | Conference, id: int,
+        text: str, attachments: List[Media]
+    ) -> Message: ...
+    @overload
+    async def edit_chat_message(
+        self, user: User, chat: Dialog | Conference, id: int,
+        text: None, attachments: List[Media]
+    ) -> Message: ...
+
     async def edit_chat_message(
         self,
         user: User,
         chat: Dialog | Conference,
         id: int,
-        text: str,
-        attachments: List[Media]
+        text: str | None = None,
+        attachments: List[Media] | None = None
     ) -> Message:
         pass
 
