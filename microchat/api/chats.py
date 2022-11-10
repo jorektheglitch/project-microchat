@@ -201,7 +201,34 @@ async def get_chat_message(
 async def edit_chat_message(
     request: web.Request, services: ServiceSet, user: User
 ) -> APIResponse:
-    pass
+    payload = await request.json()
+    if not isinstance(payload, dict):
+        raise BadRequest("Invalid body")
+    alias = request.match_info.get("alias")
+    if not alias:
+        raise BadRequest("Empty username")
+    id = request.match_info.get("id")
+    if id is None:
+        raise BadRequest("Empty message id")
+    message_id = int(id)
+    text = payload.get("text")
+    if not (isinstance(text, str) or text is None):
+        raise BadRequest("Text must be string")
+    attachments_ids = payload.get("attachments")
+    chat = await services.chats.resolve_alias(user, alias)
+    message = await services.chats.get_chat_message(user, chat, message_id)
+    if text is None:
+        text = message.text
+    if attachments_ids is None:
+        attachments = list(await message.attachments)
+    else:
+        if not isinstance(attachments_ids, list):
+            raise BadRequest("Attachments IDs must be list of integers")
+        attachments = await services.files.get_infos(user, attachments_ids)
+    edited_message = await services.chats.edit_chat_message(
+        user, chat, message_id, text, attachments
+    )
+    return APIResponse(edited_message)
 
 
 @router.delete(r"/@{alias:\w+}/messages/{id:\d+}")
