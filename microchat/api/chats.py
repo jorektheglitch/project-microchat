@@ -183,7 +183,17 @@ async def send_message(
 async def get_chat_message(
     request: web.Request, services: ServiceSet, user: User
 ) -> APIResponse:
-    pass
+    payload = await request.json()
+    if not isinstance(payload, dict):
+        raise BadRequest("Invalid body")
+    alias = request.match_info.get("alias")
+    id = request.match_info.get("id", "-1")
+    message_id = int(id)
+    if not alias:
+        raise BadRequest("Empty username")
+    chat = await services.chats.resolve_alias(user, alias)
+    message = await services.chats.get_chat_message(user, chat, message_id)
+    return APIResponse(message)
 
 
 @router.patch(r"/@{alias:\w+}/messages/{id:\d+}")
