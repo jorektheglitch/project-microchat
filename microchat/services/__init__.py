@@ -138,6 +138,16 @@ class Chats:
     ) -> None:
         pass
 
+    async def list_chat_media(
+        self, user: User, chat: Dialog | Conference, offset: int, count: int
+    ) -> List[Media]:
+        pass
+
+    async def get_chat_media(
+        self, user: User, chat: Dialog | Conference, id: int
+    ) -> Media:
+        pass
+
 
 class Files:
 
