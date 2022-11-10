@@ -1,10 +1,11 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from typing import Any, AsyncIterator, Generic, Literal, Protocol, TypeVar, overload
+from typing import Any, AsyncIterator, Generic, Literal, Protocol, TypeVar
 from typing import Awaitable, Generator, Iterable, Sequence
+from typing import overload
 
-# type: ignore
+
 T = TypeVar('T')
 T_co = TypeVar('T_co', covariant=True)
 T_contra = TypeVar('T_contra', contravariant=True)
@@ -36,19 +37,19 @@ ImagesMIME = Literal[
 ]
 
 
-class AsyncSequence(Protocol[T_co]):
+class AsyncSequence(Protocol[T]):
     @overload
     @abstractmethod
-    async def __getitem__(self, index: int) -> T_co: ...
+    async def __getitem__(self, index: int) -> T: ...
     @overload
     @abstractmethod
-    async def __getitem__(self, index: slice) -> Sequence[T_co]: ...
+    async def __getitem__(self, index: slice) -> Sequence[T]: ...
     @abstractmethod
-    async def index(self, value: Any, start: int = ..., stop: int = ...) -> int: ...  # noqa
+    async def index(self, value: T, start: int = ..., stop: int = ...) -> int: ...  # noqa
     @abstractmethod
-    async def count(self, value: Any) -> int: ...
+    async def count(self, value: T) -> int: ...
     @abstractmethod
-    async def __aiter__(self) -> AsyncIterator[T_co]: ...
+    async def __aiter__(self) -> AsyncIterator[T]: ...
 
 
 class BoundSequence(ABC, Awaitable[Sequence[T]], AsyncSequence[T], Generic[T]):
@@ -58,7 +59,7 @@ class BoundSequence(ABC, Awaitable[Sequence[T]], AsyncSequence[T], Generic[T]):
     @overload
     @abstractmethod
     def __setitem__(self, index: slice, values: Iterable[T]) -> None: ...
-    def __setitem__(self, index, value) -> None: ...
+    def __setitem__(self, index: int | slice, value: T | Iterable[T]) -> None: ...  # noqa
     @overload
     @abstractmethod
     def __delitem__(self, index: int) -> None: ...
@@ -66,7 +67,7 @@ class BoundSequence(ABC, Awaitable[Sequence[T]], AsyncSequence[T], Generic[T]):
     @abstractmethod
     def __delitem__(self, index: slice) -> None: ...
     @abstractmethod
-    def __delitem__(self, index) -> None: ...
+    def __delitem__(self, index: int | slice) -> None: ...
     @abstractmethod
     async def insert(self, index: int, value: T) -> None: ...
     @abstractmethod
