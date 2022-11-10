@@ -27,7 +27,7 @@ async def list_sessions(
 
 
 @router.post("/sessions")
-@api_handler(AccessLevel.ANY)
+@api_handler(access_level=AccessLevel.ANY)
 async def get_access_token(
     request: web.Request, services: ServiceSet
 ) -> APIResponse:

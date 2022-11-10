@@ -109,39 +109,39 @@ class AccessLevel(enum.Enum):
 def api_handler() -> Callable[[AuthenticatedHandler], Callable[[web.Request], Awaitable[web.StreamResponse]]]: ...
 @overload
 def api_handler(
-    access_level: Literal[AccessLevel.ANY],
     *,
+    access_level: Literal[AccessLevel.ANY],
     encoder: type[json.JSONEncoder] = APIResponseEncoder
 ) -> Callable[[APIHandler], Callable[[web.Request], Awaitable[web.StreamResponse]]]: ...
 @overload
 def api_handler(
-    access_level: Literal[AccessLevel.USER, AccessLevel.MODERATOR, AccessLevel.ADMIN] = AccessLevel.USER,
     *,
+    access_level: Literal[AccessLevel.USER, AccessLevel.MODERATOR, AccessLevel.ADMIN],
     encoder: type[json.JSONEncoder] = APIResponseEncoder
 ) -> Callable[[AuthenticatedHandler], Callable[[web.Request], Awaitable[web.StreamResponse]]]: ...
-@overload
-def api_handler(
-    handler: APIHandler,
-    access_level: Literal[AccessLevel.ANY],
-    *,
-    encoder: type[json.JSONEncoder] = APIResponseEncoder
-) -> Callable[[web.Request], Awaitable[web.StreamResponse]]: ...
 @overload
 def api_handler(
     handler: AuthenticatedHandler
 ) -> Callable[[web.Request], Awaitable[web.StreamResponse]]: ...
 @overload
 def api_handler(
-    handler: AuthenticatedHandler,
-    access_level: Literal[AccessLevel.USER, AccessLevel.MODERATOR, AccessLevel.ADMIN] = AccessLevel.USER,
+    handler: APIHandler,
     *,
+    access_level: Literal[AccessLevel.ANY],
+    encoder: type[json.JSONEncoder] = APIResponseEncoder
+) -> Callable[[web.Request], Awaitable[web.StreamResponse]]: ...
+@overload
+def api_handler(
+    handler: AuthenticatedHandler,
+    *,
+    access_level: Literal[AccessLevel.USER, AccessLevel.MODERATOR, AccessLevel.ADMIN] = AccessLevel.USER,
     encoder: type[json.JSONEncoder] = APIResponseEncoder
 ) -> Callable[[web.Request], Awaitable[web.StreamResponse]]: ...
 
 def api_handler(  # noqa
     handler: APIHandler | AuthenticatedHandler | None = None,
-    access_level: AccessLevel = AccessLevel.USER,
     *,
+    access_level: AccessLevel = AccessLevel.USER,
     encoder: type[json.JSONEncoder] = APIResponseEncoder
 ) -> Handler | Callable[[APIHandler], Handler] | Callable[[AuthenticatedHandler], Handler]:
     if handler is None:
