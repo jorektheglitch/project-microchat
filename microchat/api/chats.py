@@ -236,7 +236,19 @@ async def edit_chat_message(
 async def remove_chat_message(
     request: web.Request, services: ServiceSet, user: User
 ) -> APIResponse:
-    pass
+    payload = await request.json()
+    if not isinstance(payload, dict):
+        raise BadRequest("Invalid body")
+    alias = request.match_info.get("alias")
+    if not alias:
+        raise BadRequest("Empty username")
+    id = request.match_info.get("id")
+    if id is None:
+        raise BadRequest("Empty message id")
+    message_id = int(id)
+    chat = await services.chats.resolve_alias(user, alias)
+    await services.chats.remove_chat_message(user, chat, message_id)
+    return APIResponse(status=HTTPStatus.NO_CONTENT)
 
 
 @router.get(r"/@{alias:\w+}/messages/{media_type:(photo|video|audio|animation|file)s}")  # noqa
