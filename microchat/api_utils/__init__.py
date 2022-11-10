@@ -206,11 +206,11 @@ def wrap_api_handler(
                     dumps=dumps
                 )
             except ServiceError as service_exc:
-                api_exc = APIException.from_service_exc(service_exc)
+                exc_info = APIException.from_service_exc(service_exc)
                 response = web.json_response(
-                    api_exc.payload,
-                    status=api_exc.status_code,
-                    reason=api_exc.reason,
+                    exc_info.payload,
+                    status=exc_info.status_code,
+                    reason=exc_info.reason,
                     dumps=dumps
                 )
             else:
@@ -239,11 +239,11 @@ def wrap_api_handler(
                     dumps=dumps
                 )
             except ServiceError as service_exc:
-                api_exc = APIException.from_service_exc(service_exc)
+                exc_info = APIException.from_service_exc(service_exc)
                 response = web.json_response(
-                    api_exc.payload,
-                    status=api_exc.status_code,
-                    reason=api_exc.reason,
+                    exc_info.payload,
+                    status=exc_info.status_code,
+                    reason=exc_info.reason,
                     dumps=dumps
                 )
             else:
