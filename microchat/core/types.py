@@ -36,6 +36,19 @@ ImagesMIME = Literal[
     "webp",  # WebP
 ]
 
+VideosMIME = Literal[
+    "mpeg",  # MPEG-1 (RFC 2045 и RFC 2046)
+    "mp4",  # MP4 (RFC 4337)
+    "ogg",  # Ogg Theora или другое видео (RFC 5334)
+    "quicktime",  # QuickTime
+    "webm",  # WebM
+    "x-ms-wmv",  # Windows Media Video
+    "x-flv",  # FLV
+    "x-msvideo",  # AVI
+    "3gpp",  # .3gpp .3gp
+    "3gpp2",  # .3gpp2 .3g2
+]
+
 
 class AsyncSequence(Protocol[T]):
     @overload

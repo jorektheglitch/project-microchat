@@ -7,7 +7,8 @@ from pathlib import Path
 from typing import Any, Literal, Optional
 from typing import Generic, TypeVar
 
-from .types import BoundSequence, ImagesMIME, MIMEType
+from .types import BoundSequence
+from .types import MIMEType, ImagesMIME, VideosMIME
 
 
 C = TypeVar('C', "Conference", "Dialog")  # C means Conversation
@@ -109,7 +110,7 @@ class Message(Entity):  # , Generic[C]):
     reply_to: Optional[Message]
 
 
-class Media(Entity):
+class Media(Entity):  # photo|video|audio|animation|file
     file: File
     name: str  # displayed file name
     type: MIMEType  # MIME type
@@ -121,6 +122,11 @@ class Media(Entity):
 class Image(Media):
     type: Literal["image"]
     subtype: ImagesMIME
+
+
+class Video(Media):
+    type: Literal["video"]
+    subtype: VideosMIME
 
 
 class File:
