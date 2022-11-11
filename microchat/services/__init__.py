@@ -1,9 +1,12 @@
 from __future__ import annotations
 
-from typing import Iterable, List, NewType, overload
+from typing import Iterable, List, NewType, TypeVar, overload
 
 from microchat.core.entities import Bot, Conference, Dialog, File, Message, User, Session, Image, Media
 from microchat.storages import UoW
+
+
+M = TypeVar("M", Media)
 
 
 class ServiceError(Exception):
@@ -139,8 +142,10 @@ class Chats:
         pass
 
     async def list_chat_media(
-        self, user: User, chat: Dialog | Conference, offset: int, count: int
-    ) -> List[Media]:
+        self,
+        user: User, chat: Dialog | Conference,
+        offset: int, count: int, media_type: type[M]
+    ) -> List[M]:
         pass
 
     async def get_chat_media(
