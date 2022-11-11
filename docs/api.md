@@ -34,20 +34,20 @@
   - ✅ DELETE (owner and admin)
 
 - `/api/chats/@{alias}/avatars`
-  - ⚠️ GET
-  - ⚠️ POST (for self only)
+  - ✅ GET
+  - ✅ POST (for self only)
 
 - `/api/chats/@{alias}/avatars/{id}`
-  - ⚠️ DELETE (for self and admins only)
+  - ✅ DELETE (for self and admins only)
 
 - `/api/chats/@{alias}/messages`
-  - ⚠️ GET offset, count
-  - ⚠️ POST
+  - ✅ GET offset, count
+  - ✅ POST
 
 - `/api/chats/@{alias}/messages/{id}`
-  - ⚠️ GET
-  - ⚠️ PATCH (author only)
-  - ⚠️ DELETE (author and conference admins only)
+  - ✅ GET
+  - ✅ PATCH (author only)
+  - ✅ DELETE (author and conference admins only)
 
 - `/api/chats/@{alias}/messages/photos`
 - `/api/chats/@{alias}/messages/videos`
@@ -55,7 +55,7 @@
 - `/api/chats/@{alias}/messages/audios`
 - `/api/chats/@{alias}/messages/links`
 - `/api/chats/@{alias}/messages/animations`
-  - ⚠️ GET offset, count
+  - ✅ GET offset, count
 
 - `/api/chats/@{alias}/messages/photos/{id}`
 - `/api/chats/@{alias}/messages/videos/{id}`
@@ -63,8 +63,8 @@
 - `/api/chats/@{alias}/messages/audios/{id}`
 - `/api/chats/@{alias}/messages/links/{id}`
 - `/api/chats/@{alias}/messages/animations/{id}`
-  - ⚠️ GET
-  - ⚠️ DELETE (author and conference admins only)
+  - ✅ GET
+  - ✅ DELETE (author and conference admins only)
 
 ## Conferences
 
