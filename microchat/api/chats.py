@@ -256,7 +256,25 @@ async def remove_chat_message(
 async def list_chat_media(
     request: web.Request, services: ServiceSet, user: User
 ) -> APIResponse:
-    pass
+    payload = await request.json()
+    if not isinstance(payload, dict):
+        raise BadRequest("Invalid body")
+    alias = request.match_info.get("alias")
+    if not alias:
+        raise BadRequest("Empty username")
+    media_type = request.match_info.get("media_type", '')
+    MediaType = MEDIA_CLASSES.get(media_type)
+    if MediaType is None:
+        raise NotFound(f"Unknown media type '{media_type}'")
+    offset = payload.get("offset", 0)
+    count = payload.get("count", 100)
+    if not (isinstance(offset, int) and isinstance(count, int)):
+        raise BadRequest("Invalid parameters")
+    chat = await services.chats.resolve_alias(user, alias)
+    medias = await services.chats.list_chat_media(
+        user, chat, offset, count, MediaType
+    )
+    return APIResponse(medias)
 
 
 @router.get(r"/@{alias:\w+}/messages/{media_type:(photo|video|audio|animation|file)s}/{id:\d+}")  # noqa
