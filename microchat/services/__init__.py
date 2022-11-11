@@ -143,13 +143,15 @@ class Chats:
 
     async def list_chat_media(
         self,
-        user: User, chat: Dialog | Conference,
-        offset: int, count: int, media_type: type[M]
+        user: User, chat: Dialog | Conference, media_type: type[M],
+        offset: int, count: int
     ) -> List[M]:
         pass
 
     async def get_chat_media(
-        self, user: User, chat: Dialog | Conference, id: int
+        self,
+        user: User, chat: Dialog | Conference, media_type: type[M],
+        id: int
     ) -> Media:
         pass
 

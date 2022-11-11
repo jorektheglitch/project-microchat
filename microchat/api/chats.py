@@ -282,7 +282,7 @@ async def list_chat_media(
         raise BadRequest("Invalid parameters")
     chat = await services.chats.resolve_alias(user, alias)
     medias = await services.chats.list_chat_media(
-        user, chat, offset, count, MediaType
+        user, chat, MediaType, offset, count
     )
     return APIResponse(medias)
 
