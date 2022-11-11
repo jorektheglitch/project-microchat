@@ -1,13 +1,23 @@
 from aiohttp import web
 
 from microchat.services import ServiceSet
-from microchat.core.entities import Image, User
+from microchat.core.entities import User, Media
+from microchat.core.entities import Animation, Audio, File, Image, Video
 
 from microchat.api_utils import APIResponse, HTTPStatus, api_handler
 from microchat.api_utils import BadRequest, Forbidden, NotFound
 
 
 router = web.RouteTableDef()
+
+
+MEDIA_CLASSES: dict[str, type[Media]] = {
+    "photo": Image,
+    "video": Video,
+    "audio": Audio,
+    "animation": Animation,
+    "file": File
+}
 
 
 @router.get("/")
