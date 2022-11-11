@@ -292,4 +292,20 @@ async def list_chat_media(
 async def get_chat_media(
     request: web.Request, services: ServiceSet, user: User
 ) -> APIResponse:
-    pass
+    payload = await request.json()
+    if not isinstance(payload, dict):
+        raise BadRequest("Invalid body")
+    alias = request.match_info.get("alias")
+    id = request.match_info.get("id", "-1")
+    message_id = int(id)
+    if not alias:
+        raise BadRequest("Empty username")
+    media_type = request.match_info.get("media_type", '')
+    MediaType = MEDIA_CLASSES.get(media_type)
+    if MediaType is None:
+        raise NotFound(f"Unknown media type '{media_type}'")
+    chat = await services.chats.resolve_alias(user, alias)
+    message = await services.chats.get_chat_media(
+        user, chat, MediaType, message_id
+    )
+    return APIResponse(message)
