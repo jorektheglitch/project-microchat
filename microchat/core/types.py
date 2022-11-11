@@ -49,6 +49,21 @@ VideosMIME = Literal[
     "3gpp2",  # .3gpp2 .3g2
 ]
 
+AudiosMIME = Literal[
+    "basic",  # mulaw аудио, 8 кГц, 1 канал (RFC 2046)
+    "L24",  # 24bit Linear PCM аудио, 8-48 кГц, 1-N каналов (RFC 3190)
+    "mp4",  # MP4
+    "aac",  # AAC
+    "mpeg",  # MP3 или др. MPEG (RFC 3003)
+    "ogg",  # Ogg Vorbis, Speex, Flac или др. аудио (RFC 5334)
+    "vorbis",  # Vorbis (RFC 5215)
+    "x-ms-wma",  # Windows Media Audio
+    "x-ms-wax",  # Windows Media Audio перенаправление
+    "vnd.rn-realaudio",  # RealAudio
+    "vnd.wave",  # WAV (RFC 2361)
+    "webm",  # WebM
+]
+
 
 class AsyncSequence(Protocol[T]):
     @overload
