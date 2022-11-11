@@ -309,3 +309,27 @@ async def get_chat_media(
         user, chat, MediaType, message_id
     )
     return APIResponse(message)
+
+
+@router.delete(r"/@{alias:\w+}/messages/{media_type:(photo|video|audio|animation|file)s}/{id:\d+}")  # noqa
+@api_handler
+async def remove_chat_media(
+    request: web.Request, services: ServiceSet, user: User
+) -> APIResponse:
+    payload = await request.json()
+    if not isinstance(payload, dict):
+        raise BadRequest("Invalid body")
+    alias = request.match_info.get("alias")
+    id = request.match_info.get("id", "-1")
+    message_id = int(id)
+    if not alias:
+        raise BadRequest("Empty username")
+    media_type = request.match_info.get("media_type", '')
+    MediaType = MEDIA_CLASSES.get(media_type)
+    if MediaType is None:
+        raise NotFound(f"Unknown media type '{media_type}'")
+    chat = await services.chats.resolve_alias(user, alias)
+    await services.chats.remove_chat_media(
+        user, chat, MediaType, message_id
+    )
+    return APIResponse(status=HTTPStatus.NO_CONTENT)

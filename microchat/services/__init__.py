@@ -155,6 +155,13 @@ class Chats:
     ) -> Media:
         pass
 
+    async def remove_chat_media(
+        self,
+        user: User, chat: Dialog | Conference, media_type: type[M],
+        id: int
+    ) -> None:
+        pass
+
 
 class Files:
 
