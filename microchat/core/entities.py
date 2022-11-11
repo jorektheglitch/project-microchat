@@ -111,7 +111,7 @@ class Message(Entity):  # , Generic[C]):
 
 
 class Media(Entity, ABC):
-    file_info: File
+    file_info: FileInfo
     name: str  # displayed file name
     type: MIMEType  # MIME type
     subtype: str  # MIME subtype
