@@ -8,7 +8,7 @@ from typing import Any, Literal, Optional
 from typing import Generic, TypeVar
 
 from .types import BoundSequence
-from .types import MIMEType, ImagesMIME, VideosMIME
+from .types import MIMEType, AudiosMIME, ImagesMIME, VideosMIME
 
 
 C = TypeVar('C', "Conference", "Dialog")  # C means Conversation
@@ -110,8 +110,8 @@ class Message(Entity):  # , Generic[C]):
     reply_to: Optional[Message]
 
 
-class Media(Entity):  # photo|video|audio|animation|file
-    file: File
+class Media(Entity, ABC):
+    file_info: File
     name: str  # displayed file name
     type: MIMEType  # MIME type
     subtype: str  # MIME subtype
@@ -129,7 +129,21 @@ class Video(Media):
     subtype: VideosMIME
 
 
-class File:
+class Audio(Media):
+    type: Literal["audio"]
+    subtype: AudiosMIME
+
+
+class Animation(Media):
+    type: Literal["video"]
+    subtype: Literal["webm"]
+
+
+class File(Media):
+    pass
+
+
+class FileInfo:
     path: Path
     hash: bytes
     size: int
