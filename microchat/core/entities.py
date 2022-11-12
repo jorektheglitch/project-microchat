@@ -66,13 +66,15 @@ class ConferencePresence:
 
 class ConferenceMember(User):
     role: str
-    permissions: Permissions
+    permissions: Permissions | None
+    restrictions: Restrictions | None
     presences: BoundSequence[ConferencePresence]
 
 
 class ConferenceBot(Bot):
     role: str
-    permissions: Permissions
+    permissions: Permissions | None
+    restrictions: Restrictions | None
     presences: BoundSequence[ConferencePresence]
 
 
@@ -149,6 +151,20 @@ class FileInfo:
     size: int
 
 
+class Restrictions(Entity):
+    since: dt
+    to: dt
+    restictor: User | Bot
+    read: Literal[False] | None = None
+    send: Literal[False] | None = None
+    delete: Literal[False] | None = None
+    send_media: Literal[False] | None = None
+    send_mediamessage: Literal[False] | None = None
+    add_user: Literal[False] | None = None
+    pin_message: Literal[False] | None = None
+    edit_conference: Literal[False] | None = None
+
+
 class Permissions(Entity):
     read: bool
     send: bool
@@ -156,5 +172,5 @@ class Permissions(Entity):
     send_media: bool
     send_mediamessage: bool
     add_user: bool
-    bind_message: bool
+    pin_message: bool
     edit_conference: bool
