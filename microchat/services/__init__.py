@@ -6,7 +6,7 @@ from microchat.core.entities import Bot, Conference, Dialog, File, Message, User
 from microchat.storages import UoW
 
 
-M = TypeVar("M", Media)
+M = TypeVar("M", bound=Media)
 
 
 class ServiceError(Exception):
