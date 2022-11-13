@@ -18,6 +18,7 @@ class ServiceSet:
     auth: Authentication
     chats: Chats
     files: Files
+    agents: Agents
 
     def __init__(self, uow: UoW) -> None:
         pass
@@ -41,16 +42,29 @@ class Authentication:
         pass
 
 
+class Agents:
+
+    async def get(
+        self, user: User, id: int
+    ) -> User | Bot | Conference:
+        pass
+
+    async def resolve_alias(
+        self, user: User, alias: str
+    ) -> User | Bot | Conference:
+        pass
+
+    async def resolve_chat_alias(
+        self, user: User, alias: str
+    ) -> Dialog | Conference:
+        pass
+
+
 class Chats:
 
     async def list_chats(
         self, user: User, offset: int, count: int
     ) -> List[Dialog | Conference]:
-        pass
-
-    async def resolve_alias(
-        self, user: User, alias: str
-    ) -> Dialog | Conference:
         pass
 
     async def remove_chat(
