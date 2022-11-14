@@ -41,15 +41,15 @@ class User(Entity, Named):
     name: str
     surname: str | None
     bio: str | None
-    dialogs: BoundSequence[Dialog, User]
-    conferences: BoundSequence[Conference, User]
-    sessions: BoundSequence[Session, User]
+    dialogs: BoundSequence[Dialog]
+    conferences: BoundSequence[Conference]
+    sessions: BoundSequence[Session]
 
 
 class Bot(Entity, Named, Owned[User]):
     description: str | None
-    dialogs: BoundSequence[Dialog, Bot]
-    conferences: BoundSequence[Conference, Bot]
+    dialogs: BoundSequence[Dialog]
+    conferences: BoundSequence[Conference]
 
 
 class Dialog(Entity, Owned[User]):
@@ -57,7 +57,7 @@ class Dialog(Entity, Owned[User]):
     name: str
     surname: str | None
     permissions: Permissions
-    messages: BoundSequence[Message, Dialog]
+    messages: BoundSequence[Message]
 
 
 class ConferencePresence:
@@ -69,22 +69,22 @@ class ConferenceMember(User):
     role: str
     permissions: Permissions | None
     restrictions: Restrictions | None
-    presences: BoundSequence[ConferencePresence, ConferenceMember]
+    presences: BoundSequence[ConferencePresence]
 
 
 class ConferenceBot(Bot):
     role: str
     permissions: Permissions | None
-    restrictions: BoundSequence[Restrictions, ConferenceBot]
-    presences: BoundSequence[ConferencePresence, ConferenceBot]
+    restrictions: BoundSequence[Restrictions]
+    presences: BoundSequence[ConferencePresence]
 
 
 class Conference(Entity, Named, Owned[User]):
     description: str | None
-    members: BoundSequence[ConferenceMember, Conference]
-    bots: BoundSequence[ConferenceBot, Conference]
+    members: BoundSequence[ConferenceMember]
+    bots: BoundSequence[ConferenceBot]
     default_permissions: Permissions
-    messages: BoundSequence[Message, Conference]
+    messages: BoundSequence[Message]
 
 
 class Authentication:
@@ -107,7 +107,7 @@ class Message(Entity):  # , Generic[C]):
     no: int  # number of message in dialog/conference  # it is just index
     sender: User | Bot
     text: str | None
-    attachments: BoundSequence[Media, Message]
+    attachments: BoundSequence[Media]
     time_sent: dt
     time_edit: dt | None
     reply_to: Message | None
