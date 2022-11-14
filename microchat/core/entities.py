@@ -1,10 +1,11 @@
 from __future__ import annotations
 from abc import ABC
+from dataclasses import dataclass, fields
 from datetime import datetime as dt
 from enum import Enum, auto
 
 from pathlib import Path
-from typing import Any, Literal, Optional
+from typing import Any, Literal
 from typing import Generic, TypeVar
 
 from .types import BoundSequence
@@ -36,17 +37,17 @@ class Privileges(Enum):
 
 
 class User(Entity, Named):
-    privileges: Optional[Privileges]
+    privileges: Privileges | None
     name: str
-    surname: Optional[str]
-    bio: Optional[str]
+    surname: str | None
+    bio: str | None
     dialogs: BoundSequence[Dialog]
     conferences: BoundSequence[Conference]
     sessions: BoundSequence[Session]
 
 
 class Bot(Entity, Named, Owned[User]):
-    description: Optional[str]
+    description: str | None
     dialogs: BoundSequence[Dialog]
     conferences: BoundSequence[Conference]
 
@@ -54,7 +55,7 @@ class Bot(Entity, Named, Owned[User]):
 class Dialog(Entity, Owned[User]):
     colocutor: User | Bot
     name: str
-    surname: Optional[str]
+    surname: str | None
     permissions: Permissions
     messages: BoundSequence[Message]
 
@@ -74,12 +75,12 @@ class ConferenceMember(User):
 class ConferenceBot(Bot):
     role: str
     permissions: Permissions | None
-    restrictions: Restrictions | None
+    restrictions: BoundSequence[Restrictions]
     presences: BoundSequence[ConferencePresence]
 
 
 class Conference(Entity, Named, Owned[User]):
-    description: Optional[str]
+    description: str | None
     members: BoundSequence[ConferenceMember]
     bots: BoundSequence[ConferenceBot]
     default_permissions: Permissions
@@ -108,8 +109,8 @@ class Message(Entity):  # , Generic[C]):
     text: str | None
     attachments: BoundSequence[Media]
     time_sent: dt
-    time_edit: Optional[dt]
-    reply_to: Optional[Message]
+    time_edit: dt | None
+    reply_to: Message | None
 
 
 class Media(Entity, ABC):
