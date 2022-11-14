@@ -2,7 +2,10 @@ from __future__ import annotations
 
 from typing import Iterable, List, NewType, TypeVar, overload
 
-from microchat.core.entities import Bot, Conference, Dialog, File, Message, User, Session, Image, Media
+from microchat.core.entities import Bot, Conference, User, Session
+from microchat.core.entities import ConferenceBot, ConferenceMember, Dialog
+from microchat.core.entities import Permissions
+from microchat.core.entities import File, Message, Image, Media
 from microchat.storages import UoW
 
 
@@ -17,6 +20,7 @@ class ServiceSet:
 
     auth: Authentication
     chats: Chats
+    conferences: Conferences
     files: Files
     agents: Agents
 
@@ -174,6 +178,64 @@ class Chats:
         user: User, chat: Dialog | Conference, media_type: type[M],
         id: int
     ) -> None:
+        pass
+
+
+class Conferences:
+
+    async def list_chat_members(
+        self, user: User | Bot, conference: Conference,
+        offset: int, count: int
+    ) -> List[ConferenceBot | ConferenceMember]:
+        pass
+
+    async def get_chat_member(
+        self, user: User | Bot, conference: Conference,
+        no: int | User | Bot
+    ) -> ConferenceBot | ConferenceMember:
+        pass
+
+    @overload
+    async def add_chat_member(
+        self, user: User, conference: Conference,
+        invitee: User
+    ) -> ConferenceMember: ...
+    @overload
+    async def add_chat_member(
+        self, user: User, conference: Conference,
+        invitee: Bot
+    ) -> ConferenceBot: ...
+
+    async def add_chat_member(
+        self, user: User, conference: Conference,
+        invitee: User | Bot
+    ) -> ConferenceMember | ConferenceBot:
+        pass
+
+    async def remove_chat_member(
+        self, user: User, conference: Conference,
+        id: int | User | Bot
+    ) -> None:
+        pass
+
+    async def get_chat_member_permissions(
+        self, user: User | Bot, conference: Conference,
+        no: int | User | Bot
+    ) -> Permissions:
+        pass
+
+    async def edit_chat_member_permissions(
+        self, user: User | Bot, conference: Conference,
+        no: int | User | Bot,
+        read: bool | None = None,
+        send: bool | None = None,
+        delete: bool | None = None,
+        send_media: bool | None = None,
+        send_mediamessage: bool | None = None,
+        add_user: bool | None = None,
+        pin_message: bool | None = None,
+        edit_conference: bool | None = None,
+    ) -> Permissions:
         pass
 
 
