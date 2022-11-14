@@ -9,6 +9,7 @@ from typing import overload
 T = TypeVar('T')
 T_co = TypeVar('T_co', covariant=True)
 T_contra = TypeVar('T_contra', contravariant=True)
+Owner_co = TypeVar('Owner_co', covariant=True)
 
 MIMEType = Literal[
     "application",
@@ -65,7 +66,7 @@ AudiosMIME = Literal[
 ]
 
 
-class AsyncSequence(Protocol[T]):
+class AsyncSequence(Awaitable[Sequence[T]], Protocol[T]):
     @overload
     @abstractmethod
     async def __getitem__(self, index: int) -> T: ...
@@ -73,14 +74,8 @@ class AsyncSequence(Protocol[T]):
     @abstractmethod
     async def __getitem__(self, index: slice) -> Sequence[T]: ...
     @abstractmethod
-    async def index(self, value: T, start: int = ..., stop: int = ...) -> int: ...  # noqa
-    @abstractmethod
-    async def count(self, value: T) -> int: ...
-    @abstractmethod
-    async def __aiter__(self) -> AsyncIterator[T]: ...
+    async def __getitem__(self, index: int | slice) -> T | Sequence[T]: ...
 
-
-class BoundSequence(ABC, Awaitable[Sequence[T]], AsyncSequence[T], Generic[T]):
     @overload
     @abstractmethod
     def __setitem__(self, index: int, value: T) -> None: ...
@@ -88,6 +83,7 @@ class BoundSequence(ABC, Awaitable[Sequence[T]], AsyncSequence[T], Generic[T]):
     @abstractmethod
     def __setitem__(self, index: slice, values: Iterable[T]) -> None: ...
     def __setitem__(self, index: int | slice, value: T | Iterable[T]) -> None: ...  # noqa
+
     @overload
     @abstractmethod
     def __delitem__(self, index: int) -> None: ...
@@ -96,17 +92,50 @@ class BoundSequence(ABC, Awaitable[Sequence[T]], AsyncSequence[T], Generic[T]):
     def __delitem__(self, index: slice) -> None: ...
     @abstractmethod
     def __delitem__(self, index: int | slice) -> None: ...
+
     @abstractmethod
-    async def insert(self, index: int, value: T) -> None: ...
+    async def __aiter__(self) -> AsyncIterator[T]: ...
+
+    @abstractmethod
+    def __await__(self) -> Generator[None, None, Sequence[T]]: ...
+
     @abstractmethod
     async def append(self, value: T) -> None: ...
+
+    @abstractmethod
+    async def count(self, value: T) -> int: ...
+
     @abstractmethod
     async def extend(self, values: Iterable[T]) -> None: ...
+
     @abstractmethod
-    def __iadd__(self, x: Iterable[T]) -> BoundSequence[T]: ...
+    async def index(self, value: T, start: int = ..., stop: int = ...) -> int: ...  # noqa
+
     @abstractmethod
-    def __await__(self) -> Generator[Any, None, Sequence[T]]: ...
+    async def insert(self, index: int, value: T) -> None: ...
 
 
-if __name__ == "__main__":
-    pass
+class BoundSequence(ABC, Generic[T_co, Owner_co]):
+    name: str
+    owner: type[Owner_co]
+
+    @overload
+    @abstractmethod
+    def __get__(
+        self: BoundSequence[T_co, Owner_co], obj: None, cls: type[Owner_co]
+    ) -> BoundSequence[T_co, Owner_co]: ...
+    @overload  # noqa
+    @abstractmethod
+    def __get__(
+        self, obj: Any, cls: type[Owner_co]
+    ) -> AsyncSequence[T_co]: ...
+
+    @abstractmethod
+    def __get__(
+        self, obj: Any | None, cls: type[Owner_co]
+    ) -> AsyncSequence[T_co] | BoundSequence[T_co, Owner_co]:
+        pass
+
+    def __set_name__(self, owner: type[Owner_co], name: str) -> None:
+        self.name = name
+        self.owner = owner
