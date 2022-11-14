@@ -8,7 +8,7 @@ from pathlib import Path
 from typing import Any, Literal
 from typing import Generic, TypeVar
 
-from .types import BoundSequence
+from .types import Bound, BoundSequence
 from .types import MIMEType, AudiosMIME, ImagesMIME, VideosMIME
 
 
@@ -105,7 +105,7 @@ class Session(Entity):
 class Message(Entity):  # , Generic[C]):
     id: int  # internal (DB) id
     no: int  # number of message in dialog/conference  # it is just index
-    sender: User | Bot
+    sender: Bound[User | Bot]
     text: str | None
     attachments: BoundSequence[Media]
     time_sent: dt
@@ -155,7 +155,7 @@ class FileInfo:
 class Restrictions(Entity):
     since: dt
     to: dt
-    restictor: User | Bot
+    restictor: Bound[User | Bot]
     read: Literal[False] | None = None
     send: Literal[False] | None = None
     delete: Literal[False] | None = None

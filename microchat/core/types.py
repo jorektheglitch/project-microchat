@@ -115,6 +115,35 @@ class AsyncSequence(Awaitable[Sequence[T]], Protocol[T]):
     async def insert(self, index: int, value: T) -> None: ...
 
 
+class Bound(ABC, Generic[T_co]):
+    name: str
+    owner: type
+
+    @overload
+    @abstractmethod
+    def __get__(
+        self: Bound[T_co], obj: None, cls: type
+    ) -> Bound[T_co]: ...
+    @overload  # noqa
+    @abstractmethod
+    def __get__(
+        self, obj: T, cls: type[T]
+    ) -> Awaitable[T_co]: ...
+
+    @abstractmethod
+    def __get__(
+        self, obj: T | None, cls: type[T]
+    ) -> Awaitable[T_co] | Bound[T_co]:
+        pass
+
+    def __set__(self, obj: T, value: Any) -> None:
+        pass
+
+    def __set_name__(self, owner: type[T], name: str) -> None:
+        self.name = name
+        self.owner = owner
+
+
 class BoundSequence(ABC, Generic[T_co]):
     name: str
     owner: type
