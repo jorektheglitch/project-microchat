@@ -1,4 +1,4 @@
-from typing import Callable
+from typing import Callable, Sequence
 
 from aiohttp import web
 
@@ -6,7 +6,16 @@ from microchat.storages import UoW
 from microchat.services import ServiceSet
 
 from .auth import router as auth_routes
+from .chats import router as chats_routes
+from .media import router as media_routes
 from ..api_utils import Handler, Middleware
+
+
+SUBROUTES: dict[str, Sequence[web.AbstractRouteDef]] = {
+    "/auth/": auth_routes,
+    "/chats/": chats_routes,
+    "/media/": media_routes
+}
 
 
 def services_middleware(uow_factory: Callable[[], UoW]) -> Middleware:
@@ -25,7 +34,8 @@ def api_app(uow_factory: Callable[[], UoW]) -> web.Application:
     api_app = web.Application(middlewares=[
         services_middleware(uow_factory)
     ])
-    auth_app = web.Application()
-    auth_app.router.add_routes(auth_routes)
-    api_app.add_subapp("/auth/", auth_app)
+    for prefix, routes in SUBROUTES.items():
+        subapp = web.Application()
+        subapp.router.add_routes(routes)
+        api_app.add_subapp(prefix, subapp)
     return api_app
