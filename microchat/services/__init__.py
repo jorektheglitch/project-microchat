@@ -1,11 +1,13 @@
 from __future__ import annotations
 
-from typing import Iterable, List, NewType, TypeVar, overload
+from contextlib import asynccontextmanager
+
+from typing import AsyncGenerator, Iterable, List, NewType, TypeVar, overload
 
 from microchat.core.entities import Bot, Conference, User, Session
 from microchat.core.entities import ConferenceBot, ConferenceMember, Dialog
 from microchat.core.entities import Permissions
-from microchat.core.entities import FileInfo, Message, Image, Media
+from microchat.core.entities import FileInfo, Message, Image, Media, TempFile
 from microchat.storages import UoW
 
 
@@ -241,10 +243,10 @@ class Conferences:
 
 class Files:
 
-    async def store(
+    async def materialize(
         self,
         user: User,
-        file: FileInfo,
+        file: TempFile,
         name: str,
         mime_type: str
     ) -> Media:
@@ -255,3 +257,11 @@ class Files:
 
     async def get_infos(self, user: User, ids: Iterable[int]) -> List[Media]:
         pass
+
+    @asynccontextmanager
+    async def tempfile(self) -> AsyncGenerator[TempFile, None]:
+        tmpfile: TempFile
+        try:
+            yield tmpfile
+        finally:
+            await tmpfile.close()

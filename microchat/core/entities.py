@@ -1,10 +1,13 @@
 from __future__ import annotations
-from abc import ABC
+
+from abc import ABC, abstractmethod
 from dataclasses import dataclass, fields
 from datetime import datetime as dt
 from enum import Enum, auto
 
 from pathlib import Path
+
+from types import TracebackType
 from typing import Any, Literal
 from typing import Generic, TypeVar
 
@@ -14,6 +17,7 @@ from .types import MIMEType, AudiosMIME, ImagesMIME, VideosMIME
 
 C = TypeVar('C', "Conference", "Dialog")  # C means Conversation
 T = TypeVar('T')
+E = TypeVar('E', bound=Exception)
 
 
 class Entity(ABC):
@@ -148,8 +152,33 @@ class File(Media):
 
 class FileInfo:
     path: Path
+    hash: str
+    size: int
+
+
+class TempFile(ABC):
     hash: bytes
     size: int
+
+    async def __aenter__(self: T) -> T:
+        return self
+
+    @abstractmethod
+    async def __aexit__(
+        self,
+        exc_cls: type[E] | None,
+        exc: E | None,
+        tb: TracebackType | None
+    ) -> None:
+        pass
+
+    @abstractmethod
+    async def write(self, data: bytes) -> None:
+        pass
+
+    @abstractmethod
+    async def close(self) -> None:
+        pass
 
 
 class Restrictions(Entity):
