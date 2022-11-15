@@ -250,7 +250,7 @@ class Files:
     ) -> Media:
         pass
 
-    async def get_info(self, user: User, id: int) -> Media:
+    async def get_info(self, user: User, hash: str) -> Media:
         pass
 
     async def get_infos(self, user: User, ids: Iterable[int]) -> List[Media]:

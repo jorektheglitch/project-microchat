@@ -96,13 +96,13 @@ async def set_chat_avatar(
     alias = request.match_info.get("alias")
     if not alias:
         raise BadRequest("Empty username")
-    image_id = payload.get("image")
-    if not image_id or not isinstance(image_id, int):
-        raise BadRequest("Invalid parameters")
+    image_hash = payload.get("image")
+    if not image_hash:
+        raise BadRequest("Missing 'image' parameter")
     chat = await services.agents.resolve_chat_alias(user, alias)
     if chat.owner != user and not user.privileges:
         raise Forbidden("Access denied")
-    avatar = await services.files.get_info(user, image_id)
+    avatar = await services.files.get_info(user, image_hash)
     if not isinstance(avatar, Image):
         raise BadRequest("Given id does not refers to image")
     await services.chats.set_chat_avatar(user, chat, avatar)
