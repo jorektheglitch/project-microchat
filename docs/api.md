@@ -85,7 +85,13 @@
 ## Media
 
 - `/api/media`
-  - ❌ POST
+  - ✅ POST
+- `/api/media/{hash}`
+  - ✅ GET
+- `/api/media/{hash}/content`
+  - ✅ GET
+- `/api/media/{hash}/preview`
+  - ✅ GET
 
 ## Contacts
 
