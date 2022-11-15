@@ -1,19 +1,24 @@
 from __future__ import annotations
 
 from abc import ABC
+from dataclasses import dataclass
 import enum
 import json
 import functools
-from dataclasses import dataclass
 
-from typing import Any, Awaitable, Callable, ClassVar, Literal, Sequence, TypeGuard
+from typing import Any, ParamSpec, TypeVar
+from typing import Awaitable, Callable, ClassVar, Literal, Sequence, TypeGuard
 from typing import overload
 
 from aiohttp import web
+from aiohttp import typedefs
 
 from microchat.services import ServiceError, ServiceSet, AccessToken
 from microchat.core.entities import Entity, User
 
+
+P = ParamSpec("P")
+T = TypeVar("T")
 
 JSON = str | int | float | list["JSON"] | dict[str, "JSON"] | None
 APIResponseBody = Entity | Sequence[Entity] | dict[str, Entity]
@@ -191,71 +196,76 @@ def wrap_api_handler(
     encoder: type[json.JSONEncoder]
 ) -> Callable[[web.Request], Awaitable[web.StreamResponse]]:
     dumps = functools.partial(json.dumps, cls=encoder)
+    if authenticated_handler(handler, access_level):
+        handler = authenticated(handler)
+    if not default_handler(handler, AccessLevel.ANY):
+        # never happens, just for type checker
+        raise RuntimeError
+    api_handler = with_services(handler)
+    wrapped_handler = wrap_api_response(api_handler, dumps)
+    return wrapped_handler
+
+
+def with_services(
+    handler: Callable[[web.Request, ServiceSet], Awaitable[T]]
+) -> Callable[[web.Request], Awaitable[T]]:
+    @functools.wraps(handler)
+    async def wrapped(request: web.Request) -> T:
+        services: ServiceSet = request["services"]
+        return await handler(request, services)
+    return wrapped
+
+
+def authenticated(
+    handler: Callable[[web.Request, ServiceSet, User], Awaitable[T]]
+) -> Callable[[web.Request, ServiceSet], Awaitable[T]]:
+    BANNER = json.dumps({"error": "missing Authentication header"})
 
     @functools.wraps(handler)
-    async def wrapped_handler(request: web.Request) -> web.StreamResponse:
-        services: ServiceSet = request["services"]
-        if default_handler(handler, access_level):
-            try:
-                api_response = await handler(request, services)
-            except APIException as api_exc:
-                response = web.json_response(
-                    api_exc.payload,
-                    status=api_exc.status_code,
-                    reason=api_exc.reason,
-                    dumps=dumps
-                )
-            except ServiceError as service_exc:
-                exc_info = APIException.from_service_exc(service_exc)
-                response = web.json_response(
-                    exc_info.payload,
-                    status=exc_info.status_code,
-                    reason=exc_info.reason,
-                    dumps=dumps
-                )
-            else:
-                response = web.json_response(
-                    api_response.payload,
-                    status=api_response.status_code,
-                    dumps=dumps
-                )
-        elif authenticated_handler(handler, access_level):
-            token_raw = request.headers.get("Authentication")
-            if not token_raw:
-                return web.json_response(
-                    {"error": "missing Authentication header"},
-                    status=403
-                )
-            token = AccessToken(token_raw)
-            session = await services.auth.resolve_token(token)
-            user = session.auth.user
-            try:
-                api_response = await handler(request, services, user)
-            except APIException as api_exc:
-                response = web.json_response(
-                    api_exc.payload,
-                    status=api_exc.status_code,
-                    reason=api_exc.reason,
-                    dumps=dumps
-                )
-            except ServiceError as service_exc:
-                exc_info = APIException.from_service_exc(service_exc)
-                response = web.json_response(
-                    exc_info.payload,
-                    status=exc_info.status_code,
-                    reason=exc_info.reason,
-                    dumps=dumps
-                )
-            else:
-                response = web.json_response(
-                    api_response.payload,
-                    status=api_response.status_code,
-                    dumps=dumps
-                )
+    async def wrapped(request: web.Request, services: ServiceSet) -> T:
+        token_raw = request.headers.get("Authentication")
+        if not token_raw:
+            raise web.HTTPForbidden(
+                text=BANNER, content_type="application/json"
+            )
+        token = AccessToken(token_raw)
+        session = await services.auth.resolve_token(token)
+        user = session.auth.user
+        return await handler(request, services, user)
+    return wrapped
+
+
+def wrap_api_response(
+    handler: Callable[P, Awaitable[APIResponse]],
+    dumps: typedefs.JSONEncoder
+) -> Callable[P, Awaitable[web.StreamResponse]]:
+    @functools.wraps(handler)
+    async def wrapped(*args: P.args, **kwargs: P.kwargs) -> web.StreamResponse:
+        try:
+            api_response = await handler(*args, **kwargs)
+        except APIException as api_exc:
+            response = web.json_response(
+                api_exc.payload,
+                status=api_exc.status_code,
+                reason=api_exc.reason,
+                dumps=dumps
+            )
+        except ServiceError as service_exc:
+            exc_info = APIException.from_service_exc(service_exc)
+            response = web.json_response(
+                exc_info.payload,
+                status=exc_info.status_code,
+                reason=exc_info.reason,
+                dumps=dumps
+            )
         else:
-            raise web.HTTPBadRequest()
+            response = web.json_response(
+                api_response.payload,
+                status=api_response.status_code,
+                dumps=dumps
+            )
         return response
-    return wrapped_handler
+    return wrapped
 
 
 def authenticated_handler(
