@@ -16,14 +16,16 @@ router = web.RouteTableDef()
 async def list_chat_members(
     request: web.Request, services: ServiceSet, user: User
 ) -> APIResponse:
-    payload = await request.json()
-    if not isinstance(payload, dict):
-        raise BadRequest("Invalid body")
     alias = request.match_info.get("alias")
     if not alias:
         raise BadRequest("Empty username")
-    offset = payload.get("offset", 0)
-    count = payload.get("count", 100)
+    offset = request.query.get("offset", 0)
+    count = request.query.get("count", 10)
+    try:
+        offset = int(offset)
+        count = int(count)
+    except (ValueError, TypeError):
+        raise BadRequest("Invalid offset or count params")
     if not (isinstance(offset, int) and isinstance(count, int)):
         raise BadRequest("Invalid parameters")
     conference = await services.agents.resolve_alias(user, alias)
@@ -76,9 +78,6 @@ async def add_chat_member(
 async def get_chat_member(
     request: web.Request, services: ServiceSet, user: User
 ) -> APIResponse:
-    payload = await request.json()
-    if not isinstance(payload, dict):
-        raise BadRequest("Invalid body")
     alias = request.match_info.get("alias")
     id_repr = request.match_info.get("id")
     member_alias = request.match_info.get("member_alias")
@@ -148,9 +147,6 @@ async def remove_chat_member(
 async def get_chat_member_permissions(
     request: web.Request, services: ServiceSet, user: User
 ) -> APIResponse:
-    payload = await request.json()
-    if not isinstance(payload, dict):
-        raise BadRequest("Invalid body")
     alias = request.match_info.get("alias")
     id_repr = request.match_info.get("id")
     member_alias = request.match_info.get("member_alias")

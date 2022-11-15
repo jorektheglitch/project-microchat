@@ -25,13 +25,13 @@ MEDIA_CLASSES: dict[str, type[Media]] = {
 async def list_chats(
     request: web.Request, services: ServiceSet, user: User
 ) -> APIResponse:
-    payload = await request.json()
-    if not isinstance(payload, dict):
-        raise BadRequest("Invalid body")
-    offset = payload.get("offset", 0)
-    count = payload.get("count", 100)
-    if not (isinstance(offset, int) and isinstance(count, int)):
-        raise BadRequest("Invalid parameters")
+    offset = request.query.get("offset", 0)
+    count = request.query.get("count", 10)
+    try:
+        offset = int(offset)
+        count = int(count)
+    except (ValueError, TypeError):
+        raise BadRequest("Invalid offset or count params")
     chats = await services.chats.list_chats(user, offset, count)
     return APIResponse(chats)
 
@@ -41,9 +41,6 @@ async def list_chats(
 async def get_chat_info(
     request: web.Request, services: ServiceSet, user: User
 ) -> APIResponse:
-    payload = await request.json()
-    if not isinstance(payload, dict):
-        raise BadRequest("Invalid body")
     alias = request.match_info.get("alias")
     if not alias:
         raise BadRequest("Empty username")
@@ -71,16 +68,16 @@ async def remove_chat(
 async def list_chat_avatars(
     request: web.Request, services: ServiceSet, user: User
 ) -> APIResponse:
-    payload = await request.json()
-    if not isinstance(payload, dict):
-        raise BadRequest("Invalid body")
     alias = request.match_info.get("alias")
     if not alias:
         raise BadRequest("Empty username")
-    offset = payload.get("offset", 0)
-    count = payload.get("count", 100)
-    if not (isinstance(offset, int) and isinstance(count, int)):
-        raise BadRequest("Invalid parameters")
+    offset = request.query.get("offset", 0)
+    count = request.query.get("count", 10)
+    try:
+        offset = int(offset)
+        count = int(count)
+    except (ValueError, TypeError):
+        raise BadRequest("Invalid offset or count params")
     chat = await services.agents.resolve_chat_alias(user, alias)
     avatars = await services.chats.list_chat_avatars(
         user, chat, offset, count
@@ -118,9 +115,6 @@ async def set_chat_avatar(
 async def remove_chat_avatar(
     request: web.Request, services: ServiceSet, user: User
 ) -> APIResponse:
-    payload = await request.json()
-    if not isinstance(payload, dict):
-        raise BadRequest("Invalid body")
     alias = request.match_info.get("alias")
     id = request.match_info.get("id", -1)
     avatar_id = int(id)
@@ -138,16 +132,16 @@ async def remove_chat_avatar(
 async def list_chat_messages(
     request: web.Request, services: ServiceSet, user: User
 ) -> APIResponse:
-    payload = await request.json()
-    if not isinstance(payload, dict):
-        raise BadRequest("Invalid body")
     alias = request.match_info.get("alias")
     if not alias:
         raise BadRequest("Empty username")
-    offset = payload.get("offset", 0)
-    count = payload.get("count", 100)
-    if not (isinstance(offset, int) and isinstance(count, int)):
-        raise BadRequest("Invalid parameters")
+    offset = request.query.get("offset", 0)
+    count = request.query.get("count", 10)
+    try:
+        offset = int(offset)
+        count = int(count)
+    except (ValueError, TypeError):
+        raise BadRequest("Invalid offset or count params")
     chat = await services.agents.resolve_chat_alias(user, alias)
     messages = await services.chats.list_chat_messages(
         user, chat, offset, count
@@ -193,9 +187,6 @@ async def send_message(
 async def get_chat_message(
     request: web.Request, services: ServiceSet, user: User
 ) -> APIResponse:
-    payload = await request.json()
-    if not isinstance(payload, dict):
-        raise BadRequest("Invalid body")
     alias = request.match_info.get("alias")
     id = request.match_info.get("id", "-1")
     message_id = int(id)
@@ -266,9 +257,6 @@ async def remove_chat_message(
 async def list_chat_media(
     request: web.Request, services: ServiceSet, user: User
 ) -> APIResponse:
-    payload = await request.json()
-    if not isinstance(payload, dict):
-        raise BadRequest("Invalid body")
     alias = request.match_info.get("alias")
     if not alias:
         raise BadRequest("Empty username")
@@ -276,10 +264,13 @@ async def list_chat_media(
     MediaType = MEDIA_CLASSES.get(media_type)
     if MediaType is None:
         raise NotFound(f"Unknown media type '{media_type}'")
-    offset = payload.get("offset", 0)
-    count = payload.get("count", 100)
-    if not (isinstance(offset, int) and isinstance(count, int)):
-        raise BadRequest("Invalid parameters")
+    offset = request.query.get("offset", 0)
+    count = request.query.get("count", 10)
+    try:
+        offset = int(offset)
+        count = int(count)
+    except (ValueError, TypeError):
+        raise BadRequest("Invalid offset or count params")
     chat = await services.agents.resolve_chat_alias(user, alias)
     medias = await services.chats.list_chat_media(
         user, chat, MediaType, offset, count
@@ -292,9 +283,6 @@ async def list_chat_media(
 async def get_chat_media(
     request: web.Request, services: ServiceSet, user: User
 ) -> APIResponse:
-    payload = await request.json()
-    if not isinstance(payload, dict):
-        raise BadRequest("Invalid body")
     alias = request.match_info.get("alias")
     id = request.match_info.get("id", "-1")
     message_id = int(id)

@@ -15,13 +15,13 @@ router = web.RouteTableDef()
 async def list_sessions(
     request: web.Request, services: ServiceSet, user: User
 ) -> APIResponse:
-    payload = await request.json()
-    if not isinstance(payload, dict):
-        raise BadRequest("Invalid body")
-    offset = payload.get("offset", 0)
-    count = payload.get("count", 10)
-    if not (isinstance(offset, int) and isinstance(count, int)):
-        raise BadRequest("Invalid body")
+    offset = request.query.get("offset", 0)
+    count = request.query.get("count", 10)
+    try:
+        offset = int(offset)
+        count = int(count)
+    except (ValueError, TypeError):
+        raise BadRequest("Invalid offset or count params")
     sessions = await services.auth.list_sessions(user, offset, count)
     return APIResponse(sessions)
 
