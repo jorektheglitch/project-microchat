@@ -258,6 +258,15 @@ class Files:
     async def get_infos(self, user: User, ids: Iterable[int]) -> List[Media]:
         pass
 
+    async def iter_content(
+        self,
+        user: User,
+        file: FileInfo,
+        *,
+        chunk_size: int = 1024**2
+    ) -> AsyncGenerator[bytes, None]:
+        yield
+
     @asynccontextmanager
     async def tempfile(self) -> AsyncGenerator[TempFile, None]:
         tmpfile: TempFile
