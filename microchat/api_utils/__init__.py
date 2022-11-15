@@ -112,30 +112,30 @@ class AccessLevel(enum.Enum):
 
 @overload
 def api_handler() -> Callable[[AuthenticatedHandler], Callable[[web.Request], Awaitable[web.StreamResponse]]]: ...
-@overload
+@overload  # noqa
 def api_handler(
     *,
     access_level: Literal[AccessLevel.ANY],
     encoder: type[json.JSONEncoder] = APIResponseEncoder
 ) -> Callable[[APIHandler], Callable[[web.Request], Awaitable[web.StreamResponse]]]: ...
-@overload
+@overload  # noqa
 def api_handler(
     *,
     access_level: Literal[AccessLevel.USER, AccessLevel.MODERATOR, AccessLevel.ADMIN],
     encoder: type[json.JSONEncoder] = APIResponseEncoder
 ) -> Callable[[AuthenticatedHandler], Callable[[web.Request], Awaitable[web.StreamResponse]]]: ...
-@overload
+@overload  # noqa
 def api_handler(
     handler: AuthenticatedHandler
 ) -> Callable[[web.Request], Awaitable[web.StreamResponse]]: ...
-@overload
+@overload  # noqa
 def api_handler(
     handler: APIHandler,
     *,
     access_level: Literal[AccessLevel.ANY],
     encoder: type[json.JSONEncoder] = APIResponseEncoder
 ) -> Callable[[web.Request], Awaitable[web.StreamResponse]]: ...
-@overload
+@overload  # noqa
 def api_handler(
     handler: AuthenticatedHandler,
     *,
