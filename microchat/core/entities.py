@@ -129,11 +129,13 @@ class Media(Entity, ABC):
 class Image(Media):
     type: Literal["image"]
     subtype: ImagesMIME
+    preview: Preview
 
 
 class Video(Media):
     type: Literal["video"]
     subtype: VideosMIME
+    preview: Preview
 
 
 class Audio(Media):
@@ -144,10 +146,17 @@ class Audio(Media):
 class Animation(Media):
     type: Literal["video"]
     subtype: Literal["webm"]
+    preview: Preview
 
 
 class File(Media):
     pass
+
+
+class Preview:
+    file_info: FileInfo
+    type: Literal["image"]
+    subtype: Literal["jpeg"]
 
 
 class FileInfo:
