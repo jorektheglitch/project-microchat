@@ -5,7 +5,7 @@ from typing import Iterable, List, NewType, TypeVar, overload
 from microchat.core.entities import Bot, Conference, User, Session
 from microchat.core.entities import ConferenceBot, ConferenceMember, Dialog
 from microchat.core.entities import Permissions
-from microchat.core.entities import File, Message, Image, Media
+from microchat.core.entities import FileInfo, Message, Image, Media
 from microchat.storages import UoW
 
 
@@ -244,7 +244,7 @@ class Files:
     async def store(
         self,
         user: User,
-        file: File,
+        file: FileInfo,
         name: str,
         mime_type: str
     ) -> Media:
