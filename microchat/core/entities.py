@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from dataclasses import dataclass, fields
 from datetime import datetime as dt
 from enum import Enum, auto
 
@@ -215,16 +214,4 @@ class Permissions(Entity):
     edit_conference: bool
 
 
-@dataclass
-class PermissionsUpdate:
-    read: bool | None
-    send: bool | None
-    delete: bool | None
-    send_media: bool | None
-    send_mediamessage: bool | None
-    add_user: bool | None
-    pin_message: bool | None
-    edit_conference: bool | None
-
-
-PERMISSIONS_FIELDS = tuple(field.name for field in fields(PermissionsUpdate))
+PERMISSIONS_FIELDS = tuple(field for field in Permissions.__annotations__)
