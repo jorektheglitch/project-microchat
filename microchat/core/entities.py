@@ -97,12 +97,13 @@ class Authentication:
 
 
 class Session(Entity):
+    id: int
     name: str
     last_active: dt
     location: tuple[str, str, str] | None  # continent, country, city
     ip_address: str
-    token: str
     auth: Authentication
+    closed: bool
 
 
 class Message(Entity):  # , Generic[C]):

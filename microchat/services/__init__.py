@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from contextlib import asynccontextmanager
 
-from typing import AsyncGenerator, Iterable, List, NewType, TypeVar, overload
+from typing import AsyncGenerator, Iterable, List, TypeVar, overload
 
 from microchat.core.entities import Bot, Conference, User, Session
 from microchat.core.entities import ConferenceBot, ConferenceMember, Dialog
@@ -30,18 +30,15 @@ class ServiceSet:
         pass
 
 
-AccessToken = NewType("AccessToken", str)
-
-
 class Authentication:
 
-    async def new_session(self, username: str, password: str) -> AccessToken:
+    async def new_session(self, username: str, password: str) -> str:
         pass
 
     async def list_sessions(self, user: User, offset: int, count: int) -> List[Session]:
         pass
 
-    async def resolve_token(self, access_token: AccessToken) -> Session:
+    async def resolve_token(self, token: str) -> Session:
         pass
 
     async def terminate_session(self, user: User, session: Session) -> None:

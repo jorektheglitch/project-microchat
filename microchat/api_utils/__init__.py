@@ -13,7 +13,7 @@ from typing import overload
 from aiohttp import web
 from aiohttp import typedefs
 
-from microchat.services import ServiceError, ServiceSet, AccessToken
+from microchat.services import ServiceError, ServiceSet
 from microchat.core.entities import Entity, User
 
 
@@ -219,17 +219,21 @@ def with_services(
 def authenticated(
     handler: Callable[[web.Request, ServiceSet, User], Awaitable[T]]
 ) -> Callable[[web.Request, ServiceSet], Awaitable[T]]:
-    BANNER = json.dumps({"error": "missing Authentication header"})
+    MISSING_HEADER = json.dumps({"error": "missing Authentication header"})
+    REVOKED = json.dumps({"error": "token was revoked"})
 
     @functools.wraps(handler)
     async def wrapped(request: web.Request, services: ServiceSet) -> T:
-        token_raw = request.headers.get("Authentication")
-        if not token_raw:
+        jwt = request.headers.get("Authentication")
+        if not jwt:
             raise web.HTTPForbidden(
-                text=BANNER, content_type="application/json"
+                text=MISSING_HEADER, content_type="application/json"
             )
-        token = AccessToken(token_raw)
-        session = await services.auth.resolve_token(token)
+        session = await services.auth.resolve_token(jwt)
+        if session.closed:
+            raise web.HTTPForbidden(
+                text=REVOKED, content_type="application/json"
+            )
         user = session.auth.user
         return await handler(request, services, user)
     return wrapped
