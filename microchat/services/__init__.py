@@ -38,6 +38,9 @@ class Authentication:
     async def list_sessions(self, user: User, offset: int, count: int) -> List[Session]:
         pass
 
+    async def get_session(self, user: User, id: int) -> Session:
+        pass
+
     async def resolve_token(self, token: str) -> Session:
         pass
 

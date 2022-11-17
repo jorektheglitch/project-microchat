@@ -42,16 +42,19 @@ async def get_access_token(
     return APIResponse(access_token)
 
 
-@router.delete(r"/sessions/{token:\w+}")
+@router.delete(r"/sessions/{session_id:\w+}")
 @api_handler
 async def terminate_session(
     request: web.Request, services: ServiceSet, user: User
 ) -> APIResponse:
-    token_raw = request.match_info.get("token")
-    if not token_raw:
-        raise BadRequest("Invalid or missing token")
-    token = AccessToken(token_raw)
-    session = await services.auth.resolve_token(token)
+    id_raw = request.match_info.get("session_id")
+    if not id_raw:
+        raise BadRequest("Invalid or missing session_id")
+    try:
+        session_id = int(id_raw)
+    except (TypeError, ValueError):
+        raise BadRequest("Incorrect 'session_id' parameter")
+    session = await services.auth.get_session(user, session_id)
     if user == session.auth.user:
         await services.auth.terminate_session(user, session)
     else:
