@@ -1,6 +1,6 @@
 from aiohttp import web
 
-from microchat.services import ServiceSet, AccessToken
+from microchat.services import ServiceSet
 from microchat.core.entities import User
 
 from microchat.api_utils import AccessLevel, api_handler, APIResponse
