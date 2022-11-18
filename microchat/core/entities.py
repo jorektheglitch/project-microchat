@@ -55,11 +55,21 @@ class Bot(Entity, Named, Owned[User]):
     conferences: BoundSequence[Conference]
 
 
-class Dialog(Entity, Owned[User]):
-    colocutor: User | Bot
-    name: str
-    surname: str | None
-    permissions: Permissions
+Actor = TypeVar("Actor", bound=User | Bot)
+
+
+class Relation(Entity, ABC, Generic[Actor]):
+    actor: Actor
+    related: User | Bot | Conference
+    permissions: Permissions | None
+
+
+class BotRelation(Relation[Bot], ABC):
+    related: User | Conference
+
+
+class Dialog(Relation[User]):
+    related: User | Bot
     messages: BoundSequence[Message]
 
 
@@ -68,24 +78,17 @@ class ConferencePresence:
     leave_at: int | None  # leave message id
 
 
-class ConferenceMember(User):
+class ConferenceParticipation(Relation[Actor], Generic[Actor]):
+    related: Conference
     role: str
-    permissions: Permissions | None
-    restrictions: Restrictions | None
-    presences: BoundSequence[ConferencePresence]
-
-
-class ConferenceBot(Bot):
-    role: str
-    permissions: Permissions | None
-    restrictions: BoundSequence[Restrictions]
     presences: BoundSequence[ConferencePresence]
 
 
 class Conference(Entity, Named, Owned[User]):
     description: str | None
-    members: BoundSequence[ConferenceMember]
-    bots: BoundSequence[ConferenceBot]
+    members: BoundSequence[ConferenceParticipation[User | Bot]]
+    users: BoundSequence[ConferenceParticipation[User]]
+    bots: BoundSequence[ConferenceParticipation[Bot]]
     default_permissions: Permissions
     messages: BoundSequence[Message]
 

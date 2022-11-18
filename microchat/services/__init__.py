@@ -4,8 +4,8 @@ from contextlib import asynccontextmanager
 
 from typing import AsyncGenerator, Iterable, List, TypeVar, overload
 
-from microchat.core.entities import Bot, Conference, User, Session
-from microchat.core.entities import ConferenceBot, ConferenceMember, Dialog
+from microchat.core.entities import Bot, Conference, User, Actor, Session
+from microchat.core.entities import ConferenceParticipation, Dialog
 from microchat.core.entities import Permissions
 from microchat.core.entities import FileInfo, Message, Image, Media, TempFile
 from microchat.storages import UoW
@@ -63,12 +63,14 @@ class Agents:
     ) -> Agent:
         pass
 
-    async def get_chat(self, user: User, id: int) -> Dialog | ConferenceMember:
+    async def get_chat(
+        self, user: User, id: int
+    ) -> Dialog | ConferenceParticipation[User]:
         pass
 
     async def resolve_chat_alias(
         self, user: User, alias: str
-    ) -> Dialog | ConferenceMember:
+    ) -> Dialog | ConferenceParticipation[User]:
         pass
 
     async def list_avatars(
@@ -127,44 +129,46 @@ class Chats:
 
     async def list_chats(
         self, user: User, offset: int, count: int
-    ) -> List[Dialog | ConferenceMember]:
+    ) -> List[Dialog | ConferenceParticipation[User]]:
         pass
 
     async def remove_chat(
-        self, user: User, chat: Dialog | ConferenceMember
+        self, user: User, chat: Dialog | ConferenceParticipation[User]
     ) -> None:
         pass
 
     async def list_chat_messages(
-        self, user: User, chat: Dialog | ConferenceMember, offset: int, count: int
+        self,
+        user: User, chat: Dialog | ConferenceParticipation[User],
+        offset: int, count: int
     ) -> List[Message]:
         pass
 
     async def get_chat_message(
-        self, user: User, chat: Dialog | ConferenceMember, id: int
+        self, user: User, chat: Dialog | ConferenceParticipation[User], id: int
     ) -> Message:
         pass
 
     @overload
     async def add_chat_message(
-        self, user: User, chat: Dialog | ConferenceMember,
+        self, user: User, chat: Dialog | ConferenceParticipation[User],
         text: str, attachments: None, reply_to: Message | None
     ) -> Message: ...
     @overload
     async def add_chat_message(
-        self, user: User, chat: Dialog | ConferenceMember,
+        self, user: User, chat: Dialog | ConferenceParticipation[User],
         text: str, attachments: List[Media], reply_to: Message | None
     ) -> Message: ...
     @overload
     async def add_chat_message(
-        self, user: User, chat: Dialog | ConferenceMember,
+        self, user: User, chat: Dialog | ConferenceParticipation[User],
         text: None, attachments: List[Media], reply_to: Message | None
     ) -> Message: ...
 
     async def add_chat_message(
         self,
         user: User,
-        chat: Dialog | ConferenceMember,
+        chat: Dialog | ConferenceParticipation[User],
         text: str | None = None,
         attachments: List[Media] | None = None,
         reply_to: Message | None = None
@@ -174,24 +178,24 @@ class Chats:
 
     @overload
     async def edit_chat_message(
-        self, user: User, chat: Dialog | ConferenceMember, id: int,
-        text: str, attachments: None
+        self, user: User, chat: Dialog | ConferenceParticipation[User],
+        id: int, text: str, attachments: None
     ) -> Message: ...
     @overload
     async def edit_chat_message(
-        self, user: User, chat: Dialog | ConferenceMember, id: int,
-        text: str, attachments: List[Media]
+        self, user: User, chat: Dialog | ConferenceParticipation[User],
+        id: int, text: str, attachments: List[Media]
     ) -> Message: ...
     @overload
     async def edit_chat_message(
-        self, user: User, chat: Dialog | ConferenceMember, id: int,
-        text: None, attachments: List[Media]
+        self, user: User, chat: Dialog | ConferenceParticipation[User],
+        id: int, text: None, attachments: List[Media]
     ) -> Message: ...
 
     async def edit_chat_message(
         self,
         user: User,
-        chat: Dialog | ConferenceMember,
+        chat: Dialog | ConferenceParticipation[User],
         id: int,
         text: str | None = None,
         attachments: List[Media] | None = None
@@ -199,27 +203,30 @@ class Chats:
         pass
 
     async def remove_chat_message(
-        self, user: User, chat: Dialog | ConferenceMember, id: int
+        self, user: User, chat: Dialog | ConferenceParticipation[User], id: int
     ) -> None:
         pass
 
     async def list_chat_media(
         self,
-        user: User, chat: Dialog | ConferenceMember, media_type: type[M],
+        user: User, chat: Dialog | ConferenceParticipation[User],
+        media_type: type[M],
         offset: int, count: int
     ) -> List[M]:
         pass
 
     async def get_chat_media(
         self,
-        user: User, chat: Dialog | ConferenceMember, media_type: type[M],
+        user: User, chat: Dialog | ConferenceParticipation[User],
+        media_type: type[M],
         id: int
     ) -> Media:
         pass
 
     async def remove_chat_media(
         self,
-        user: User, chat: Dialog | ConferenceMember, media_type: type[M],
+        user: User, chat: Dialog | ConferenceParticipation[User],
+        media_type: type[M],
         id: int
     ) -> None:
         pass
@@ -230,30 +237,19 @@ class Conferences:
     async def list_chat_members(
         self, user: User | Bot, conference: Conference,
         offset: int, count: int
-    ) -> List[ConferenceBot | ConferenceMember]:
+    ) -> List[ConferenceParticipation[User | Bot]]:
         pass
 
     async def get_chat_member(
         self, user: User | Bot, conference: Conference,
         no: int | User | Bot
-    ) -> ConferenceBot | ConferenceMember:
+    ) -> ConferenceParticipation[User | Bot]:
         pass
 
-    @overload
     async def add_chat_member(
         self, user: User, conference: Conference,
-        invitee: User
-    ) -> ConferenceMember: ...
-    @overload
-    async def add_chat_member(
-        self, user: User, conference: Conference,
-        invitee: Bot
-    ) -> ConferenceBot: ...
-
-    async def add_chat_member(
-        self, user: User, conference: Conference,
-        invitee: User | Bot
-    ) -> ConferenceMember | ConferenceBot:
+        invitee: Actor
+    ) -> ConferenceParticipation[Actor]:
         pass
 
     async def remove_chat_member(
