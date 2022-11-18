@@ -13,6 +13,9 @@ from microchat.storages import UoW
 
 M = TypeVar("M", bound=Media)
 
+Agent = User | Bot | Conference
+A = TypeVar("A", bound=Agent)
+
 
 class ServiceError(Exception):
     pass
@@ -52,17 +55,71 @@ class Agents:
 
     async def get(
         self, user: User, id: int
-    ) -> User | Bot | Conference:
+    ) -> Agent:
         pass
 
     async def resolve_alias(
         self, user: User, alias: str
-    ) -> User | Bot | Conference:
+    ) -> Agent:
+        pass
+
+    async def get_chat(self, user: User, id: int) -> Dialog | ConferenceMember:
         pass
 
     async def resolve_chat_alias(
         self, user: User, alias: str
-    ) -> Dialog | Conference:
+    ) -> Dialog | ConferenceMember:
+        pass
+
+    async def list_avatars(
+        self, user: User, agent: Agent, offset: int, count: int
+    ) -> List[Image]:
+        pass
+
+    async def get_avatar(
+        self, user: User, agent: Agent, id: int
+    ) -> Image:
+        pass
+
+    async def edit_self(
+        self,
+        user: User,
+        alias: str | None = None,
+        avatar: str | None = None,
+        name: str | None = None,
+        surname: str | None = None,
+        bio: str | None = None
+    ) -> User:
+        pass
+
+    async def edit_permissions(
+        self,
+        user: User,
+        relation: Dialog,
+        **kwargs: bool
+    ) -> Dialog:
+        pass
+
+    async def edit_agent(
+        self,
+        user: User,
+        agent: A,
+        **kwargs: str
+    ) -> A:
+        # raise is user != agent
+        pass
+
+    async def set_avatar(
+        self, user: User, agent: Agent, avatar: Image
+    ) -> None:
+        pass
+
+    async def remove_avatar(
+        self, user: User, agent: Agent, id: int
+    ) -> None:
+        pass
+
+    async def remove_agent(self, user: User, agent: Agent) -> None:
         pass
 
 
@@ -70,59 +127,44 @@ class Chats:
 
     async def list_chats(
         self, user: User, offset: int, count: int
-    ) -> List[Dialog | Conference]:
+    ) -> List[Dialog | ConferenceMember]:
         pass
 
     async def remove_chat(
-        self, user: User, chat: Dialog | Conference
-    ) -> None:
-        pass
-
-    async def list_chat_avatars(
-        self, user: User, chat: Dialog | Conference, offset: int, count: int
-    ) -> List[Image]:
-        pass
-
-    async def set_chat_avatar(
-        self, user: User, chat: Dialog | Conference, avatar: Image
-    ) -> None:
-        pass
-
-    async def remove_chat_avatar(
-        self, user: User, chat: Dialog | Conference, id: int
+        self, user: User, chat: Dialog | ConferenceMember
     ) -> None:
         pass
 
     async def list_chat_messages(
-        self, user: User, chat: Dialog | Conference, offset: int, count: int
+        self, user: User, chat: Dialog | ConferenceMember, offset: int, count: int
     ) -> List[Message]:
         pass
 
     async def get_chat_message(
-        self, user: User, chat: Dialog | Conference, id: int
+        self, user: User, chat: Dialog | ConferenceMember, id: int
     ) -> Message:
         pass
 
     @overload
     async def add_chat_message(
-        self, user: User, chat: Dialog | Conference,
+        self, user: User, chat: Dialog | ConferenceMember,
         text: str, attachments: None, reply_to: Message | None
     ) -> Message: ...
     @overload
     async def add_chat_message(
-        self, user: User, chat: Dialog | Conference,
+        self, user: User, chat: Dialog | ConferenceMember,
         text: str, attachments: List[Media], reply_to: Message | None
     ) -> Message: ...
     @overload
     async def add_chat_message(
-        self, user: User, chat: Dialog | Conference,
+        self, user: User, chat: Dialog | ConferenceMember,
         text: None, attachments: List[Media], reply_to: Message | None
     ) -> Message: ...
 
     async def add_chat_message(
         self,
         user: User,
-        chat: Dialog | Conference,
+        chat: Dialog | ConferenceMember,
         text: str | None = None,
         attachments: List[Media] | None = None,
         reply_to: Message | None = None
@@ -132,24 +174,24 @@ class Chats:
 
     @overload
     async def edit_chat_message(
-        self, user: User, chat: Dialog | Conference, id: int,
+        self, user: User, chat: Dialog | ConferenceMember, id: int,
         text: str, attachments: None
     ) -> Message: ...
     @overload
     async def edit_chat_message(
-        self, user: User, chat: Dialog | Conference, id: int,
+        self, user: User, chat: Dialog | ConferenceMember, id: int,
         text: str, attachments: List[Media]
     ) -> Message: ...
     @overload
     async def edit_chat_message(
-        self, user: User, chat: Dialog | Conference, id: int,
+        self, user: User, chat: Dialog | ConferenceMember, id: int,
         text: None, attachments: List[Media]
     ) -> Message: ...
 
     async def edit_chat_message(
         self,
         user: User,
-        chat: Dialog | Conference,
+        chat: Dialog | ConferenceMember,
         id: int,
         text: str | None = None,
         attachments: List[Media] | None = None
@@ -157,27 +199,27 @@ class Chats:
         pass
 
     async def remove_chat_message(
-        self, user: User, chat: Dialog | Conference, id: int
+        self, user: User, chat: Dialog | ConferenceMember, id: int
     ) -> None:
         pass
 
     async def list_chat_media(
         self,
-        user: User, chat: Dialog | Conference, media_type: type[M],
+        user: User, chat: Dialog | ConferenceMember, media_type: type[M],
         offset: int, count: int
     ) -> List[M]:
         pass
 
     async def get_chat_media(
         self,
-        user: User, chat: Dialog | Conference, media_type: type[M],
+        user: User, chat: Dialog | ConferenceMember, media_type: type[M],
         id: int
     ) -> Media:
         pass
 
     async def remove_chat_media(
         self,
-        user: User, chat: Dialog | Conference, media_type: type[M],
+        user: User, chat: Dialog | ConferenceMember, media_type: type[M],
         id: int
     ) -> None:
         pass

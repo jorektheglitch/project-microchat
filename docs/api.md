@@ -16,12 +16,12 @@
 - Users and bots ❌
   - `/api/v0/users`: `POST` ❌ (unauthenticated access)
   - `/api/v0/bots`: `POST` ❌
-- Entities (users, bots, conferences) ⚠️
-  - `/api/v0/entities/self`: `GET` ✅, `PATCH` ❌, `DELETE` ❌
-  - `/api/v0/entities/({eid}|@{alias})`: `GET` ✅, `PATCH` ❌, `DELETE` ❌
-  - `/api/v0/entities/({eid}|@{alias})/avatars`: `GET` ✅, `POST` ❌
-  - `/api/v0/entities/({eid}|@{alias})/avatars/{id}`: `DELETE` ❌
-  - `/api/v0/entities/({eid}|@{alias})/pemissions`: `GET` ❌, `PATCH` ❌
+- Entities (users, bots, conferences) ✅
+  - `/api/v0/entities/self`: `GET` ✅, `PATCH` ✅, `DELETE` ✅
+  - `/api/v0/entities/({eid}|@{alias})`: `GET` ✅, `PATCH` ✅, `DELETE` ✅
+  - `/api/v0/entities/({eid}|@{alias})/avatars`: `GET` ✅, `POST` ✅
+  - `/api/v0/entities/({eid}|@{alias})/avatars/{id}`: `DELETE` ✅
+  - `/api/v0/entities/({eid}|@{alias})/pemissions`: `GET` ✅, `PATCH` ✅
     Users and bots permissons. You can't manage conference's permissions.
 - Chats ❌
   - `/api/v0/chats`: `GET` ❌

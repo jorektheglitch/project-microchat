@@ -7,6 +7,7 @@ from microchat.services import ServiceSet
 
 from .auth import router as auth_routes
 from .chats import router as chats_routes
+from .entities import router as entities_routes
 from .media import router as media_routes
 from ..api_utils import Handler, Middleware
 
@@ -14,6 +15,7 @@ from ..api_utils import Handler, Middleware
 SUBROUTES: dict[str, Sequence[web.AbstractRouteDef]] = {
     "/auth/": auth_routes,
     "/chats/": chats_routes,
+    "/entities/": entities_routes,
     "/media/": media_routes
 }
 

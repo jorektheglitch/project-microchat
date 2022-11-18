@@ -25,7 +25,7 @@ class Entity(ABC):
 
 class Named(ABC):
     id: int
-    username: str
+    alias: str
     title: str
     avatar: Image
 
