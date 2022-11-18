@@ -1,7 +1,7 @@
 from aiohttp import web
 
 from microchat.services import ServiceSet
-from microchat.core.entities import ConferenceMember, Image, User
+from microchat.core.entities import ConferenceParticipation, Image, User
 
 from microchat.api_utils import APIResponse, HTTPStatus, api_handler
 from microchat.api_utils import BadRequest
@@ -221,7 +221,7 @@ async def get_entity_permissions(
         relation = await services.agents.get_chat(user, entity_id)
     elif alias:
         relation = await services.agents.resolve_chat_alias(user, alias)
-    if isinstance(relation, ConferenceMember):
+    if isinstance(relation, ConferenceParticipation):
         raise BadRequest("Can't ask for conference's permissions")
     return APIResponse(relation.permissions)
 
@@ -241,7 +241,7 @@ async def edit_entity_permissions(
         relation = await services.agents.get_chat(user, entity_id)
     elif alias:
         relation = await services.agents.resolve_chat_alias(user, alias)
-    if isinstance(relation, ConferenceMember):
+    if isinstance(relation, ConferenceParticipation):
         raise BadRequest("Can't manage conference's permissions")
     overlay: dict[str, bool] = {}
     await services.agents.edit_permissions(user, relation, **overlay)
