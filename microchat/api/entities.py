@@ -39,7 +39,7 @@ async def edit_self(
     return APIResponse(updated)
 
 
-@router.get("/self")
+@router.delete("/self")
 @api_handler
 async def remove_self(
     request: web.Request, services: ServiceSet, user: User
