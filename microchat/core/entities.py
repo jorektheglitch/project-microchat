@@ -156,7 +156,7 @@ class File(Media):
     pass
 
 
-class Preview:
+class Preview(Media):
     file_info: FileInfo
     type: Literal["image"]
     subtype: Literal["jpeg"]
