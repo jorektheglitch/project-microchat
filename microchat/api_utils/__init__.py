@@ -70,10 +70,16 @@ class HTTPStatus(enum.Enum):
     NO_CONTENT = 204
 
 
+class HEADER(enum.Enum):
+    ContentDisposition = "Content-Disposition"
+    ContentType = "Content-Type"
+
+
 @dataclass
 class APIResponse:
     payload: dict[str, APIResponseBody | JSON]
     status: HTTPStatus = HTTPStatus.OK
+    headers: dict[HEADER, str] | None = None
 
     def __init__(
         self,
@@ -263,10 +269,14 @@ def wrap_api_response(
                 dumps=dumps
             )
         else:
+            headers = {
+                key.value: value for key, value in api_response.headers.items()
+            }
             response = web.json_response(
                 api_response.payload,
                 status=api_response.status_code,
-                dumps=dumps
+                dumps=dumps,
+                headers=headers
             )
         return response
     return wrapped
