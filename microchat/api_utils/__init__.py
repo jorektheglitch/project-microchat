@@ -106,6 +106,8 @@ class APIResponseEncoder(json.JSONEncoder):
         return super().default(o)
 
 
+DEFAULT_JSON_DUMPER = functools.partial(json.dumps, cls=APIResponseEncoder)
+
 Handler = Callable[[web.Request], Awaitable[web.StreamResponse]]
 
 APIHandler = Callable[[web.Request, ServiceSet], Awaitable[APIResponse]]
@@ -251,7 +253,7 @@ def authenticated(
 
 def wrap_api_response(
     handler: Callable[P, Awaitable[APIResponse]],
-    dumps: typedefs.JSONEncoder
+    dumps: typedefs.JSONEncoder = DEFAULT_JSON_DUMPER
 ) -> Callable[P, Awaitable[web.StreamResponse]]:
     @functools.wraps(handler)
     async def wrapped(*args: P.args, **kwargs: P.kwargs) -> web.StreamResponse:
