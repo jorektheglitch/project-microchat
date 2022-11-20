@@ -47,6 +47,12 @@ class Authentication:
     async def resolve_token(self, token: str) -> Session:
         pass
 
+    async def resolve_media_token(self, auth_cookie: str) -> Session:
+        pass
+
+    async def check_csrf_token(self, user: User, csrf_token: str) -> bool:
+        pass
+
     async def terminate_session(self, user: User, session: Session) -> None:
         pass
 
