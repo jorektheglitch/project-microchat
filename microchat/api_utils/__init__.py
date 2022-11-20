@@ -83,7 +83,7 @@ class APIResponse:
 
     def __init__(
         self,
-        payload: APIResponseBody | JSON = None,
+        payload: APIResponseBody | JSON | AsyncIterable[bytes] = None,
         status: HTTPStatus = HTTPStatus.OK,
         headers: dict[HEADER, str] | None = None,
     ) -> None:
