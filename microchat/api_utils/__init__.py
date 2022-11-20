@@ -272,7 +272,7 @@ def wrap_api_response(
         else:
             headers = {
                 key.value: value for key, value in api_response.headers.items()
-            }
+            } if api_response.headers else None
             if isinstance(api_response.payload, AsyncIterable):
                 response = web.StreamResponse(
                     status=api_response.status_code,
