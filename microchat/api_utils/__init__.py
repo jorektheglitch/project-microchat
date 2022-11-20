@@ -6,7 +6,7 @@ import enum
 import json
 import functools
 
-from typing import Any, ParamSpec, TypeVar
+from typing import Any, AsyncIterable, ParamSpec, TypeVar
 from typing import Awaitable, Callable, ClassVar, Literal, Sequence, TypeGuard
 from typing import overload
 
@@ -77,7 +77,7 @@ class HEADER(enum.Enum):
 
 @dataclass
 class APIResponse:
-    payload: dict[str, APIResponseBody | JSON]
+    payload: dict[str, APIResponseBody | JSON] | AsyncIterable[bytes]
     status: HTTPStatus = HTTPStatus.OK
     headers: dict[HEADER, str] | None = None
 
@@ -251,6 +251,7 @@ def wrap_api_response(
 ) -> Callable[P, Awaitable[web.StreamResponse]]:
     @functools.wraps(handler)
     async def wrapped(*args: P.args, **kwargs: P.kwargs) -> web.StreamResponse:
+        response: web.StreamResponse
         try:
             api_response = await handler(*args, **kwargs)
         except APIException as api_exc:
@@ -272,6 +273,13 @@ def wrap_api_response(
             headers = {
                 key.value: value for key, value in api_response.headers.items()
             }
+            if isinstance(api_response.payload, AsyncIterable):
+                response = web.StreamResponse(
+                    status=api_response.status_code,
+                    headers=headers
+                )
+                async for chunk in api_response.payload:
+                    await response.write(chunk)
             response = web.json_response(
                 api_response.payload,
                 status=api_response.status_code,
