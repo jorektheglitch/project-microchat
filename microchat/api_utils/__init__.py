@@ -79,15 +79,19 @@ class HEADER(enum.Enum):
 class APIResponse:
     payload: dict[str, APIResponseBody | JSON] | AsyncIterable[bytes]
     status: HTTPStatus = HTTPStatus.OK
-    headers: dict[HEADER, str] | None = None
+    headers: dict[str, str] | None = None
 
     def __init__(
         self,
         payload: APIResponseBody | JSON = None,
-        status: HTTPStatus = HTTPStatus.OK
+        status: HTTPStatus = HTTPStatus.OK,
+        headers: dict[HEADER, str] | None = None,
     ) -> None:
         self.payload = {"response": payload}
         self.status = status
+        self.headers = {
+            key.value: value for key, value in headers.items()
+        } if headers else None
 
     @property
     def status_code(self) -> int:
@@ -270,22 +274,20 @@ def wrap_api_response(
                 dumps=dumps
             )
         else:
-            headers = {
-                key.value: value for key, value in api_response.headers.items()
-            } if api_response.headers else None
             if isinstance(api_response.payload, AsyncIterable):
                 response = web.StreamResponse(
                     status=api_response.status_code,
-                    headers=headers
+                    headers=api_response.headers
                 )
                 async for chunk in api_response.payload:
                     await response.write(chunk)
-            response = web.json_response(
-                api_response.payload,
-                status=api_response.status_code,
-                dumps=dumps,
-                headers=headers
-            )
+            else:
+                response = web.json_response(
+                    api_response.payload,
+                    status=api_response.status_code,
+                    dumps=dumps,
+                    headers=api_response.headers
+                )
         return response
     return wrapped
 
