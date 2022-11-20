@@ -7,36 +7,29 @@ from microchat.core.entities import PERMISSIONS_FIELDS
 from microchat.api_utils import APIResponse, HTTPStatus, api_handler
 from microchat.api_utils import BadRequest, NotFound
 
+from .misc import get_conference, get_offset_count
+
 
 router = web.RouteTableDef()
 
 
+@router.get(r"/{entity_id:\d+}/members")
 @router.get(r"/@{alias:\w+}/members")
 @api_handler
 async def list_chat_members(
     request: web.Request, services: ServiceSet, user: User
 ) -> APIResponse:
+    entity_id = request.match_info.get("entity_id")
     alias = request.match_info.get("alias")
-    if not alias:
-        raise BadRequest("Empty username")
-    offset = request.query.get("offset", 0)
-    count = request.query.get("count", 10)
-    try:
-        offset = int(offset)
-        count = int(count)
-    except (ValueError, TypeError):
-        raise BadRequest("Invalid offset or count params")
-    if not (isinstance(offset, int) and isinstance(count, int)):
-        raise BadRequest("Invalid parameters")
-    conference = await services.agents.resolve_alias(user, alias)
-    if not isinstance(conference, Conference):
-        raise NotFound
+    offset, count = get_offset_count(request)
+    conference = await get_conference(services, user, entity_id, alias)
     members = await services.conferences.list_chat_members(
         user, conference, offset, count
     )
     return APIResponse(members)
 
 
+@router.post(r"/{entity_id:\d+}/members")
 @router.post(r"/@{alias:\w+}/members")
 @api_handler
 async def add_chat_member(
@@ -45,6 +38,7 @@ async def add_chat_member(
     payload = await request.json()
     if not isinstance(payload, dict):
         raise BadRequest("Invalid body")
+    entity_id = request.match_info.get("entity_id")
     alias = request.match_info.get("alias")
     if not alias:
         raise BadRequest("Empty username")
@@ -63,7 +57,7 @@ async def add_chat_member(
         raise BadRequest("Missing username or user_id parameter")
     if isinstance(invitee, Conference):
         raise BadRequest("Invalid agent id or username")
-    conference = await services.agents.resolve_alias(user, alias)
+    conference = await get_conference(services, user, entity_id, alias)
     if not isinstance(conference, Conference):
         raise NotFound
     member = await services.conferences.add_chat_member(
@@ -72,12 +66,15 @@ async def add_chat_member(
     return APIResponse(member, HTTPStatus.CREATED)
 
 
+@router.get(r"/{entity_id:\d+}/members/{id:\d+}")
+@router.get(r"/{entity_id:\d+}/members/{member_alias:\w+}")
 @router.get(r"/@{alias:\w+}/members/{id:\d+}")
 @router.get(r"/@{alias:\w+}/members/{member_alias:\w+}")
 @api_handler
 async def get_chat_member(
     request: web.Request, services: ServiceSet, user: User
 ) -> APIResponse:
+    entity_id = request.match_info.get("entity_id")
     alias = request.match_info.get("alias")
     id_repr = request.match_info.get("id")
     member_alias = request.match_info.get("member_alias")
@@ -96,7 +93,7 @@ async def get_chat_member(
         raise BadRequest("Missing username or user_id parameter")
     if not isinstance(agent, (User, Bot)):
         raise BadRequest("Agent id/alias must refers to User or Bot")
-    conference = await services.agents.resolve_alias(user, alias)
+    conference = await get_conference(services, user, entity_id, alias)
     if not isinstance(conference, Conference):
         raise NotFound
     member = await services.conferences.get_chat_member(
@@ -105,6 +102,8 @@ async def get_chat_member(
     return APIResponse(member)
 
 
+@router.delete(r"/{entity_id:\d+}/members/{id:\d+}")
+@router.delete(r"/{entity_id:\d+}/members/{member_alias:\w+}")
 @router.delete(r"/@{alias:\w+}/members/{id:\d+}")
 @router.delete(r"/@{alias:\w+}/members/{member_alias:\w+}")
 @api_handler
@@ -114,6 +113,7 @@ async def remove_chat_member(
     payload = await request.json()
     if not isinstance(payload, dict):
         raise BadRequest("Invalid body")
+    entity_id = request.match_info.get("entity_id")
     alias = request.match_info.get("alias")
     id_repr = request.match_info.get("id")
     member_alias = request.match_info.get("member_alias")
@@ -132,7 +132,7 @@ async def remove_chat_member(
         raise BadRequest("Missing username or user_id parameter")
     if not isinstance(agent, (User, Bot)):
         raise BadRequest("Agent id/alias must refers to User or Bot")
-    conference = await services.agents.resolve_alias(user, alias)
+    conference = await get_conference(services, user, entity_id, alias)
     if not isinstance(conference, Conference):
         raise NotFound
     await services.conferences.get_chat_member(
@@ -141,12 +141,15 @@ async def remove_chat_member(
     return APIResponse(status=HTTPStatus.NO_CONTENT)
 
 
+@router.get(r"/{entity_id:\d+}/members/{id:\d+}/permissions")
+@router.get(r"/{entity_id:\d+}/members/{member_alias:\w+}/permissions")
 @router.get(r"/@{alias:\w+}/members/{id:\d+}/permissions")
 @router.get(r"/@{alias:\w+}/members/{member_alias:\w+}/permissions")
 @api_handler
 async def get_chat_member_permissions(
     request: web.Request, services: ServiceSet, user: User
 ) -> APIResponse:
+    entity_id = request.match_info.get("entity_id")
     alias = request.match_info.get("alias")
     id_repr = request.match_info.get("id")
     member_alias = request.match_info.get("member_alias")
@@ -165,7 +168,7 @@ async def get_chat_member_permissions(
         raise BadRequest("Missing username or user_id parameter")
     if not isinstance(agent, (User, Bot)):
         raise BadRequest("Agent id/alias must refers to User or Bot")
-    conference = await services.agents.resolve_alias(user, alias)
+    conference = await get_conference(services, user, entity_id, alias)
     if not isinstance(conference, Conference):
         raise NotFound
     permissions = await services.conferences.get_chat_member_permissions(
@@ -174,6 +177,8 @@ async def get_chat_member_permissions(
     return APIResponse(permissions)
 
 
+@router.patch(r"/{entity_id:\d+}/members/{id:\d+}/permissions")
+@router.patch(r"/{entity_id:\d+}/members/{member_alias:\w+}/permissions")
 @router.patch(r"/@{alias:\w+}/members/{id:\d+}/permissions")
 @router.patch(r"/@{alias:\w+}/members/{member_alias:\w+}/permissions")
 @api_handler
@@ -183,6 +188,7 @@ async def edit_chat_member_permissions(
     payload = await request.json()
     if not isinstance(payload, dict):
         raise BadRequest("Invalid body")
+    entity_id = request.match_info.get("entity_id")
     alias = request.match_info.get("alias")
     id_repr = request.match_info.get("id")
     member_alias = request.match_info.get("member_alias")
@@ -201,7 +207,7 @@ async def edit_chat_member_permissions(
         raise BadRequest("Missing username or user_id parameter")
     if not isinstance(agent, (User, Bot)):
         raise BadRequest("Agent id/alias must refers to User or Bot")
-    conference = await services.agents.resolve_alias(user, alias)
+    conference = await get_conference(services, user, entity_id, alias)
     if not isinstance(conference, Conference):
         raise NotFound
     overalys: dict[str, bool] = {}
