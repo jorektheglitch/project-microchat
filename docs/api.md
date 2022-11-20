@@ -23,15 +23,15 @@
   - `/api/v0/entities/({eid}|@{alias})/avatars/{id}`: `DELETE` ✅
   - `/api/v0/entities/({eid}|@{alias})/pemissions`: `GET` ✅, `PATCH` ⚠️
     Users and bots permissons. You can't manage conference's permissions.
-- Chats ❌
-  - `/api/v0/chats`: `GET` ❌
-  - `/api/v0/chats/({eid}|@{alias})`: `GET` ❌, `DELETE` ❌
-  - `/api/v0/chats/({eid}|@{alias})/messages`: `GET` ❌, `POST` ❌
-  - `/api/v0/chats/({eid}|@{alias})/messages/{id}`: `GET` ❌, `PATCH` ❌, `DELETE` ❌
-  - `/api/v0/chats/({eid}|@{alias})/messages/{id}/attachments/{id}/preview`: `GET` ❌
-  - `/api/v0/chats/({eid}|@{alias})/messages/{id}/attachments/{id}/content`: `GET` ❌
-  - `/api/v0/chats/({eid}|@{alias})/(photos|audios|videos|animations|files)`: `GET` ❌
-  - `/api/v0/chats/({eid}|@{alias})/(photos|audios|videos|animations|files)/{id}`: `GET` ❌, `DELETE` ❌
+- Chats ✅
+  - `/api/v0/chats`: `GET` ✅
+  - `/api/v0/chats/({eid}|@{alias})`: `GET` ✅
+  - `/api/v0/chats/({eid}|@{alias})/messages`: `GET` ✅, `POST` ✅
+  - `/api/v0/chats/({eid}|@{alias})/messages/{id}`: `GET` ✅, `PATCH` ✅, `DELETE` ✅
+  - `/api/v0/chats/({eid}|@{alias})/messages/{id}/attachments/{id}/preview`: `GET` ✅
+  - `/api/v0/chats/({eid}|@{alias})/messages/{id}/attachments/{id}/content`: `GET` ✅
+  - `/api/v0/chats/({eid}|@{alias})/(photos|audios|videos|animations|files)`: `GET` ✅
+  - `/api/v0/chats/({eid}|@{alias})/(photos|audios|videos|animations|files)/{id}`: `GET` ✅, `DELETE` ✅
 - Conferences ❌
   - `/api/v0/conferences`: `POST` ❌
   - `/api/v0/conferences/({eid}|@{alias})/members`: `GET` ❌, `POST` ❌
