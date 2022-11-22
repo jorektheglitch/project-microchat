@@ -3,8 +3,9 @@ from aiohttp import web
 from microchat.services import ServiceSet
 from microchat.core.entities import ConferenceParticipation, Image, User
 
-from microchat.api_utils import APIResponse, HTTPStatus, api_handler
-from microchat.api_utils import BadRequest
+from microchat.api_utils.response import APIResponse, Status
+from microchat.api_utils.handler import api_handler
+from microchat.api_utils.exceptions import BadRequest
 
 from .misc import get_chat, get_entity, get_offset_count
 
@@ -47,7 +48,7 @@ async def remove_self(
     request: web.Request, services: ServiceSet, user: User
 ) -> APIResponse:
     await services.agents.remove_agent(user, user)
-    return APIResponse(status=HTTPStatus.NO_CONTENT)
+    return APIResponse(status=Status.NO_CONTENT)
 
 
 @router.get(r"/{entity_id:\d+}")
@@ -94,7 +95,7 @@ async def remove_entity(
     alias = request.match_info.get("alias")
     entity = await get_entity(services, user, entity_id, alias)
     await services.agents.remove_agent(user, entity)
-    return APIResponse(status=HTTPStatus.NO_CONTENT)
+    return APIResponse(status=Status.NO_CONTENT)
 
 
 @router.get(r"/{entity_id:\d+}/avatars")
@@ -169,7 +170,7 @@ async def remove_entity_avatar(
         raise BadRequest("Empty username or avatar id")
     entity = await get_entity(services, user, entity_id, alias)
     await services.agents.remove_avatar(user, entity, avatar_id)
-    return APIResponse(status=HTTPStatus.NO_CONTENT)
+    return APIResponse(status=Status.NO_CONTENT)
 
 
 @router.get(r"/{entity_id:\d+}/permissions")

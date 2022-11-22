@@ -4,8 +4,9 @@ from microchat.services import ServiceSet
 from microchat.core.entities import Bot, User, Conference
 from microchat.core.entities import PERMISSIONS_FIELDS
 
-from microchat.api_utils import APIResponse, HTTPStatus, api_handler
-from microchat.api_utils import BadRequest, NotFound
+from microchat.api_utils.handler import api_handler
+from microchat.api_utils.response import APIResponse, Status
+from microchat.api_utils.exceptions import BadRequest, NotFound
 
 from .misc import get_conference, get_offset_count
 
@@ -63,7 +64,7 @@ async def add_chat_member(
     member = await services.conferences.add_chat_member(
         user, conference, invitee
     )
-    return APIResponse(member, HTTPStatus.CREATED)
+    return APIResponse(member, Status.CREATED)
 
 
 @router.get(r"/{entity_id:\d+}/members/{id:\d+}")
@@ -138,7 +139,7 @@ async def remove_chat_member(
     await services.conferences.get_chat_member(
         user, conference, agent
     )
-    return APIResponse(status=HTTPStatus.NO_CONTENT)
+    return APIResponse(status=Status.NO_CONTENT)
 
 
 @router.get(r"/{entity_id:\d+}/members/{id:\d+}/permissions")

@@ -3,8 +3,8 @@ from aiohttp import web
 from microchat.services import ServiceSet
 from microchat.core.entities import User
 
-from microchat.api_utils import AccessLevel, api_handler, APIResponse
-from microchat.api_utils import BadRequest
+from microchat.api_utils.handler import AccessLevel, api_handler, APIResponse
+from microchat.api_utils.exceptions import BadRequest
 
 
 router = web.RouteTableDef()
