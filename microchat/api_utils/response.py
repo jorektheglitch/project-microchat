@@ -28,12 +28,14 @@ class HEADER(enum.Enum):
 class APIResponse:
     payload: dict[str, APIResponseBody | JSON] | AsyncIterable[bytes]
     status: Status = Status.OK
+    reason: str | None = None
     headers: dict[str, str] | None = None
 
     def __init__(
         self,
         payload: APIResponseBody | JSON | AsyncIterable[bytes] = None,
         status: Status = Status.OK,
+        reason: str | None = None,
         headers: dict[HEADER, str] | None = None,
     ) -> None:
         if not isinstance(payload, AsyncIterable):
@@ -41,6 +43,7 @@ class APIResponse:
         else:
             self.payload = payload
         self.status = status
+        self.reason = reason
         self.headers = {
             key.value: value for key, value in headers.items()
         } if headers else None

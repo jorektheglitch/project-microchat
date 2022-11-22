@@ -191,6 +191,7 @@ def wrap_api_response(
             if isinstance(api_response.payload, AsyncIterable):
                 response = web.StreamResponse(
                     status=api_response.status_code,
+                    reason=api_response.reason,
                     headers=api_response.headers
                 )
                 async for chunk in api_response.payload:
@@ -199,6 +200,7 @@ def wrap_api_response(
                 response = web.json_response(
                     api_response.payload,
                     status=api_response.status_code,
+                    reason=api_response.reason,
                     dumps=dumps,
                     headers=api_response.headers
                 )
