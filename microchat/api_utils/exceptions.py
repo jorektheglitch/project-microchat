@@ -8,12 +8,11 @@ if TYPE_CHECKING:
     from .types import JSON
 
 from microchat.services import ServiceError
+from .response import APIResponse
 
 
-class APIError(ABC, Exception):
+class APIError(ABC, Exception, APIResponse):
     status_code: ClassVar[int]
-    payload: JSON
-    reason: str | None
 
     def __init__(
         self,
@@ -26,7 +25,7 @@ class APIError(ABC, Exception):
         if payload is None and msg is not None:
             self.payload = {"error": msg}
         else:
-            self.payload = payload
+            self.payload = {"error": payload}
         self.reason = reason
 
     @classmethod

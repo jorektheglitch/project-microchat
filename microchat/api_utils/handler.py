@@ -173,37 +173,26 @@ def wrap_api_response(
         try:
             api_response = await handler(*args, **kwargs)
         except APIError as api_exc:
-            response = web.json_response(
-                api_exc.payload,
-                status=api_exc.status_code,
-                reason=api_exc.reason,
-                dumps=dumps
-            )
+            api_response = api_exc
         except ServiceError as service_exc:
             exc_info = APIError.from_service_exc(service_exc)
-            response = web.json_response(
-                exc_info.payload,
-                status=exc_info.status_code,
-                reason=exc_info.reason,
-                dumps=dumps
+            api_response = exc_info
+        if isinstance(api_response.payload, AsyncIterable):
+            response = web.StreamResponse(
+                status=api_response.status_code,
+                reason=api_response.reason,
+                headers=api_response.headers
             )
+            async for chunk in api_response.payload:
+                await response.write(chunk)
         else:
-            if isinstance(api_response.payload, AsyncIterable):
-                response = web.StreamResponse(
-                    status=api_response.status_code,
-                    reason=api_response.reason,
-                    headers=api_response.headers
-                )
-                async for chunk in api_response.payload:
-                    await response.write(chunk)
-            else:
-                response = web.json_response(
-                    api_response.payload,
-                    status=api_response.status_code,
-                    reason=api_response.reason,
-                    dumps=dumps,
-                    headers=api_response.headers
-                )
+            response = web.json_response(
+                api_response.payload,
+                status=api_response.status_code,
+                reason=api_response.reason,
+                dumps=dumps,
+                headers=api_response.headers
+            )
         return response
     return wrapped
 
