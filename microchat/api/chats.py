@@ -1,14 +1,17 @@
 from aiohttp import web
 
-from microchat.services import ServiceSet
 from microchat.core.entities import User, Media
 from microchat.core.entities import Animation, Audio, File, Image, Video
+from microchat.services import ServiceSet
 
 from microchat.api_utils.response import APIResponse, Status
 from microchat.api_utils.exceptions import BadRequest, NotFound
-from microchat.api_utils.handler import api_handler, with_services, wrap_api_response
+from microchat.api_utils.handler import api_handler
+from microchat.api_utils.handler import with_services, wrap_api_response
 
-from .misc import get_chat, get_offset_count
+from .misc import authenticate_media_request
+from .misc import get_offset_count
+from .misc import get_chat, get_chat_message_attachment_content
 
 
 router = web.RouteTableDef()
@@ -39,9 +42,7 @@ async def list_chats(
 async def get_chat_info(
     request: web.Request, services: ServiceSet, user: User
 ) -> APIResponse:
-    entity_id = request.match_info.get("entity_id")
-    alias = request.match_info.get("alias")
-    relation = await get_chat(services, user, entity_id, alias)
+    relation = await get_chat(services, user, request.match_info)
     return APIResponse(relation)
 
 
@@ -51,10 +52,8 @@ async def get_chat_info(
 async def list_chat_messages(
     request: web.Request, services: ServiceSet, user: User
 ) -> APIResponse:
-    entity_id = request.match_info.get("entity_id")
-    alias = request.match_info.get("alias")
     offset, count = get_offset_count(request)
-    chat = await get_chat(services, user, entity_id, alias)
+    chat = await get_chat(services, user, request.match_info)
     messages = await services.chats.list_chat_messages(
         user, chat, offset, count
     )
@@ -70,8 +69,6 @@ async def send_message(
     payload = await request.json()
     if not isinstance(payload, dict):
         raise BadRequest("Invalid body")
-    entity_id = request.match_info.get("entity_id")
-    alias = request.match_info.get("alias")
     text = payload.get("text")
     attachments_ids = payload.get("attachments", [])
     reply_to_id = payload.get("reply_to")
@@ -81,7 +78,7 @@ async def send_message(
         raise BadRequest("Attachments IDs must be list of integers")
     if not all(isinstance(item, int) for item in attachments_ids):
         raise BadRequest("Attachments IDs must be list of integers")
-    chat = await get_chat(services, user, entity_id, alias)
+    chat = await get_chat(services, user, request.match_info)
     reply_to = None
     if reply_to_id:
         reply_to = await services.chats.get_chat_message(
@@ -100,11 +97,9 @@ async def send_message(
 async def get_chat_message(
     request: web.Request, services: ServiceSet, user: User
 ) -> APIResponse:
-    entity_id = request.match_info.get("entity_id")
-    alias = request.match_info.get("alias")
     id = request.match_info["id"]
     message_id = int(id)
-    chat = await get_chat(services, user, entity_id, alias)
+    chat = await get_chat(services, user, request.match_info)
     message = await services.chats.get_chat_message(user, chat, message_id)
     return APIResponse(message)
 
@@ -118,15 +113,13 @@ async def edit_chat_message(
     payload = await request.json()
     if not isinstance(payload, dict):
         raise BadRequest("Invalid body")
-    entity_id = request.match_info.get("entity_id")
-    alias = request.match_info.get("alias")
     id = request.match_info["id"]
     message_id = int(id)
     text = payload.get("text")
     if not (isinstance(text, str) or text is None):
         raise BadRequest("Text must be string")
     attachments_ids = payload.get("attachments")
-    chat = await get_chat(services, user, entity_id, alias)
+    chat = await get_chat(services, user, request.match_info)
     message = await services.chats.get_chat_message(user, chat, message_id)
     if text is None:
         text = message.text
@@ -151,59 +144,25 @@ async def remove_chat_message(
     payload = await request.json()
     if not isinstance(payload, dict):
         raise BadRequest("Invalid body")
-    entity_id = request.match_info.get("entity_id")
-    alias = request.match_info.get("alias")
     id = request.match_info["id"]
     message_id = int(id)
-    chat = await get_chat(services, user, entity_id, alias)
+    chat = await get_chat(services, user, request.match_info)
     await services.chats.remove_chat_message(user, chat, message_id)
-    return APIResponse(status=HTTPStatus.NO_CONTENT)
+    return APIResponse(status=Status.NO_CONTENT)
 
 
 @router.get(r"/{entity_id:\d+}/messages/{message_id:\d+}/attachments/{id:\w+}/{view:(preview|content)}")
 @router.get(r"/@{alias:\w+}/messages/{message_id:\d+}/attachments/{id:\w+}/{view:(preview|content)}")
+@wrap_api_response
 @with_services
-async def get_attachment(
+async def get_attachment_content(
     request: web.Request, services: ServiceSet
-) -> web.StreamResponse:
-    try:
-        auth_cookie = request.cookies["MEDIA_ACCESS"]
-        csrf_token = request.query["csrf_token"]
-    except KeyError:
-        raise web.HTTPForbidden()
-    session = await services.auth.resolve_media_token(auth_cookie)
-    if session.closed:
-        raise web.HTTPForbidden()
-    user = session.auth.user
-    if not await services.auth.check_csrf_token(user, csrf_token):
-        raise web.HTTPForbidden()
-    entity_id = request.match_info.get("entity_id")
-    alias = request.match_info.get("alias")
-    try:
-        chat = await get_chat(services, user, entity_id, alias)
-    except BadRequest:
-        raise web.HTTPBadRequest()
-    message_id = int(request.match_info["message_id"])
-    message = await services.chats.get_chat_message(user, chat, message_id)
-    attachment_id = int(request.match_info["id"])
-    attachment = await message.attachments[attachment_id]
-    response = web.StreamResponse()
-    view_kind = request.match_info["view"]
-    if view_kind == "content":
-        media = attachment
-        disposition = f"attachment; filename={media.name}"
-    else:
-        if not isinstance(attachment, (Image, Video, Animation)):
-            # preview only for Image, Video or Animation
-            raise web.HTTPBadRequest()
-        media = attachment.preview
-        disposition = "inline"
-    response.headers["Content-Disposition"] = disposition
-    response.headers["Content-Type"] = f"{media.type}/{media.subtype}"
-    chunks = services.files.iter_content(user, media.file_info)
-    async for chunk in chunks:
-        await response.write(chunk)
-    return response
+) -> APIResponse:
+    user = await authenticate_media_request(request, services)
+    payload, headers = await get_chat_message_attachment_content(
+        services, user, request.match_info
+    )
+    return APIResponse(payload, headers=headers)
 
 
 MEDIA_TYPE = r"{media_type:(photo|video|audio|animation|file)s}"
@@ -215,14 +174,12 @@ MEDIA_TYPE = r"{media_type:(photo|video|audio|animation|file)s}"
 async def list_chat_media(
     request: web.Request, services: ServiceSet, user: User
 ) -> APIResponse:
-    entity_id = request.match_info.get("entity_id")
-    alias = request.match_info.get("alias")
     media_type = request.match_info.get("media_type", '')
     MediaType = MEDIA_CLASSES.get(media_type)
     if MediaType is None:
         raise NotFound(f"Unknown media type: '{media_type}'")
     offset, count = get_offset_count(request)
-    chat = await get_chat(services, user, entity_id, alias)
+    chat = await get_chat(services, user, request.match_info)
     medias = await services.chats.list_chat_media(
         user, chat, MediaType, offset, count
     )
@@ -235,15 +192,13 @@ async def list_chat_media(
 async def get_chat_media(
     request: web.Request, services: ServiceSet, user: User
 ) -> APIResponse:
-    entity_id = request.match_info.get("entity_id")
-    alias = request.match_info.get("alias")
     id = request.match_info.get("id", "-1")
     message_id = int(id)
     media_type = request.match_info.get("media_type", '')
     MediaType = MEDIA_CLASSES.get(media_type)
     if MediaType is None:
         raise NotFound(f"Unknown media type: '{media_type}'")
-    chat = await get_chat(services, user, entity_id, alias)
+    chat = await get_chat(services, user, request.match_info)
     message = await services.chats.get_chat_media(
         user, chat, MediaType, message_id
     )
@@ -256,16 +211,14 @@ async def get_chat_media(
 async def remove_chat_media(
     request: web.Request, services: ServiceSet, user: User
 ) -> APIResponse:
-    entity_id = request.match_info.get("entity_id")
-    alias = request.match_info.get("alias")
     id = request.match_info.get("id", "-1")
     message_id = int(id)
     media_type = request.match_info.get("media_type", '')
     MediaType = MEDIA_CLASSES.get(media_type)
     if MediaType is None:
         raise NotFound(f"Unknown media type: '{media_type}'")
-    chat = await get_chat(services, user, entity_id, alias)
+    chat = await get_chat(services, user, request.match_info)
     await services.chats.remove_chat_media(
         user, chat, MediaType, message_id
     )
-    return APIResponse(status=HTTPStatus.NO_CONTENT)
+    return APIResponse(status=Status.NO_CONTENT)
