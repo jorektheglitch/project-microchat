@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from asyncio import Queue
 from dataclasses import dataclass
 import enum
 import json
@@ -11,6 +12,7 @@ if TYPE_CHECKING:
     from .types import APIResponseBody, JSON
 
 from microchat.core.entities import Entity
+from microchat.core.events import Event
 
 
 class Status(enum.Enum):
@@ -26,7 +28,7 @@ class HEADER(enum.Enum):
 
 @dataclass
 class APIResponse:
-    payload: dict[str, APIResponseBody | JSON] | AsyncIterable[bytes]
+    payload: dict[str, APIResponseBody | JSON] | AsyncIterable[bytes] | Queue[Event]
     status: Status = Status.OK
     reason: str | None = None
     headers: dict[str, str] | None = None

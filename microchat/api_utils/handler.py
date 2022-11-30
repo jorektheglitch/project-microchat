@@ -1,4 +1,6 @@
 from __future__ import annotations
+from asyncio import Queue
+import asyncio
 
 import enum
 import json
@@ -8,6 +10,8 @@ from typing import AsyncIterable, ParamSpec, TypeVar
 from typing import Awaitable, Callable, Literal, TypeGuard
 from typing import overload
 from typing import TYPE_CHECKING
+
+from aiohttp_sse import sse_response
 if TYPE_CHECKING:
     from .types import AuthenticatedHandler, APIHandler
     from .types import APIResponse, APIResponseEncoder
@@ -185,6 +189,25 @@ def wrap_api_response(
             )
             async for chunk in api_response.payload:
                 await response.write(chunk)
+        elif isinstance(api_response.payload, Queue):
+            request = web.Request()
+            events_response = sse_response(
+                request,
+                status=api_response.status_code,
+                reason=api_response.reason,
+                headers=api_response.headers
+            )
+            events_queue = api_response.payload
+            async with events_response as response:
+                while True:
+                    try:
+                        # may be CancelledError if connection was aborted
+                        event = await events_queue.get()
+                    except asyncio.CancelledError:
+                        break
+                    body = event.as_json()
+                    event_kind = event.__class__.__name__
+                    events_response.send(body, event=event_kind)
         else:
             response = web.json_response(
                 api_response.payload,
