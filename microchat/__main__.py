@@ -5,6 +5,7 @@ from aiohttp import web
 
 
 from .app import app
+from .core.jwt_manager import JWTManager
 from .config import Config
 from .storages import UoW
 
@@ -15,7 +16,8 @@ def create_uow_factory(config: Config) -> Callable[[], UoW]:
 
 def run(config: Config) -> None:
     uow_factory = create_uow_factory(config)
-    web.run_app(app(uow_factory))
+    jwt_manager = JWTManager(config.jwt_secret)
+    web.run_app(app(uow_factory, jwt_manager))
 
 
 if __name__ == "__main__":

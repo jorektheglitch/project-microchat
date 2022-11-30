@@ -2,6 +2,7 @@ from typing import Callable, Sequence
 
 from aiohttp import web
 
+from microchat.core.jwt_manager import JWTManager
 from microchat.storages import UoW
 from microchat.services import ServiceSet
 from microchat.api_utils.types import Handler, Middleware
@@ -20,6 +21,16 @@ SUBROUTES: dict[str, Sequence[web.AbstractRouteDef]] = {
 }
 
 
+def jwt_middleware(jwt_manager: JWTManager) -> Middleware:
+    @web.middleware
+    async def add_jwt_manager(
+        request: web.Request, handler: Handler
+    ) -> web.StreamResponse:
+        request["jwt_manager"] = jwt_manager
+        return await handler(request)
+    return add_jwt_manager
+
+
 def services_middleware(uow_factory: Callable[[], UoW]) -> Middleware:
     @web.middleware
     async def add_services(
@@ -32,8 +43,12 @@ def services_middleware(uow_factory: Callable[[], UoW]) -> Middleware:
     return add_services
 
 
-def api_app(uow_factory: Callable[[], UoW]) -> web.Application:
+def api_app(
+    uow_factory: Callable[[], UoW],
+    jwt_manager: JWTManager
+) -> web.Application:
     api_app = web.Application(middlewares=[
+        jwt_middleware(jwt_manager),
         services_middleware(uow_factory)
     ])
     for prefix, routes in SUBROUTES.items():
