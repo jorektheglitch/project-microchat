@@ -1,7 +1,9 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from typing import Any, AsyncIterator, Generic, Literal, Protocol, TypeVar
+from enum import Enum
+
+from typing import Any, AsyncIterator, Generic, Protocol, TypeVar
 from typing import Awaitable, Generator, Iterable, Sequence
 from typing import overload
 
@@ -11,59 +13,62 @@ T_co = TypeVar('T_co', covariant=True)
 T_contra = TypeVar('T_contra', contravariant=True)
 Owner_co = TypeVar('Owner_co', covariant=True)
 
-MIMEType = Literal[
-    "application",
-    "audio",
-    "chemical",
-    "example",
-    "font",
-    "image",
-    "message",
-    "model",
-    "multipart",
-    "text",
-    "video"
-]
 
-ImagesMIME = Literal[
-    "gif",  # GIF (RFC 2045 и RFC 2046)
-    "jpeg",  # JPEG (RFC 2045 и RFC 2046)
-    "pjpeg",  # JPEG[9]
-    "png",  # Portable Network Graphics[10](RFC 2083)
-    "svg+xml",  # SVG[11]
-    "tiff",  # TIFF (RFC 3302)
-    "vnd.microsoft.icon",  # ICO[12]
-    "vnd.wap.wbmp",  # WBMP
-    "webp",  # WebP
-]
+class MIMEType(Enum):
+    APPLICATION = "application"
+    AUDIO = "audio"
+    CHEMICAL = "chemical"
+    EXAMPLE = "example"
+    FONT = "font"
+    IMAGE = "image"
+    MESSAGE = "message"
+    MODEL = "model"
+    MULTIPART = "multipart"
+    TEXT = "text"
+    VIDEO = "video"
 
-VideosMIME = Literal[
-    "mpeg",  # MPEG-1 (RFC 2045 и RFC 2046)
-    "mp4",  # MP4 (RFC 4337)
-    "ogg",  # Ogg Theora или другое видео (RFC 5334)
-    "quicktime",  # QuickTime
-    "webm",  # WebM
-    "x-ms-wmv",  # Windows Media Video
-    "x-flv",  # FLV
-    "x-msvideo",  # AVI
-    "3gpp",  # .3gpp .3gp
-    "3gpp2",  # .3gpp2 .3g2
-]
 
-AudiosMIME = Literal[
-    "basic",  # mulaw аудио, 8 кГц, 1 канал (RFC 2046)
-    "L24",  # 24bit Linear PCM аудио, 8-48 кГц, 1-N каналов (RFC 3190)
-    "mp4",  # MP4
-    "aac",  # AAC
-    "mpeg",  # MP3 или др. MPEG (RFC 3003)
-    "ogg",  # Ogg Vorbis, Speex, Flac или др. аудио (RFC 5334)
-    "vorbis",  # Vorbis (RFC 5215)
-    "x-ms-wma",  # Windows Media Audio
-    "x-ms-wax",  # Windows Media Audio перенаправление
-    "vnd.rn-realaudio",  # RealAudio
-    "vnd.wave",  # WAV (RFC 2361)
-    "webm",  # WebM
-]
+class ImagesMIME(Enum):
+    GIF = "gif"                     # GIF (RFC 2045 and RFC 2046)
+    JPEG = "jpeg"                   # JPEG (RFC 2045 and RFC 2046)
+    PJPEG = "pjpeg"                 # JPEG
+    PNG = "png"                     # Portable Network Graphics (RFC 2083)
+    SVG_XML = "svg+xml"             # SVG
+    TIFF = "tiff"                   # TIFF (RFC 3302)
+    MS_ICON = "vnd.microsoft.icon"  # ICO
+    WAP_WBMP = "vnd.wap.wbmp"       # WBMP
+    WEBP = "webp"                   # WebP
+
+
+class VideosMIME(Enum):
+    MPEG = "mpeg"                   # MPEG-1 (RFC 2045 and RFC 2046)
+    MP4 = "mp4"                     # MP4 (RFC 4337)
+    OGG = "ogg"                     # Ogg Theora or other (RFC 5334)
+    QUICKTIME = "quicktime"         # QuickTime
+    WEBM = "webm"                   # WebM
+    X_MS_WMV = "x-ms-wmv"           # Windows Media Video
+    X_FLV = "x-flv"                 # FLV
+    X_MSVIDEO = "x-msvideo"         # AVI
+    ThirdGPP = "3gpp"               # .3gpp .3gp
+    ThirdGPP2 = "3gpp2"             # .3gpp2 .3g2
+
+
+class AudiosMIME(Enum):
+    BASIC = "basic"                 # mulaw, 8 KHz, 1 ch (RFC 2046)
+    L24 = "L24"                     # 24bit Linear PCM, 8-48 KHz, 1-N ch (RFC 3190)
+    MP4 = "mp4"                     # MP4
+    AAC = "aac"                     # AAC
+    MPEG = "mpeg"                   # MP3 or other MPEG (RFC 3003)
+    OGG = "ogg"                     # Ogg Vorbis, Speex, Flac and others (RFC 5334)
+    VORBIS = "vorbis"               # Vorbis (RFC 5215)
+    X_MS_WMA = "x-ms-wma"           # Windows Media Audio
+    X_MS_WAX = "x-ms-wax"           # Windows Media Audio перенаправление
+    RN_REALAUDIO = "vnd.rn-realaudio"  # RealAudio
+    WAVE = "vnd.wave"               # WAV (RFC 2361)
+    WEBM = "webm"                   # WebM
+
+
+MIMESubtype = ImagesMIME | AudiosMIME | VideosMIME | str
 
 
 class AsyncSequence(Awaitable[Sequence[T]], Protocol[T]):

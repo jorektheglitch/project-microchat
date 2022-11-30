@@ -11,7 +11,7 @@ from typing import Any, Literal
 from typing import Generic, TypeVar
 
 from .types import Bound, BoundSequence
-from .types import MIMEType, AudiosMIME, ImagesMIME, VideosMIME
+from .types import MIMEType, MIMESubtype, AudiosMIME, ImagesMIME, VideosMIME
 
 
 C = TypeVar('C', "Conference", "Dialog")  # C means Conversation
@@ -124,31 +124,31 @@ class Media(Entity, ABC):
     file_info: FileInfo
     name: str  # displayed file name
     type: MIMEType  # MIME type
-    subtype: str  # MIME subtype
+    subtype: MIMESubtype  # MIME subtype
     loaded_at: dt
     loaded_by: User | Bot
 
 
 class Image(Media):
-    type: Literal["image"]
+    type: Literal[MIMEType.IMAGE]
     subtype: ImagesMIME
     preview: Preview
 
 
 class Video(Media):
-    type: Literal["video"]
+    type: Literal[MIMEType.VIDEO]
     subtype: VideosMIME
     preview: Preview
 
 
 class Audio(Media):
-    type: Literal["audio"]
+    type: Literal[MIMEType.AUDIO]
     subtype: AudiosMIME
 
 
 class Animation(Media):
-    type: Literal["video"]
-    subtype: Literal["webm"]
+    type: Literal[MIMEType.VIDEO]
+    subtype: Literal[VideosMIME.WEBM]
     preview: Preview
 
 
@@ -158,8 +158,8 @@ class File(Media):
 
 class Preview(Media):
     file_info: FileInfo
-    type: Literal["image"]
-    subtype: Literal["jpeg"]
+    type: Literal[MIMEType.IMAGE]
+    subtype: Literal[ImagesMIME.JPEG]
 
 
 class FileInfo:
