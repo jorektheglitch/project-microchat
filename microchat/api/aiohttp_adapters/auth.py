@@ -9,18 +9,23 @@ from .misc import get_request_payload
 
 
 @dataclass
-class GetSessions(APIRequest):
+class AuthAPIRequest(APIRequest):
+    pass
+
+
+@dataclass
+class GetSessions(AuthAPIRequest):
     disposition: Disposition
 
 
 @dataclass
-class AddSession(APIRequest):
+class AddSession(AuthAPIRequest):
     usename: str
     password: str
 
 
 @dataclass
-class CloseSession(APIRequest):
+class CloseSession(AuthAPIRequest):
     pass
 
 

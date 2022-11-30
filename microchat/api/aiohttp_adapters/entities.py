@@ -11,12 +11,17 @@ from .misc import int_param, get_request_payload
 
 
 @dataclass
-class GetSelf(APIRequest):
+class EntitiesAPIRequest(APIRequest):
     pass
 
 
 @dataclass
-class EditSelf(APIRequest):
+class GetSelf(EntitiesAPIRequest):
+    pass
+
+
+@dataclass
+class EditSelf(EntitiesAPIRequest):
     alias: str | None
     name: str | None
     surname: str | None
@@ -25,56 +30,56 @@ class EditSelf(APIRequest):
 
 
 @dataclass
-class RemoveSelf(APIRequest):
+class RemoveSelf(EntitiesAPIRequest):
     pass
 
 
 @dataclass
-class GetEntity(APIRequest):
+class GetEntity(EntitiesAPIRequest):
     entity: str | int
 
 
 @dataclass
-class EditEntity(APIRequest):
+class EditEntity(EntitiesAPIRequest):
     entity_request: GetEntity
     update: dict[str, str]
 
 
 @dataclass
-class RemoveEntity(APIRequest):
+class RemoveEntity(EntitiesAPIRequest):
     entity_request: GetEntity
 
 
 @dataclass
-class GetAvatars(APIRequest):
+class GetAvatars(EntitiesAPIRequest):
     entity_request: GetEntity
     disposition: Disposition
 
 
 @dataclass
-class GetAvatar(APIRequest):
+class GetAvatar(EntitiesAPIRequest):
     entity_request: GetEntity
     avatar_id: int
 
 
 @dataclass
-class SetAvatar(APIRequest):
+class SetAvatar(EntitiesAPIRequest):
     entity_request: GetEntity
     avatar: str
 
 
 @dataclass
-class RemoveAvatar(APIRequest):
+class RemoveAvatar(EntitiesAPIRequest):
     avatar_request: GetAvatar
 
 
 @dataclass
-class GetPermissions(APIRequest):
+class GetPermissions(EntitiesAPIRequest):
     entity_request: GetEntity
 
 
 @dataclass
-class EditPermissions(APIRequest):
+class EditPermissions(EntitiesAPIRequest):
     entity_request: GetEntity
     permissions_patch: PermissionsPatch
 

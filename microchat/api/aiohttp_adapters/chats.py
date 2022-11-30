@@ -18,29 +18,34 @@ MEDIA_CLASSES: dict[str, type[Image | Animation | Audio | Video | File]] = {
 
 
 @dataclass
-class GetChats(APIRequest):
+class ChatsAPIRequest(APIRequest):
+    pass
+
+
+@dataclass
+class GetChats(ChatsAPIRequest):
     disposition: Disposition
 
 
 @dataclass
-class GetChat(APIRequest):
+class GetChat(ChatsAPIRequest):
     chat: str | int
 
 
 @dataclass
-class GetMessages(APIRequest):
+class GetMessages(ChatsAPIRequest):
     chat_request: GetChat
     disposition: Disposition
 
 
 @dataclass
-class GetMessage(APIRequest):
+class GetMessage(ChatsAPIRequest):
     chat_request: GetChat
     message_id: int
 
 
 @dataclass
-class SendMessage(APIRequest):
+class SendMessage(ChatsAPIRequest):
     chat_request: GetChat
     text: str | None
     attachments: list[int] | None
@@ -48,38 +53,38 @@ class SendMessage(APIRequest):
 
 
 @dataclass
-class EditMessage(APIRequest):
+class EditMessage(ChatsAPIRequest):
     message_request: GetMessage
     text: str | None
     attachments: list[int] | None
 
 
 @dataclass
-class DeleteMessage(APIRequest):
+class DeleteMessage(ChatsAPIRequest):
     message_request: GetMessage
 
 
 @dataclass
-class GetAttachmentPreview(APIRequest):
-    message_request: GetMessage
-    attachment_id: int
-
-
-@dataclass
-class GetAttachmentContent(APIRequest):
+class GetAttachmentPreview(ChatsAPIRequest):
     message_request: GetMessage
     attachment_id: int
 
 
 @dataclass
-class GetChatMedias(APIRequest):
+class GetAttachmentContent(ChatsAPIRequest):
+    message_request: GetMessage
+    attachment_id: int
+
+
+@dataclass
+class GetChatMedias(ChatsAPIRequest):
     chat_requset: GetChat
     disposition: Disposition
     media_type: type[Image | Animation | Audio | Video | File]
 
 
 @dataclass
-class ChatMediaRequest(APIRequest):
+class ChatMediaRequest(ChatsAPIRequest):
     chat_request: GetChat
     media_id: int
     media_type: type[Image | Animation | Audio | Video | File]

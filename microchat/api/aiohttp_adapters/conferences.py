@@ -10,7 +10,12 @@ from .misc import get_request_payload, int_param
 
 
 @dataclass
-class CreateConference(APIRequest):
+class ConferencesAPIRequest(APIRequest):
+    pass
+
+
+@dataclass
+class CreateConference(ConferencesAPIRequest):
     alias: str | None
     title: str
     avatar: str | None
@@ -18,51 +23,51 @@ class CreateConference(APIRequest):
 
 
 @dataclass
-class GetConference(APIRequest):
+class GetConference(ConferencesAPIRequest):
     conference: int | str
 
 
 @dataclass
-class GetDefaultPermissions(APIRequest):
+class GetDefaultPermissions(ConferencesAPIRequest):
     conference_request: GetConference
 
 
 @dataclass
-class EditDefaultPermissions(APIRequest):
+class EditDefaultPermissions(ConferencesAPIRequest):
     conference_request: GetConference
     permissions_patch: PermissionsPatch
 
 
 @dataclass
-class GetMembers(APIRequest):
+class GetMembers(ConferencesAPIRequest):
     conference_request: GetConference
     disposition: Disposition
 
 
 @dataclass
-class GetMember(APIRequest):
+class GetMember(ConferencesAPIRequest):
     conference_request: GetConference
     member: int | str
 
 
 @dataclass
-class AddMember(APIRequest):
+class AddMember(ConferencesAPIRequest):
     conference_request: GetConference
     invitee: int | str
 
 
 @dataclass
-class RemoveMember(APIRequest):
+class RemoveMember(ConferencesAPIRequest):
     member_request: GetMember
 
 
 @dataclass
-class GetMemberPermissions(APIRequest):
+class GetMemberPermissions(ConferencesAPIRequest):
     member_request: GetMember
 
 
 @dataclass
-class EditMemberPermissions(APIRequest):
+class EditMemberPermissions(ConferencesAPIRequest):
     member_request: GetMember
     permissions_patch: PermissionsPatch
 

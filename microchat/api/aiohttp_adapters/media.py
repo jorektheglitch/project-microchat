@@ -28,12 +28,17 @@ class PartReader:
 
 
 @dataclass
-class UploadMedia(APIRequest):
+class MediaAPIRequest(APIRequest):
+    pass
+
+
+@dataclass
+class UploadMedia(MediaAPIRequest):
     payload: AsyncIterable[tuple[str, PartReader]]
 
 
 @dataclass
-class MediaRequest(APIRequest):
+class MediaRequest(MediaAPIRequest):
     hash: str
 
 
