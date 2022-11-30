@@ -4,12 +4,12 @@ from aiohttp import web
 
 from microchat.storages import UoW
 from microchat.services import ServiceSet
+from microchat.api_utils.types import Handler, Middleware
 
 from .auth import router as auth_routes
 from .chats import router as chats_routes
 from .entities import router as entities_routes
 from .media import router as media_routes
-from ..api_utils import Handler, Middleware
 
 
 SUBROUTES: dict[str, Sequence[web.AbstractRouteDef]] = {

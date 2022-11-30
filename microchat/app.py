@@ -19,7 +19,6 @@ async def app(
     middlewares: Iterable[_Middleware] = (),
     client_max_size: int = 1024**2,
 ) -> web.Application:
-    web.json_response()
     router = web.UrlDispatcher()
     app = web.Application(
         logger=logger, router=router, middlewares=middlewares,
