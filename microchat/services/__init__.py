@@ -9,6 +9,7 @@ from microchat.core.entities import Bot, Conference, User, Actor, Session
 from microchat.core.entities import ConferenceParticipation, Dialog
 from microchat.core.entities import Permissions
 from microchat.core.entities import FileInfo, Message, Image, Media, TempFile
+from microchat.core.jwt_manager import JWTManager
 from microchat.storages import UoW
 
 
@@ -67,27 +68,54 @@ class Service(ABC):
 
 
 class Auth(Service):
+    jwt_manager: JWTManager
 
     async def new_session(self, username: str, password: str) -> str:
-        pass
+        entity = await self.uow.entities.get_by_alias(username)
+        if not isinstance(entity, User):
+            raise InvalidCredentials()
+        auth_info = await self.uow.auth.get_auth_data(entity, "password")
+        try:
+            auth_succeed = auth_info.check(password.encode())
+        except NotImplementedError as e:
+            raise UnsupportedMethod(e.args[0])
+        if not auth_succeed:
+            raise InvalidCredentials()
+        session = await self.uow.auth.create_session(entity, auth_info)
+        token = self.jwt_manager.create_access_token(entity.id, session.id)
+        return token
 
-    async def list_sessions(self, user: User, offset: int, count: int) -> List[Session]:
-        pass
+    async def list_sessions(
+        self, user: User, offset: int, count: int
+    ) -> List[Session]:
+        return list(await user.sessions[offset:offset+count])
 
     async def get_session(self, user: User, id: int) -> Session:
-        pass
+        session = await user.sessions[id]
+        return session
 
     async def resolve_token(self, token: str) -> Session:
-        pass
+        payload = self.jwt_manager.decode_access_token(token)
+        entity = await self.uow.entities.get_by_id(payload["user"])
+        if not isinstance(entity, User):
+            raise InvalidToken()
+        session = await entity.sessions[payload["session"]]
+        return session
 
-    async def resolve_media_token(self, auth_cookie: str) -> Session:
-        pass
-
-    async def check_csrf_token(self, user: User, csrf_token: str) -> bool:
-        pass
+    async def resolve_media_token(
+        self, media_cookie: str, csrf_token: str
+    ) -> Session:
+        session_info = self.jwt_manager.decode_access_token(media_cookie)
+        csrf_info = self.jwt_manager.decode_csrf_token(csrf_token)
+        # TODO: add CSRF token checking
+        entity = self.uow.entities.get_by_id(session_info["user"])
+        if not isinstance(entity, User):
+            raise InvalidToken()
+        session = await entity.sessions[session_info["session"]]
+        return session
 
     async def terminate_session(self, user: User, session: Session) -> None:
-        pass
+        await self.uow.auth.terminate_session(user, session)
 
 
 class Agents(Service):
