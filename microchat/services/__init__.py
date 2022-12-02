@@ -123,43 +123,58 @@ class Agents(Service):
     async def get(
         self, user: User, id: int
     ) -> Agent:
-        pass
+        return await self.uow.entities.get_by_id(id)
 
     async def resolve_alias(
         self, user: User, alias: str
     ) -> Agent:
-        pass
+        return await self.uow.entities.get_by_alias(alias)
 
     async def get_chat(
         self, user: User, id: int
     ) -> Dialog | ConferenceParticipation[User]:
-        pass
+        relation = await self.uow.relations.get_relation(user, id)
+        return relation
 
     async def resolve_chat_alias(
         self, user: User, alias: str
     ) -> Dialog | ConferenceParticipation[User]:
-        pass
+        related = await self.uow.entities.get_by_alias(alias)
+        relation = await self.uow.relations.get_relation(user, related.id)
+        return relation
 
     async def list_avatars(
         self, user: User, agent: Agent, offset: int, count: int
     ) -> List[Image]:
-        pass
+        # TODO: check user's access to entity's avatar
+        avatars = await agent.avatars[offset:offset+count]
+        return list(avatars)
 
     async def get_avatar(
         self, user: User, agent: Agent, id: int
     ) -> Image:
-        pass
+        # TODO: check user's access to entity's avatar
+        avatar = await agent.avatars[id]
+        return avatar
 
     async def edit_self(
         self,
         user: User,
         alias: str | None = None,
-        avatar: str | None = None,
+        avatar_hash: str | None = None,
         name: str | None = None,
         surname: str | None = None,
         bio: str | None = None
     ) -> User:
-        pass
+        avatar = None
+        if avatar_hash is not None:
+            avatar = await self.uow.media.get_by_hash(user, avatar_hash)
+        if avatar is not None and not isinstance(avatar, Image):
+            raise ImageExpected()
+        updated = await self.uow.entities.edit_user(
+            user, alias, avatar, name, surname, bio
+        )
+        return updated
 
     async def edit_permissions(
         self,
@@ -167,7 +182,10 @@ class Agents(Service):
         relation: Dialog,
         **kwargs: bool
     ) -> Dialog:
-        pass
+        updated = await self.uow.relations.edit_permissions(
+            user, relation, kwargs
+        )
+        return updated
 
     async def edit_agent(
         self,
@@ -175,21 +193,45 @@ class Agents(Service):
         agent: A,
         **kwargs: str
     ) -> A:
-        # raise is user != agent
-        pass
+        await self._check_permissions(user, agent)
+        updated = await self.uow.entities.edit_entity(agent, kwargs)
+        return updated
 
     async def set_avatar(
-        self, user: User, agent: Agent, avatar: Image
+        self, user: User, agent: Agent, avatar_hash: str
     ) -> None:
-        pass
+        await self._check_permissions(user, agent)
+        avatar = self.uow.media.get_by_hash(user, avatar_hash)
+        if not isinstance(avatar, Image):
+            raise ImageExpected()
+        await self.uow.entities.set_avatar(agent, avatar)
 
     async def remove_avatar(
         self, user: User, agent: Agent, id: int
     ) -> None:
-        pass
+        await self._check_permissions(user, agent)
+        await self.uow.entities.remove_avatar(agent, id)
+
+    async def _check_permissions(self, user: User, agent: Agent) -> None:
+        if isinstance(agent, User) and agent != user:
+            raise AccessDenied("Can't edit other users")
+        elif isinstance(agent, Bot) and agent.owner != user:
+            raise AccessDenied("You are not a bot's owner")
+        elif isinstance(agent, Conference):
+            relation = await self.get_chat(user, agent.id)
+            if not relation.permissions:
+                raise AccessDenied("You have not permissions in conference")
+            if not relation.permissions.edit_conference:
+                raise AccessDenied(
+                    "'edit_conference' permission does not granted"
+                )
 
     async def remove_agent(self, user: User, agent: Agent) -> None:
-        pass
+        if isinstance(agent, User) and agent != user:
+            raise AccessDenied("Can't delete other users")
+        elif isinstance(agent, (Bot, Conference)) and agent.owner != user:
+            raise AccessDenied("Only owner can delete bot/conference")
+        await self.uow.entities.remove_entity(agent)
 
 
 class Chats(Service):
