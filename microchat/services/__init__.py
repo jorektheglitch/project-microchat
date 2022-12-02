@@ -23,7 +23,7 @@ class ServiceError(Exception):
 
 class ServiceSet:
 
-    auth: Authentication
+    auth: Auth
     chats: Chats
     conferences: Conferences
     files: Files
@@ -33,7 +33,7 @@ class ServiceSet:
         pass
 
 
-class Authentication:
+class Auth:
 
     async def new_session(self, username: str, password: str) -> str:
         pass
