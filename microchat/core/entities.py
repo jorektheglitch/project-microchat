@@ -29,6 +29,7 @@ class Named(ABC):
     alias: str
     title: str
     avatar: Image
+    avatars: BoundSequence[Image]
 
 
 class Owned(ABC, Generic[T]):
