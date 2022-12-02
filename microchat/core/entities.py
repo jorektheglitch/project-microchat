@@ -3,11 +3,12 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from datetime import datetime as dt
 from enum import Enum, auto
+from hashlib import sha3_512
 
 from pathlib import Path
 
 from types import TracebackType
-from typing import Any, Literal
+from typing import Literal
 from typing import Generic, TypeVar
 
 from .types import Bound, BoundSequence
@@ -93,10 +94,23 @@ class Conference(Entity, Named, Owned[User]):
     messages: BoundSequence[Message]
 
 
+class AuthMethod(Enum):
+    PASSWORD = auto()
+    PUBLIC_KEY = auto()
+
+
 class Authentication:
-    method: str
+    method: AuthMethod
     user: User
-    data: Any  # type: ignore
+    data: bytes
+
+    def check(self, data: bytes) -> bool:
+        if self.method is AuthMethod.PASSWORD:
+            return self.data == sha3_512(data)
+        method = self.method.name
+        raise NotImplementedError(
+            f"'{method}' authentication method is not implemented yet"
+        )
 
 
 class Session(Entity):
