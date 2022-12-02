@@ -3,7 +3,8 @@ from aiohttp import web
 from microchat.services import ServiceSet
 from microchat.core.entities import User
 
-from microchat.api_utils.handler import AccessLevel, api_handler, APIResponse
+from microchat.api_utils.handler import AccessLevel, api_handler
+from microchat.api_utils.response import APIResponse
 from microchat.api_utils.exceptions import BadRequest
 
 

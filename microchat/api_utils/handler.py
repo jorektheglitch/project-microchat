@@ -14,7 +14,6 @@ from typing import TYPE_CHECKING
 from aiohttp_sse import sse_response
 if TYPE_CHECKING:
     from .types import AuthenticatedHandler, APIHandler
-    from .types import APIResponse, APIResponseEncoder
     from .types import Handler
 
 from aiohttp import web
@@ -24,6 +23,7 @@ from microchat.services import ServiceError, ServiceSet
 from microchat.core.entities import User
 
 from .exceptions import APIError
+from .response import APIResponse, APIResponseEncoder
 from .response import DEFAULT_JSON_DUMPER
 
 

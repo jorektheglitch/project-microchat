@@ -7,7 +7,7 @@ from microchat.api.params import check_view_kind
 from microchat.core.entities import Message, User, Bot, Conference
 from microchat.core.entities import Media, Animation, Image, Video
 from microchat.core.entities import ConferenceParticipation, Dialog
-from microchat.services import ServiceSet, AuthenticationFailed
+from microchat.services import ServiceSet, AuthenticationError
 from microchat.api_utils.response import HEADER
 from microchat.api_utils.exceptions import BadRequest, NotFound
 
@@ -19,7 +19,7 @@ async def authenticate_media_request(
         auth_cookie = request.cookies["MEDIA_ACCESS"]
         csrf_token = request.query["csrf_token"]
     except KeyError:
-        raise AuthenticationFailed
+        raise AuthenticationError
     session = await services.auth.resolve_media_token(
         auth_cookie, csrf_token
     )
