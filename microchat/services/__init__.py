@@ -58,7 +58,15 @@ class ServiceSet:
         pass
 
 
-class Auth:
+class Service(ABC):
+    uow: UoW
+
+    def __init__(self, uow: UoW) -> None:
+        super().__init__()
+        self.uow = uow
+
+
+class Auth(Service):
 
     async def new_session(self, username: str, password: str) -> str:
         pass
@@ -82,7 +90,7 @@ class Auth:
         pass
 
 
-class Agents:
+class Agents(Service):
 
     async def get(
         self, user: User, id: int
@@ -156,7 +164,7 @@ class Agents:
         pass
 
 
-class Chats:
+class Chats(Service):
 
     async def list_chats(
         self, user: User, offset: int, count: int
@@ -263,7 +271,7 @@ class Chats:
         pass
 
 
-class Conferences:
+class Conferences(Service):
 
     async def list_chat_members(
         self, user: User | Bot, conference: Conference,
@@ -310,7 +318,7 @@ class Conferences:
         pass
 
 
-class Files:
+class Files(Service):
 
     async def materialize(
         self,
