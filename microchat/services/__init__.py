@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from abc import ABC
 from contextlib import asynccontextmanager
 
 from typing import AsyncGenerator, Iterable, List, TypeVar, overload
@@ -17,7 +18,31 @@ Agent = User | Bot | Conference
 A = TypeVar("A", bound=Agent)
 
 
-class ServiceError(Exception):
+class ServiceError(ABC, Exception):
+    pass
+
+
+class AccessDenied(ServiceError):
+    pass
+
+
+class AuthenticationError(ServiceError):
+    pass
+
+
+class InvalidCredentials(AuthenticationError):
+    pass
+
+
+class UnsupportedMethod(AuthenticationError):
+    pass
+
+
+class InvalidToken(AuthenticationError):
+    pass
+
+
+class ImageExpected(ServiceError):
     pass
 
 
