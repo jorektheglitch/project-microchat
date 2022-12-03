@@ -24,6 +24,7 @@ class UoW:
     auth: AuthenticationStorage
     entities: EntitiesStorage
     relations: RelationsStorage
+    chats: ChatsStorage
 
     async def __aenter__(self: T) -> T:
         return self
@@ -121,4 +122,95 @@ class RelationsStorage(ABC):
     async def edit_permissions(
         self, user: User, relation: Dialog, update: dict[str, bool]
     ) -> Dialog:
+        pass
+
+
+class ChatsStorage(ABC):
+
+    @abstractmethod
+    async def get_user_chats(
+        self, user: User, offset: int, count: int
+    ) -> list[Dialog | ConferenceParticipation[User]]:
+        pass
+
+    @abstractmethod
+    async def get_dialog_messages(
+        self, user: User, chat: Dialog, offset: int, count: int
+    ) -> list[Message]:
+        pass
+
+    @abstractmethod
+    async def get_conference_messages(
+        self,
+        user: User, chat: ConferenceParticipation[User],
+        offset: int, count: int,
+    ) -> list[Message]:
+        pass
+
+    @abstractmethod
+    async def get_private_conference_messages(
+        self,
+        user: User,
+        chat: ConferenceParticipation[User],
+        offset: int,
+        count: int,
+        presences: AsyncSequence[ConferencePresence]
+    ) -> list[Message]:
+        pass
+
+    @abstractmethod
+    async def add_message(
+        self,
+        user: User, chat: Dialog | ConferenceParticipation[User],
+        text: str | None,
+        attachments: list[Media] | None,
+        reply_to: Message | None
+    ) -> Message:
+        pass
+
+    async def edit_message(
+        self,
+        message: Message,
+        text: str | None,
+        attachments: list[Media] | None
+    ) -> Message:
+        pass
+
+    async def remove_message(self, message: Message) -> None:
+        pass
+
+    @abstractmethod
+    async def get_dialog_medias(
+        self,
+        user: User,
+        chat: Dialog,
+        media_type: type[M],
+        offset: int,
+        count: int
+    ) -> list[Attachment[M]]:
+        pass
+
+    @abstractmethod
+    async def get_conference_medias(
+        self,
+        user: User, chat: ConferenceParticipation[User],
+        media_type: type[M],
+        offset: int, count: int,
+    ) -> list[Attachment[M]]:
+        pass
+
+    @abstractmethod
+    async def get_private_conference_medias(
+        self,
+        user: User,
+        chat: ConferenceParticipation[User],
+        media_type: type[M],
+        offset: int,
+        count: int,
+        presences: AsyncSequence[ConferencePresence]
+    ) -> list[Attachment[M]]:
+        pass
+
+    @abstractmethod
+    async def remove_media(self, attachment: Attachment[M]) -> None:
         pass
