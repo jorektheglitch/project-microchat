@@ -168,6 +168,7 @@ class ChatsStorage(ABC):
     ) -> Message:
         pass
 
+    @abstractmethod
     async def edit_message(
         self,
         message: Message,
@@ -176,6 +177,7 @@ class ChatsStorage(ABC):
     ) -> Message:
         pass
 
+    @abstractmethod
     async def remove_message(self, message: Message) -> None:
         pass
 
