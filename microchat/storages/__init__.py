@@ -22,6 +22,7 @@ Exc = TypeVar("Exc", BaseException, Exception)
 class UoW:
 
     auth: AuthenticationStorage
+    entities: EntitiesStorage
 
     async def __aenter__(self: T) -> T:
         return self
@@ -59,4 +60,49 @@ class AuthenticationStorage(ABC):
 
     @abstractmethod
     async def terminate_session(self, user: User, session: Session) -> None:
+        pass
+
+
+class EntitiesStorage(ABC):
+
+    @abstractmethod
+    async def get_by_alias(self, alias: str) -> User | Bot | Conference:
+        pass
+
+    @abstractmethod
+    async def get_by_id(self, id: int) -> User | Bot | Conference:
+        pass
+
+    @abstractmethod
+    async def edit_user(
+        self,
+        user: User,
+        alias: str | None = None,
+        avatar: Image | None = None,
+        name: str | None = None,
+        surname: str | None = None,
+        bio: str | None = None
+    ) -> User:
+        pass
+
+    @abstractmethod
+    async def edit_entity(
+        self, entity: A, update: dict[str, Any]
+    ) -> A:
+        pass
+
+    @abstractmethod
+    async def set_avatar(
+        self, entity: Bot | User | Conference, avatar: Image
+    ) -> None:
+        pass
+
+    @abstractmethod
+    async def remove_entity(self, entity: Bot | User | Conference) -> None:
+        pass
+
+    @abstractmethod
+    async def remove_avatar(
+        self, entity: Bot | User | Conference, id: int
+    ) -> None:
         pass
