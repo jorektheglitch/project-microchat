@@ -23,6 +23,7 @@ class UoW:
 
     auth: AuthenticationStorage
     entities: EntitiesStorage
+    relations: RelationsStorage
 
     async def __aenter__(self: T) -> T:
         return self
@@ -105,4 +106,19 @@ class EntitiesStorage(ABC):
     async def remove_avatar(
         self, entity: Bot | User | Conference, id: int
     ) -> None:
+        pass
+
+
+class RelationsStorage(ABC):
+
+    @abstractmethod
+    async def get_relation(
+        self, user: User | Bot, id: int
+    ) -> Dialog | ConferenceParticipation[User]:
+        pass
+
+    @abstractmethod
+    async def edit_permissions(
+        self, user: User, relation: Dialog, update: dict[str, bool]
+    ) -> Dialog:
         pass
