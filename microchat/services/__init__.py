@@ -8,7 +8,8 @@ from typing import AsyncGenerator, Iterable, List, TypeVar, overload
 from microchat.core.entities import Bot, Conference, User, Actor, Session
 from microchat.core.entities import ConferenceParticipation, Dialog
 from microchat.core.entities import Permissions
-from microchat.core.entities import FileInfo, Message, Image, Media, TempFile
+from microchat.core.entities import Message, Attachment, Media, Image
+from microchat.core.entities import FileInfo, TempFile
 from microchat.core.jwt_manager import JWTManager
 from microchat.storages import UoW
 
@@ -44,6 +45,10 @@ class InvalidToken(AuthenticationError):
 
 
 class ImageExpected(ServiceError):
+    pass
+
+
+class DoesNotExists(ServiceError):
     pass
 
 
@@ -238,40 +243,57 @@ class Chats(Service):
 
     async def list_chats(
         self, user: User, offset: int, count: int
-    ) -> List[Dialog | ConferenceParticipation[User]]:
-        pass
-
-    async def remove_chat(
-        self, user: User, chat: Dialog | ConferenceParticipation[User]
-    ) -> None:
-        pass
+    ) -> list[Dialog | ConferenceParticipation[User]]:
+        chats = await self.uow.chats.get_user_chats(user, offset, count)
+        return chats
 
     async def list_chat_messages(
         self,
         user: User, chat: Dialog | ConferenceParticipation[User],
         offset: int, count: int
-    ) -> List[Message]:
-        pass
+    ) -> list[Message]:
+        chats = self.uow.chats
+        if isinstance(chat, Dialog):
+            messages = await chats.get_dialog_messages(
+                user, chat, offset, count
+            )
+        elif isinstance(chat, ConferenceParticipation):
+            if chat.related.private:
+                presences = chat.presences
+                messages = await chats.get_private_conference_messages(
+                    user, chat, offset, count, presences
+                )
+            else:
+                messages = await chats.get_conference_messages(
+                    user, chat, offset, count
+                )
+        return messages
 
     async def get_chat_message(
-        self, user: User, chat: Dialog | ConferenceParticipation[User], id: int
+        self, user: User, chat: Dialog | ConferenceParticipation[User], no: int
     ) -> Message:
-        pass
+        messages = await self.list_chat_messages(user, chat, no, 1)
+        if not messages:
+            raise DoesNotExists()
+        message = messages[0]
+        if message.no != no:
+            raise DoesNotExists()
+        return message
 
     @overload
     async def add_chat_message(
         self, user: User, chat: Dialog | ConferenceParticipation[User],
-        text: str, attachments: None, reply_to: Message | None
+        text: str, attachments: None, reply_to_no: int | None
     ) -> Message: ...
-    @overload
+    @overload  # noqa
     async def add_chat_message(
         self, user: User, chat: Dialog | ConferenceParticipation[User],
-        text: str, attachments: List[Media], reply_to: Message | None
+        text: str, attachments: list[Media], reply_to_no: int | None
     ) -> Message: ...
-    @overload
+    @overload  # noqa
     async def add_chat_message(
         self, user: User, chat: Dialog | ConferenceParticipation[User],
-        text: None, attachments: List[Media], reply_to: Message | None
+        text: None, attachments: list[Media], reply_to_no: int | None
     ) -> Message: ...
 
     async def add_chat_message(
@@ -279,66 +301,117 @@ class Chats(Service):
         user: User,
         chat: Dialog | ConferenceParticipation[User],
         text: str | None = None,
-        attachments: List[Media] | None = None,
-        reply_to: Message | None = None
+        attachments: list[Media] | None = None,
+        reply_to_no: int | None = None
     ) -> Message:
-        pass
+        if isinstance(chat, ConferenceParticipation):
+            # TODO: check that user is conference member
+            pass
+        permissions = chat.permissions or chat.related.default_permissions
+        if not permissions.send:
+            raise AccessDenied("Can't send message due to chat restrictions")
+        if attachments and not permissions.send_media:
+            raise AccessDenied(
+                "Can't send message with attachments due to chat restrictions"
+            )
+        reply_to = None
+        if reply_to_no is not None:
+            reply_to = await self.get_chat_message(user, chat, reply_to_no)
+        message = await self.uow.chats.add_message(
+            user, chat, text, attachments, reply_to
+        )
+        return message
 
-
     @overload
     async def edit_chat_message(
         self, user: User, chat: Dialog | ConferenceParticipation[User],
-        id: int, text: str, attachments: None
+        no: int, text: str, attachments: None
     ) -> Message: ...
-    @overload
+    @overload  # noqa
     async def edit_chat_message(
         self, user: User, chat: Dialog | ConferenceParticipation[User],
-        id: int, text: str, attachments: List[Media]
+        no: int, text: str, attachments: List[Media]
     ) -> Message: ...
-    @overload
+    @overload  # noqa
     async def edit_chat_message(
         self, user: User, chat: Dialog | ConferenceParticipation[User],
-        id: int, text: None, attachments: List[Media]
+        no: int, text: None, attachments: List[Media]
     ) -> Message: ...
 
     async def edit_chat_message(
         self,
         user: User,
         chat: Dialog | ConferenceParticipation[User],
-        id: int,
+        no: int,
         text: str | None = None,
         attachments: List[Media] | None = None
     ) -> Message:
-        pass
+        message = await self.get_chat_message(user, chat, no)
+        sender = await message.sender
+        if sender != user:
+            raise AccessDenied("Can't edit other user's messages")
+        updated = await self.uow.chats.edit_message(message, text, attachments)
+        return updated
 
     async def remove_chat_message(
-        self, user: User, chat: Dialog | ConferenceParticipation[User], id: int
+        self, user: User, chat: Dialog | ConferenceParticipation[User], no: int
     ) -> None:
-        pass
+        permissions = chat.permissions or chat.related.default_permissions
+        message = await self.get_chat_message(user, chat, no)
+        sender = await message.sender
+        if sender != user and not permissions.delete:
+            raise AccessDenied("Can't delete other user's messages")
+        await self.uow.chats.remove_message(message)
 
     async def list_chat_media(
         self,
         user: User, chat: Dialog | ConferenceParticipation[User],
         media_type: type[M],
         offset: int, count: int
-    ) -> List[M]:
-        pass
+    ) -> list[Attachment[M]]:
+        chats = self.uow.chats
+        if isinstance(chat, Dialog):
+            medias = await chats.get_dialog_medias(
+                user, chat, media_type, offset, count
+            )
+        elif isinstance(chat, ConferenceParticipation):
+            if chat.related.private:
+                presences = chat.presences
+                medias = await chats.get_private_conference_medias(
+                    user, chat, media_type, offset, count, presences
+                )
+            else:
+                medias = await chats.get_conference_medias(
+                    user, chat, media_type, offset, count
+                )
+        return medias
 
     async def get_chat_media(
         self,
         user: User, chat: Dialog | ConferenceParticipation[User],
         media_type: type[M],
-        id: int
-    ) -> Media:
-        pass
+        no: int
+    ) -> Attachment[M]:
+        attachments = await self.list_chat_media(user, chat, media_type, no, 1)
+        if not attachments:
+            raise DoesNotExists()
+        attachment = attachments[0]
+        if attachment.no != no:
+            raise DoesNotExists()
+        return attachment
 
     async def remove_chat_media(
         self,
         user: User, chat: Dialog | ConferenceParticipation[User],
         media_type: type[M],
-        id: int
+        no: int
     ) -> None:
-        pass
+        permissions = chat.permissions or chat.related.default_permissions
+        attachment = await self.get_chat_media(user, chat, media_type, no)
+        sender = attachment.media.loaded_by
+        if sender != user and not permissions.delete:
+            raise AccessDenied("Can't delete other user's medias")
+        await self.uow.chats.remove_media(attachment)
 
 
 class Conferences(Service):
