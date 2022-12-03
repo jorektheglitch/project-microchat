@@ -30,6 +30,7 @@ class Named(ABC):
     title: str
     avatar: Image
     avatars: BoundSequence[Image]
+    default_permissions: Permissions
 
 
 class Owned(ABC, Generic[T]):
@@ -88,6 +89,7 @@ class ConferenceParticipation(Relation[Actor], Generic[Actor]):
 
 class Conference(Entity, Named, Owned[User]):
     description: str | None
+    private: bool
     members: BoundSequence[ConferenceParticipation[User | Bot]]
     users: BoundSequence[ConferenceParticipation[User]]
     bots: BoundSequence[ConferenceParticipation[Bot]]
@@ -124,17 +126,6 @@ class Session(Entity):
     closed: bool
 
 
-class Message(Entity):  # , Generic[C]):
-    id: int  # internal (DB) id
-    no: int  # number of message in dialog/conference  # it is just index
-    sender: Bound[User | Bot]
-    text: str | None
-    attachments: BoundSequence[Media]
-    time_sent: dt
-    time_edit: dt | None
-    reply_to: Message | None
-
-
 class Media(Entity, ABC):
     file_info: FileInfo
     name: str  # displayed file name
@@ -142,6 +133,9 @@ class Media(Entity, ABC):
     subtype: MIMESubtype  # MIME subtype
     loaded_at: dt
     loaded_by: User | Bot
+
+
+M = TypeVar("M", bound=Media)
 
 
 class Image(Media):
@@ -206,6 +200,22 @@ class TempFile(ABC):
     @abstractmethod
     async def close(self) -> None:
         pass
+
+
+class Message(Entity):  # , Generic[C]):
+    id: int  # internal (DB) id
+    no: int  # number of message in dialog/conference  # it is just index
+    sender: Bound[User | Bot]
+    text: str | None
+    attachments: BoundSequence[Attachment[Media]]
+    time_sent: dt
+    time_edit: dt | None
+    reply_to: Message | None
+
+
+class Attachment(Generic[M]):
+    no: int  # index of attachment in all of attachments in dialog
+    media: M
 
 
 class Restrictions(Entity):
