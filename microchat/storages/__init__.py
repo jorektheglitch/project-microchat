@@ -5,7 +5,7 @@ from abc import ABC, abstractmethod
 from types import TracebackType
 from typing import Any, TypeVar, overload
 
-from microchat.core.entities import Authentication, Session
+from microchat.core.entities import Authentication, Permissions, Session
 from microchat.core.entities import User, Bot, Conference, Dialog
 from microchat.core.entities import ConferenceParticipation, ConferencePresence
 from microchat.core.entities import Message, Attachment
@@ -26,6 +26,7 @@ class UoW:
     entities: EntitiesStorage
     relations: RelationsStorage
     chats: ChatsStorage
+    conferences: ConferencesStorage
 
     async def __aenter__(self: T) -> T:
         return self
@@ -216,4 +217,37 @@ class ChatsStorage(ABC):
 
     @abstractmethod
     async def remove_media(self, attachment: Attachment[M]) -> None:
+        pass
+
+
+class ConferencesStorage(ABC):
+
+    @abstractmethod
+    async def list_members(
+        self, conference: Conference, offset: int, count: int
+    ) -> list[ConferenceParticipation[User | Bot]]:
+        pass
+
+    @abstractmethod
+    async def find_member(
+        self, conference: Conference, actor: Actor
+    ) -> ConferenceParticipation[Actor]:
+        pass
+
+    @abstractmethod
+    async def add_member(
+        self, conference: Conference, invitee: Actor
+    ) -> ConferenceParticipation[Actor]:
+        pass
+
+    @abstractmethod
+    async def remove_member(
+        self, member: ConferenceParticipation[User | Bot]
+    ) -> None:
+        pass
+
+    @abstractmethod
+    async def update_permissions(
+        self, member: ConferenceParticipation[User | Bot], update: Permissions
+    ) -> Permissions:
         pass
