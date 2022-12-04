@@ -241,6 +241,7 @@ class Permissions(Entity):
     send_media: bool
     send_mediamessage: bool
     add_user: bool
+    remove_user: bool
     pin_message: bool
     edit_conference: bool
 
