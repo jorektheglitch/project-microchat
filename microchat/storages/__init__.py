@@ -251,3 +251,30 @@ class ConferencesStorage(ABC):
         self, member: ConferenceParticipation[User | Bot], update: Permissions
     ) -> Permissions:
         pass
+
+
+class MediaStorage(ABC):
+
+    @abstractmethod
+    async def get_by_hash(self, user: User, hash: str) -> Media:
+        pass
+
+    @abstractmethod
+    async def get_by_hashes(
+        self, user: User, hashes: Iterable[str]
+    ) -> list[Media]:
+        pass
+
+    @abstractmethod
+    async def save_media(
+        self, user: User, file: TempFile, name: str, mime: MIMETuple
+    ) -> Media:
+        pass
+
+    @abstractmethod
+    async def create_tempfile(self) -> TempFile:
+        pass
+
+    @abstractmethod
+    async def open(self, file: FileInfo) -> AsyncReader:
+        pass
