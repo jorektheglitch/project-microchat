@@ -3,14 +3,14 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 
 from types import TracebackType
-from typing import Any, TypeVar, overload
+from typing import Any, Iterable, TypeVar, overload
 
 from microchat.core.entities import Authentication, Permissions, Session
 from microchat.core.entities import User, Bot, Conference, Dialog
 from microchat.core.entities import ConferenceParticipation, ConferencePresence
 from microchat.core.entities import Message, Attachment
-from microchat.core.entities import Media, Image
-from microchat.core.types import AsyncSequence
+from microchat.core.entities import Media, Image, TempFile, FileInfo
+from microchat.core.types import AsyncReader, AsyncSequence, MIMETuple
 
 
 T = TypeVar("T")
@@ -27,6 +27,7 @@ class UoW:
     relations: RelationsStorage
     chats: ChatsStorage
     conferences: ConferencesStorage
+    media: MediaStorage
 
     async def __aenter__(self: T) -> T:
         return self
