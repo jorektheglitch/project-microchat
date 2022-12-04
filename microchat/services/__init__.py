@@ -9,8 +9,9 @@ from microchat.core.entities import Bot, Conference, User, Actor, Session
 from microchat.core.entities import ConferenceParticipation, Dialog
 from microchat.core.entities import Permissions
 from microchat.core.entities import Message, Attachment, Media, Image
-from microchat.core.entities import FileInfo, TempFile
+from microchat.core.entities import FileInfo, TempFile, MIME_TUPLES
 from microchat.core.jwt_manager import JWTManager
+from microchat.core.types import MIMETuple
 from microchat.storages import UoW
 
 
@@ -49,6 +50,14 @@ class ImageExpected(ServiceError):
 
 
 class DoesNotExists(ServiceError):
+    pass
+
+
+class IncompleteMIMEType(ServiceError):
+    pass
+
+
+class UnsupportedMIMEType(ServiceError):
     pass
 
 
@@ -513,20 +522,13 @@ class Conferences(Service):
 
 class Files(Service):
 
-    async def materialize(
-        self,
-        user: User,
-        file: TempFile,
-        name: str,
-        mime_type: str
-    ) -> Media:
-        pass
-
     async def get_info(self, user: User, hash: str) -> Media:
-        pass
+        return await self.uow.media.get_by_hash(user, hash)
 
-    async def get_infos(self, user: User, ids: Iterable[int]) -> List[Media]:
-        pass
+    async def get_infos(
+        self, user: User, hashes: Iterable[str]
+    ) -> List[Media]:
+        return await self.uow.media.get_by_hashes(user, hashes)
 
     async def iter_content(
         self,
@@ -535,12 +537,35 @@ class Files(Service):
         *,
         chunk_size: int = 1024**2
     ) -> AsyncGenerator[bytes, None]:
-        yield
+        reader = await self.uow.media.open(file)
+        chunk = await reader.read(chunk_size)
+        while chunk:
+            yield chunk
+            chunk = await reader.read(chunk_size)
+
+    async def materialize(
+        self,
+        user: User,
+        file: TempFile,
+        name: str,
+        mime_repr: str
+    ) -> Media:
+        mime = self._parse_mime_repr(mime_repr)
+        media = await self.uow.media.save_media(user, file, name, mime)
+        return media
 
     @asynccontextmanager
     async def tempfile(self) -> AsyncGenerator[TempFile, None]:
-        tmpfile: TempFile
+        tempfile = await self.uow.media.create_tempfile()
         try:
-            yield tmpfile
+            yield tempfile
         finally:
-            await tmpfile.close()
+            await tempfile.close()
+
+    @staticmethod
+    def _parse_mime_repr(mime_repr: str) -> MIMETuple:
+        mime_repr_ = mime_repr.split("/", maxsplit=1)
+        mime_tuple = MIME_TUPLES.get(tuple(mime_repr_))  # type: ignore
+        if mime_tuple is None:
+            raise UnsupportedMIMEType()
+        return mime_tuple
