@@ -495,6 +495,7 @@ class Conferences(Service):
         if not user_perms.remove_user:
             raise AccessDenied("'remove_user' permission does not granted")
         member = await self.get_member(user, conference, no)
+        # TODO: do something with this creepy part of code
         permissions = member.permissions or conference.default_permissions
         permissions.read = read or permissions.read
         permissions.send = send or permissions.send
