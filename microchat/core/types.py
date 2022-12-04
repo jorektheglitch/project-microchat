@@ -173,3 +173,10 @@ class BoundSequence(ABC, Generic[T_co]):
     def __set_name__(self, owner: type, name: str) -> None:
         self.name = name
         self.owner = owner
+
+
+class AsyncReader(ABC):
+
+    @abstractmethod
+    async def read(self, size: int = 0) -> bytes:
+        pass
