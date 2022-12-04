@@ -83,6 +83,7 @@ class ConferencePresence:
 
 
 class ConferenceParticipation(Relation[Actor], Generic[Actor]):
+    no: int  # index of participant
     related: Conference
     role: str
     presences: BoundSequence[ConferencePresence]
