@@ -3,8 +3,8 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from enum import Enum
 
-from typing import Any, AsyncIterator, Generic, Protocol, TypeVar
-from typing import Awaitable, Generator, Iterable, Sequence
+from typing import Any, Generic, Literal, Protocol, TypeVar, Union
+from typing import Awaitable, AsyncIterator, Generator, Iterable, Sequence
 from typing import overload
 
 
@@ -69,6 +69,11 @@ class AudiosMIME(Enum):
 
 
 MIMESubtype = ImagesMIME | AudiosMIME | VideosMIME | str
+MIMETuple = Union[
+    tuple[Literal[MIMEType.IMAGE], ImagesMIME],
+    tuple[Literal[MIMEType.AUDIO], AudiosMIME],
+    tuple[Literal[MIMEType.VIDEO], VideosMIME],
+]
 
 
 class AsyncSequence(Awaitable[Sequence[T]], Protocol[T]):
