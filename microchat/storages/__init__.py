@@ -14,7 +14,8 @@ from microchat.core.types import AsyncSequence
 
 
 T = TypeVar("T")
-A = TypeVar("A", bound=User | Bot | Conference)
+Agent = TypeVar("Agent", bound=User | Bot | Conference)
+Actor = TypeVar("Actor", bound=User | Bot)
 M = TypeVar("M", bound=Media)
 Exc = TypeVar("Exc", BaseException, Exception)
 
@@ -89,8 +90,8 @@ class EntitiesStorage(ABC):
 
     @abstractmethod
     async def edit_entity(
-        self, entity: A, update: dict[str, Any]
-    ) -> A:
+        self, entity: Agent, update: dict[str, Any]
+    ) -> Agent:
         pass
 
     @abstractmethod
