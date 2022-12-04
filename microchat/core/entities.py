@@ -12,7 +12,8 @@ from typing import Literal
 from typing import Generic, TypeVar
 
 from .types import Bound, BoundSequence
-from .types import MIMEType, MIMESubtype, AudiosMIME, ImagesMIME, VideosMIME
+from .types import MIMEType, MIMESubtype, MIMETuple
+from .types import AudiosMIME, ImagesMIME, VideosMIME
 
 
 C = TypeVar('C', "Conference", "Dialog")  # C means Conversation
@@ -244,3 +245,9 @@ class Permissions(Entity):
 
 
 PERMISSIONS_FIELDS = tuple(field for field in Permissions.__annotations__)
+
+MIME_TUPLES: dict[tuple[str, str], MIMETuple] = {
+    **{("image", item.value): (MIMEType.IMAGE, item) for item in ImagesMIME},
+    **{("audio", item.value): (MIMEType.AUDIO, item) for item in AudiosMIME},
+    **{("video", item.value): (MIMEType.VIDEO, item) for item in VideosMIME},
+}
