@@ -24,7 +24,7 @@ async def list_chat_members(
     alias = request.match_info.get("alias")
     offset, count = get_offset_count(request)
     conference = await get_conference(services, user, entity_id, alias)
-    members = await services.conferences.list_chat_members(
+    members = await services.conferences.list_members(
         user, conference, offset, count
     )
     return APIResponse(members)
@@ -61,7 +61,7 @@ async def add_chat_member(
     conference = await get_conference(services, user, entity_id, alias)
     if not isinstance(conference, Conference):
         raise NotFound
-    member = await services.conferences.add_chat_member(
+    member = await services.conferences.add_member(
         user, conference, invitee
     )
     return APIResponse(member, Status.CREATED)
@@ -97,7 +97,7 @@ async def get_chat_member(
     conference = await get_conference(services, user, entity_id, alias)
     if not isinstance(conference, Conference):
         raise NotFound
-    member = await services.conferences.get_chat_member(
+    member = await services.conferences.get_member(
         user, conference, agent
     )
     return APIResponse(member)
@@ -136,7 +136,7 @@ async def remove_chat_member(
     conference = await get_conference(services, user, entity_id, alias)
     if not isinstance(conference, Conference):
         raise NotFound
-    await services.conferences.get_chat_member(
+    await services.conferences.get_member(
         user, conference, agent
     )
     return APIResponse(status=Status.NO_CONTENT)
@@ -172,7 +172,7 @@ async def get_chat_member_permissions(
     conference = await get_conference(services, user, entity_id, alias)
     if not isinstance(conference, Conference):
         raise NotFound
-    permissions = await services.conferences.get_chat_member_permissions(
+    permissions = await services.conferences.get_member_permissions(
         user, conference, agent
     )
     return APIResponse(permissions)
@@ -220,7 +220,7 @@ async def edit_chat_member_permissions(
                 f"Incorrect value for '{name}'. Values must be bool."
             )
         overalys[name] = value
-    permissions = await services.conferences.edit_chat_member_permissions(
+    permissions = await services.conferences.edit_member_permissions(
         user, conference, agent, **overalys
     )
     return APIResponse(permissions)
