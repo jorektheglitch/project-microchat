@@ -1,32 +1,10 @@
-from dataclasses import dataclass
-
 from aiohttp import web
+
 from microchat.api_utils.exceptions import BadRequest
+from microchat.api.auth_ import GetSessions, AddSession, CloseSession
 
-from microchat.api_utils.request import APIRequest
-from .misc import Disposition, get_disposition
+from .misc import get_disposition
 from .misc import get_request_payload
-
-
-@dataclass
-class AuthAPIRequest(APIRequest):
-    pass
-
-
-@dataclass
-class GetSessions(AuthAPIRequest):
-    disposition: Disposition
-
-
-@dataclass
-class AddSession(AuthAPIRequest):
-    usename: str
-    password: str
-
-
-@dataclass
-class CloseSession(AuthAPIRequest):
-    pass
 
 
 async def sessions_request_params(request: web.Request) -> GetSessions:

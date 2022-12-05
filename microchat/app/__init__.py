@@ -6,9 +6,10 @@ from aiohttp import log
 from aiohttp import web
 from aiohttp.typedefs import Handler
 
+from microchat.core.jwt_manager import JWTManager
+from microchat.storages import UoW
+
 from .api import api_app
-from .core.jwt_manager import JWTManager
-from .storages import UoW
 
 
 _Middleware = Callable[[web.Request, Handler], Awaitable[web.StreamResponse]]
