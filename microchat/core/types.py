@@ -13,6 +13,8 @@ T_co = TypeVar('T_co', covariant=True)
 T_contra = TypeVar('T_contra', contravariant=True)
 Owner_co = TypeVar('Owner_co', covariant=True)
 
+JSON = str | int | float | list["JSON"] | dict[str, "JSON"] | None
+
 
 class MIMEType(Enum):
     APPLICATION = "application"
