@@ -1,226 +1,195 @@
-from aiohttp import web
+from dataclasses import dataclass
+
+
+from microchat.core.entities import User, Dialog, ConferenceParticipation
+from microchat.core.entities import Bot, Conference, Permissions
 
 from microchat.services import ServiceSet
-from microchat.core.entities import Bot, User, Conference
-from microchat.core.entities import PERMISSIONS_FIELDS
-
-from microchat.api_utils.handler import api_handler
+from microchat.api_utils.handler import authenticated
+from microchat.api_utils.request import APIRequest, Authenticated
 from microchat.api_utils.response import APIResponse, Status
 from microchat.api_utils.exceptions import BadRequest, NotFound
 
-from .misc import get_conference, get_offset_count
+from .misc import Disposition, PermissionsPatch
 
 
-router = web.RouteTableDef()
+@dataclass
+class ConferencesAPIRequest(APIRequest, Authenticated):
+    pass
 
 
-@router.get(r"/{entity_id:\d+}/members")
-@router.get(r"/@{alias:\w+}/members")
-@api_handler
+@dataclass
+class CreateConference(ConferencesAPIRequest):
+    alias: str | None
+    title: str
+    avatar: str | None
+    description: str | None
+
+
+@dataclass
+class GetConference(ConferencesAPIRequest):
+    identity: int | str
+
+
+@dataclass
+class GetDefaultPermissions(ConferencesAPIRequest):
+    conference_request: GetConference
+
+
+@dataclass
+class EditDefaultPermissions(ConferencesAPIRequest):
+    conference_request: GetConference
+    permissions_patch: PermissionsPatch
+
+
+@dataclass
+class GetMembers(ConferencesAPIRequest):
+    conference_request: GetConference
+    disposition: Disposition
+
+
+@dataclass
+class GetMember(ConferencesAPIRequest):
+    conference_request: GetConference
+    member_no: int
+
+
+@dataclass
+class AddMember(ConferencesAPIRequest):
+    conference_request: GetConference
+    invitee: int | str
+
+
+@dataclass
+class RemoveMember(ConferencesAPIRequest):
+    member_request: GetMember
+
+
+@dataclass
+class GetMemberPermissions(ConferencesAPIRequest):
+    member_request: GetMember
+
+
+@dataclass
+class EditMemberPermissions(ConferencesAPIRequest):
+    member_request: GetMember
+    permissions_patch: PermissionsPatch
+
+
+async def get_conference(
+    services: ServiceSet, user: User, identity: str | int
+) -> Conference:
+    relation = await services.agents.get_chat(user, identity)
+    if isinstance(relation, Dialog):
+        raise NotFound
+    return relation.related
+
+
+async def get_actor(
+    services: ServiceSet, user: User, identity: str | int
+) -> User | Bot:
+    entity = await services.agents.get(user, identity)
+    if isinstance(entity, Conference):
+        raise BadRequest
+    return entity
+
+
+# @router.get(r"/{entity_id:\d+}/members")
+# @router.get(r"/@{alias:\w+}/members")
+@authenticated
 async def list_chat_members(
-    request: web.Request, services: ServiceSet, user: User
-) -> APIResponse:
-    entity_id = request.match_info.get("entity_id")
-    alias = request.match_info.get("alias")
-    offset, count = get_offset_count(request)
-    conference = await get_conference(services, user, entity_id, alias)
+    request: GetMembers, services: ServiceSet, user: User
+) -> APIResponse[list[ConferenceParticipation[User | Bot]]]:
+    identity = request.conference_request.identity
+    offset = request.disposition.offset
+    count = request.disposition.count
+    conference = await get_conference(services, user, identity)
     members = await services.conferences.list_members(
         user, conference, offset, count
     )
     return APIResponse(members)
 
 
-@router.post(r"/{entity_id:\d+}/members")
-@router.post(r"/@{alias:\w+}/members")
-@api_handler
+# @router.post(r"/{entity_id:\d+}/members")
+# @router.post(r"/@{alias:\w+}/members")
+@authenticated
 async def add_chat_member(
-    request: web.Request, services: ServiceSet, user: User
-) -> APIResponse:
-    payload = await request.json()
-    if not isinstance(payload, dict):
-        raise BadRequest("Invalid body")
-    entity_id = request.match_info.get("entity_id")
-    alias = request.match_info.get("alias")
-    if not alias:
-        raise BadRequest("Empty username")
-    username = payload.get("username")
-    user_id_repr = payload.get("user_id")
-    if isinstance(username, str):
-        invitee = await services.agents.resolve_alias(user, username)
-    elif isinstance(user_id_repr, str):
-        try:
-            user_id = int(user_id_repr)
-        except (ValueError, TypeError):
-            raise BadRequest("Invalid agent id")
-        else:
-            invitee = await services.agents.get(user, user_id)
-    else:
-        raise BadRequest("Missing username or user_id parameter")
-    if isinstance(invitee, Conference):
-        raise BadRequest("Invalid agent id or username")
-    conference = await get_conference(services, user, entity_id, alias)
-    if not isinstance(conference, Conference):
-        raise NotFound
+    request: AddMember, services: ServiceSet, user: User
+) -> APIResponse[ConferenceParticipation[User | Bot]]:
+    conference_identity = request.conference_request.identity
+    conference = await get_conference(services, user, conference_identity)
+    invitee = await get_actor(services, user, request.invitee)
     member = await services.conferences.add_member(
         user, conference, invitee
     )
     return APIResponse(member, Status.CREATED)
 
 
-@router.get(r"/{entity_id:\d+}/members/{id:\d+}")
-@router.get(r"/{entity_id:\d+}/members/{member_alias:\w+}")
-@router.get(r"/@{alias:\w+}/members/{id:\d+}")
-@router.get(r"/@{alias:\w+}/members/{member_alias:\w+}")
-@api_handler
+# @router.get(r"/{entity_id:\d+}/members/{id:\d+}")
+# @router.get(r"/{entity_id:\d+}/members/{member_alias:\w+}")
+# @router.get(r"/@{alias:\w+}/members/{id:\d+}")
+# @router.get(r"/@{alias:\w+}/members/{member_alias:\w+}")
+@authenticated
 async def get_chat_member(
-    request: web.Request, services: ServiceSet, user: User
-) -> APIResponse:
-    entity_id = request.match_info.get("entity_id")
-    alias = request.match_info.get("alias")
-    id_repr = request.match_info.get("id")
-    member_alias = request.match_info.get("member_alias")
-    if not alias:
-        raise BadRequest("Empty username")
-    if isinstance(member_alias, str):
-        agent = await services.agents.resolve_alias(user, member_alias)
-    elif isinstance(id_repr, str):
-        try:
-            agent_id = int(id_repr)
-        except (ValueError, TypeError):
-            raise BadRequest("Invalid agent id")
-        else:
-            agent = await services.agents.get(user, agent_id)
-    else:
-        raise BadRequest("Missing username or user_id parameter")
-    if not isinstance(agent, (User, Bot)):
-        raise BadRequest("Agent id/alias must refers to User or Bot")
-    conference = await get_conference(services, user, entity_id, alias)
-    if not isinstance(conference, Conference):
-        raise NotFound
+    request: GetMember, services: ServiceSet, user: User
+) -> APIResponse[ConferenceParticipation[User | Bot]]:
+    conference_identity = request.conference_request.identity
+    member_no = request.member_no
+    conference = await get_conference(services, user, conference_identity)
     member = await services.conferences.get_member(
-        user, conference, agent
+        user, conference, member_no
     )
     return APIResponse(member)
 
 
-@router.delete(r"/{entity_id:\d+}/members/{id:\d+}")
-@router.delete(r"/{entity_id:\d+}/members/{member_alias:\w+}")
-@router.delete(r"/@{alias:\w+}/members/{id:\d+}")
-@router.delete(r"/@{alias:\w+}/members/{member_alias:\w+}")
-@api_handler
+# @router.delete(r"/{entity_id:\d+}/members/{id:\d+}")
+# @router.delete(r"/{entity_id:\d+}/members/{member_alias:\w+}")
+# @router.delete(r"/@{alias:\w+}/members/{id:\d+}")
+# @router.delete(r"/@{alias:\w+}/members/{member_alias:\w+}")
+@authenticated
 async def remove_chat_member(
-    request: web.Request, services: ServiceSet, user: User
-) -> APIResponse:
-    payload = await request.json()
-    if not isinstance(payload, dict):
-        raise BadRequest("Invalid body")
-    entity_id = request.match_info.get("entity_id")
-    alias = request.match_info.get("alias")
-    id_repr = request.match_info.get("id")
-    member_alias = request.match_info.get("member_alias")
-    if not alias:
-        raise BadRequest("Empty username")
-    if isinstance(member_alias, str):
-        agent = await services.agents.resolve_alias(user, member_alias)
-    elif isinstance(id_repr, str):
-        try:
-            agent_id = int(id_repr)
-        except (ValueError, TypeError):
-            raise BadRequest("Invalid agent id")
-        else:
-            agent = await services.agents.get(user, agent_id)
-    else:
-        raise BadRequest("Missing username or user_id parameter")
-    if not isinstance(agent, (User, Bot)):
-        raise BadRequest("Agent id/alias must refers to User or Bot")
-    conference = await get_conference(services, user, entity_id, alias)
-    if not isinstance(conference, Conference):
-        raise NotFound
-    await services.conferences.get_member(
-        user, conference, agent
-    )
+    request: RemoveMember, services: ServiceSet, user: User
+) -> APIResponse[None]:
+    member_request = request.member_request
+    conference_identity = member_request.conference_request.identity
+    member_no = member_request.member_no
+    conference = await get_conference(services, user, conference_identity)
+    await services.conferences.remove_member(user, conference, member_no)
     return APIResponse(status=Status.NO_CONTENT)
 
 
-@router.get(r"/{entity_id:\d+}/members/{id:\d+}/permissions")
-@router.get(r"/{entity_id:\d+}/members/{member_alias:\w+}/permissions")
-@router.get(r"/@{alias:\w+}/members/{id:\d+}/permissions")
-@router.get(r"/@{alias:\w+}/members/{member_alias:\w+}/permissions")
-@api_handler
+# @router.get(r"/{entity_id:\d+}/members/{id:\d+}/permissions")
+# @router.get(r"/{entity_id:\d+}/members/{member_alias:\w+}/permissions")
+# @router.get(r"/@{alias:\w+}/members/{id:\d+}/permissions")
+# @router.get(r"/@{alias:\w+}/members/{member_alias:\w+}/permissions")
+@authenticated
 async def get_chat_member_permissions(
-    request: web.Request, services: ServiceSet, user: User
-) -> APIResponse:
-    entity_id = request.match_info.get("entity_id")
-    alias = request.match_info.get("alias")
-    id_repr = request.match_info.get("id")
-    member_alias = request.match_info.get("member_alias")
-    if not alias:
-        raise BadRequest("Empty username")
-    if isinstance(member_alias, str):
-        agent = await services.agents.resolve_alias(user, member_alias)
-    elif isinstance(id_repr, str):
-        try:
-            agent_id = int(id_repr)
-        except (ValueError, TypeError):
-            raise BadRequest("Invalid agent id")
-        else:
-            agent = await services.agents.get(user, agent_id)
-    else:
-        raise BadRequest("Missing username or user_id parameter")
-    if not isinstance(agent, (User, Bot)):
-        raise BadRequest("Agent id/alias must refers to User or Bot")
-    conference = await get_conference(services, user, entity_id, alias)
-    if not isinstance(conference, Conference):
-        raise NotFound
+    request: GetMemberPermissions, services: ServiceSet, user: User
+) -> APIResponse[Permissions]:
+    member_request = request.member_request
+    conference_identity = member_request.conference_request.identity
+    member_no = member_request.member_no
+    conference = await get_conference(services, user, conference_identity)
     permissions = await services.conferences.get_member_permissions(
-        user, conference, agent
+        user, conference, member_no
     )
     return APIResponse(permissions)
 
 
-@router.patch(r"/{entity_id:\d+}/members/{id:\d+}/permissions")
-@router.patch(r"/{entity_id:\d+}/members/{member_alias:\w+}/permissions")
-@router.patch(r"/@{alias:\w+}/members/{id:\d+}/permissions")
-@router.patch(r"/@{alias:\w+}/members/{member_alias:\w+}/permissions")
-@api_handler
+# @router.patch(r"/{entity_id:\d+}/members/{id:\d+}/permissions")
+# @router.patch(r"/{entity_id:\d+}/members/{member_alias:\w+}/permissions")
+# @router.patch(r"/@{alias:\w+}/members/{id:\d+}/permissions")
+# @router.patch(r"/@{alias:\w+}/members/{member_alias:\w+}/permissions")
+@authenticated
 async def edit_chat_member_permissions(
-    request: web.Request, services: ServiceSet, user: User
-) -> APIResponse:
-    payload = await request.json()
-    if not isinstance(payload, dict):
-        raise BadRequest("Invalid body")
-    entity_id = request.match_info.get("entity_id")
-    alias = request.match_info.get("alias")
-    id_repr = request.match_info.get("id")
-    member_alias = request.match_info.get("member_alias")
-    if not alias:
-        raise BadRequest("Empty username")
-    if isinstance(member_alias, str):
-        agent = await services.agents.resolve_alias(user, member_alias)
-    elif isinstance(id_repr, str):
-        try:
-            agent_id = int(id_repr)
-        except (ValueError, TypeError):
-            raise BadRequest("Invalid agent id")
-        else:
-            agent = await services.agents.get(user, agent_id)
-    else:
-        raise BadRequest("Missing username or user_id parameter")
-    if not isinstance(agent, (User, Bot)):
-        raise BadRequest("Agent id/alias must refers to User or Bot")
-    conference = await get_conference(services, user, entity_id, alias)
-    if not isinstance(conference, Conference):
-        raise NotFound
-    overalys: dict[str, bool] = {}
-    for name, value in payload.items():
-        if name not in PERMISSIONS_FIELDS:
-            raise BadRequest(f"Unknown permission '{name}'")
-        if not isinstance(value, bool):
-            raise BadRequest(
-                f"Incorrect value for '{name}'. Values must be bool."
-            )
-        overalys[name] = value
+    request: EditMemberPermissions, services: ServiceSet, user: User
+) -> APIResponse[Permissions]:
+    member_request = request.member_request
+    conference_identity = member_request.conference_request.identity
+    member_no = member_request.member_no
+    conference = await get_conference(services, user, conference_identity)
+    permissions_update = request.permissions_patch
     permissions = await services.conferences.edit_member_permissions(
-        user, conference, agent, **overalys
+        user, conference, member_no, **permissions_update
     )
     return APIResponse(permissions)

@@ -1,39 +1,84 @@
-from aiohttp import web
+from abc import ABC, abstractmethod
+from dataclasses import dataclass
+
+from typing import AsyncIterable
+
+from microchat.api_utils.handler import authenticated
 
 from microchat.services import ServiceSet
-from microchat.core.entities import Animation, Image, User, Video
+from microchat.core.entities import Animation, Image, Media, User, Video
 
-from microchat.api_utils.response import APIResponse, Status
-from microchat.api_utils.handler import api_handler, authenticated, with_services
-from microchat.api_utils.exceptions import BadRequest
-
-
-router = web.RouteTableDef()
+from microchat.api_utils.request import APIRequest, Authenticated
+from microchat.api_utils.response import HEADER, APIResponse, Status
+from microchat.api_utils.exceptions import BadRequest, NotFound
 
 
-@router.post("/")
-@api_handler
+CHUNK_SIZE = 65535
+
+
+class PartReader(ABC):
+
+    @abstractmethod
+    async def read(self) -> bytes:
+        pass
+
+    @abstractmethod
+    async def iter_chunks(
+        self, size: int = CHUNK_SIZE
+    ) -> AsyncIterable[bytes]:
+        yield b""
+
+
+@dataclass
+class MediaAPIRequest(APIRequest, Authenticated):
+    pass
+
+
+@dataclass
+class UploadMedia(MediaAPIRequest):
+    payload: AsyncIterable[tuple[str, PartReader]]
+
+
+@dataclass
+class MediaRequest(MediaAPIRequest):
+    hash: str
+
+
+@dataclass
+class GetMediaInfo(MediaRequest):
+    pass
+
+
+@dataclass
+class DownloadMedia(MediaRequest):
+    pass
+
+
+@dataclass
+class DownloadPreview(MediaRequest):
+    pass
+
+
+# @router.post("/")
+@authenticated
 async def store(
-    request: web.Request,
+    request: UploadMedia,
     services: ServiceSet,
     user: User
-) -> APIResponse:
-    reader = await request.multipart()
+) -> APIResponse[Media]:
     file_name = None
     file_type = None
     async with services.files.tempfile() as tempfile:
-        async for part in reader:
-            if part.name == 'filename':
-                content = await part.read()
+        async for name, reader in request.payload:
+            if name == 'filename':
+                content = await reader.read()
                 file_name = content.decode()
-            if part.name == 'mimetype':
-                content = await part.read()
+            if name == 'mimetype':
+                content = await reader.read()
                 file_type = content.decode()
-            if part.name == 'content':
-                chunk = await part.read_chunk()
-                while chunk:
+            if name == 'content':
+                async for chunk in reader.iter_chunks():
                     await tempfile.write(chunk)
-                    chunk = await part.read_chunk()
         if not (file_name and file_type):
             raise BadRequest("file name does not specified")
         media = await services.files.materialize(
@@ -42,61 +87,48 @@ async def store(
     return APIResponse(media, Status.CREATED)
 
 
-@router.get(r"/{hash:[\da-fA-F]+}")
-@api_handler
+# @router.get(r"/{hash:[\da-fA-F]+}")
+@authenticated
 async def get_media_info(
-    request: web.Request, services: ServiceSet, user: User
-) -> APIResponse:
-    hash = request.match_info.get("hash")
-    if not hash:
-        raise web.HTTPNotFound
+    request: GetMediaInfo, services: ServiceSet, user: User
+) -> APIResponse[Media]:
+    hash = request.hash
     media = await services.files.get_info(user, hash)
     return APIResponse(media)
 
 
-@router.get(r"/{hash:[\da-fA-F]+}/content")
-@with_services
-@authenticated
+# @router.get(r"/{hash:[\da-fA-F]+}/content")
+# TODO: add media authentication
 async def get_content(
-    request: web.Request, services: ServiceSet, user: User
-) -> web.StreamResponse:
-    hash = request.match_info.get("hash")
-    if not hash:
-        raise web.HTTPNotFound
+    request: DownloadMedia, services: ServiceSet, user: User
+) -> APIResponse[AsyncIterable[bytes]]:
+    hash = request.hash
     media = await services.files.get_info(user, hash)
-    response = web.StreamResponse()
+    headers = {}
     disposition = f"attachment; filename={media.name}"
-    response.headers["Content-Disposition"] = disposition
-    response.headers["Content-Type"] = f"{media.type}/{media.subtype}"
-    await response.prepare(request)
+    headers[HEADER.ContentDisposition] = disposition
+    headers[HEADER.ContentType] = f"{media.type}/{media.subtype}"
     content = services.files.iter_content(
         user, media.file_info, chunk_size=1024**2
     )
-    async for chunk in content:
-        await response.write(chunk)
-    return response
+    return APIResponse(content, headers=headers)
 
 
-@router.get(r"/{hash:[\da-fA-F]+}/preview")
-@with_services
-@authenticated
+# @router.get(r"/{hash:[\da-fA-F]+}/preview")
+# TODO: add media authentication
 async def get_preview(
-    request: web.Request, services: ServiceSet, user: User
-) -> web.StreamResponse:
-    hash = request.match_info.get("hash")
-    if not hash:
-        raise
+    request: DownloadPreview, services: ServiceSet, user: User
+) -> APIResponse[AsyncIterable[bytes]]:
+    hash = request.hash
     media = await services.files.get_info(user, hash)
     if not isinstance(media, (Image, Video, Animation)):
-        raise web.HTTPNoContent()
+        media_type = type(media).__name__
+        raise NotFound(f"Preview for '{media_type}' is unavailable")
     preview = media.preview
-    response = web.StreamResponse()
-    response.headers["Content-Disposition"] = "inline"
-    response.headers["Content-Type"] = f"{preview.type}/{preview.subtype}"
-    await response.prepare(request)
+    headers = {}
+    headers[HEADER.ContentDisposition] = "inline"
+    headers[HEADER.ContentType] = f"{preview.type}/{preview.subtype}"
     content = services.files.iter_content(
         user, preview.file_info, chunk_size=1024**2
     )
-    async for chunk in content:
-        await response.write(chunk)
-    return response
+    return APIResponse(content, headers=headers)

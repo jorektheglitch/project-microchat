@@ -1,63 +1,60 @@
-from aiohttp import web
+from dataclasses import dataclass
 
+from microchat.api_utils.request import APIRequest, Authenticated
+from microchat.api_utils.response import APIResponse, Status
+from microchat.api_utils.handler import authenticated
+from microchat.core.entities import Session, User
 from microchat.services import ServiceSet
-from microchat.core.entities import User
 
-from microchat.api_utils.handler import AccessLevel, api_handler
-from microchat.api_utils.response import APIResponse
-from microchat.api_utils.exceptions import BadRequest
+from .misc import Disposition
 
 
-router = web.RouteTableDef()
+@dataclass
+class AuthAPIRequest(APIRequest):
+    pass
 
 
-@router.get("/sessions")
-@api_handler
+@dataclass
+class GetSessions(AuthAPIRequest, Authenticated):
+    disposition: Disposition
+
+
+@dataclass
+class AddSession(AuthAPIRequest):
+    username: str
+    password: str
+
+
+@dataclass
+class CloseSession(AuthAPIRequest, Authenticated):
+    id: int | None
+
+
+async def add_session(
+    request: AddSession, services: ServiceSet
+) -> APIResponse[str]:
+    username = request.username
+    password = request.password
+    access_token = await services.auth.new_session(username, password)
+    return APIResponse(access_token, status=Status.CREATED)
+
+
+@authenticated
 async def list_sessions(
-    request: web.Request, services: ServiceSet, user: User
-) -> APIResponse:
-    offset = request.query.get("offset", 0)
-    count = request.query.get("count", 10)
-    try:
-        offset = int(offset)
-        count = int(count)
-    except (ValueError, TypeError):
-        raise BadRequest("Invalid offset or count params")
+    request: GetSessions, services: ServiceSet, user: User
+) -> APIResponse[list[Session]]:
+    offset = request.disposition.offset
+    count = request.disposition.count
     sessions = await services.auth.list_sessions(user, offset, count)
     return APIResponse(sessions)
 
 
-@router.post("/sessions")
-@api_handler(access_level=AccessLevel.ANY)
-async def get_access_token(
-    request: web.Request, services: ServiceSet
-) -> APIResponse:
-    payload = await request.json()
-    if not isinstance(payload, dict):
-        raise BadRequest("Invalid body")
-    username: str | None = payload.get("username")
-    password: str | None = payload.get("password")
-    if not (username and password):
-        raise BadRequest("Missing username or password")
-    access_token = await services.auth.new_session(username, password)
-    return APIResponse(access_token)
-
-
-@router.delete(r"/sessions/{session_id:\w+}")
-@api_handler
+@authenticated
 async def terminate_session(
-    request: web.Request, services: ServiceSet, user: User
-) -> APIResponse:
-    id_raw = request.match_info.get("session_id")
-    if not id_raw:
-        raise BadRequest("Invalid or missing session_id")
-    try:
-        session_id = int(id_raw)
-    except (TypeError, ValueError):
-        raise BadRequest("Incorrect 'session_id' parameter")
-    session = await services.auth.get_session(user, session_id)
-    if user == session.auth.user:
-        await services.auth.terminate_session(user, session)
-    else:
-        raise BadRequest("Invalid or missing token")
-    return APIResponse()
+    request: CloseSession, services: ServiceSet, user: User
+) -> APIResponse[None]:
+    session_id = request.id
+    if session_id is not None:
+        session = await services.auth.get_session(user, session_id)
+    await services.auth.terminate_session(user, session)
+    return APIResponse(status=Status.NO_CONTENT)
