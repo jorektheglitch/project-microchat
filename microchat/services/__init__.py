@@ -41,6 +41,10 @@ class UnsupportedMethod(AuthenticationError):
     pass
 
 
+class MissingToken(AuthenticationError):
+    pass
+
+
 class InvalidToken(AuthenticationError):
     pass
 
@@ -135,26 +139,22 @@ class Auth(Service):
 class Agents(Service):
 
     async def get(
-        self, user: User, id: int
+        self, user: User, identity: int | str
     ) -> Agent:
-        return await self.uow.entities.get_by_id(id)
-
-    async def resolve_alias(
-        self, user: User, alias: str
-    ) -> Agent:
-        return await self.uow.entities.get_by_alias(alias)
+        if isinstance(identity, int):
+            entity = await self.uow.entities.get_by_id(identity)
+        elif isinstance(identity, str):
+            entity = await self.uow.entities.get_by_alias(identity)
+        return entity
 
     async def get_chat(
-        self, user: User, id: int
+        self, user: User, identity: int | str
     ) -> Dialog | ConferenceParticipation[User]:
-        relation = await self.uow.relations.get_relation(user, id)
-        return relation
-
-    async def resolve_chat_alias(
-        self, user: User, alias: str
-    ) -> Dialog | ConferenceParticipation[User]:
-        related = await self.uow.entities.get_by_alias(alias)
-        relation = await self.uow.relations.get_relation(user, related.id)
+        if isinstance(identity, str):
+            related = await self.uow.entities.get_by_alias(identity)
+            identity = related.id
+        if isinstance(identity, int):
+            relation = await self.uow.relations.get_relation(user, identity)
         return relation
 
     async def list_avatars(
@@ -213,12 +213,13 @@ class Agents(Service):
 
     async def set_avatar(
         self, user: User, agent: Agent, avatar_hash: str
-    ) -> None:
+    ) -> Image:
         await self._check_permissions(user, agent)
         avatar = self.uow.media.get_by_hash(user, avatar_hash)
         if not isinstance(avatar, Image):
             raise ImageExpected()
         await self.uow.entities.set_avatar(agent, avatar)
+        return avatar
 
     async def remove_avatar(
         self, user: User, agent: Agent, id: int
@@ -292,17 +293,23 @@ class Chats(Service):
     @overload
     async def add_chat_message(
         self, user: User, chat: Dialog | ConferenceParticipation[User],
-        text: str, attachments: None, reply_to_no: int | None
+        text: str, attachments_hashes: None, reply_to_no: int | None
     ) -> Message: ...
     @overload  # noqa
     async def add_chat_message(
         self, user: User, chat: Dialog | ConferenceParticipation[User],
-        text: str, attachments: list[Media], reply_to_no: int | None
+        text: str, attachments_hashes: list[str], reply_to_no: int | None
     ) -> Message: ...
     @overload  # noqa
     async def add_chat_message(
         self, user: User, chat: Dialog | ConferenceParticipation[User],
-        text: None, attachments: list[Media], reply_to_no: int | None
+        text: None, attachments_hashes: list[str], reply_to_no: int | None
+    ) -> Message: ...
+    @overload  # noqa
+    async def add_chat_message(
+        self, user: User, chat: Dialog | ConferenceParticipation[User],
+        text: str | None, attachments_hashes: list[str] | None,
+        reply_to_no: int | None
     ) -> Message: ...
 
     async def add_chat_message(
@@ -310,7 +317,7 @@ class Chats(Service):
         user: User,
         chat: Dialog | ConferenceParticipation[User],
         text: str | None = None,
-        attachments: list[Media] | None = None,
+        attachments_hashes: list[str] | None = None,
         reply_to_no: int | None = None
     ) -> Message:
         if isinstance(chat, ConferenceParticipation):
@@ -319,13 +326,18 @@ class Chats(Service):
         permissions = chat.permissions or chat.related.default_permissions
         if not permissions.send:
             raise AccessDenied("Can't send message due to chat restrictions")
-        if attachments and not permissions.send_media:
+        if attachments_hashes and not permissions.send_media:
             raise AccessDenied(
                 "Can't send message with attachments due to chat restrictions"
             )
         reply_to = None
         if reply_to_no is not None:
             reply_to = await self.get_chat_message(user, chat, reply_to_no)
+        attachments = None
+        if attachments_hashes:
+            attachments = await self.uow.media.get_by_hashes(
+                user, attachments_hashes
+            )
         message = await self.uow.chats.add_message(
             user, chat, text, attachments, reply_to
         )
@@ -334,17 +346,17 @@ class Chats(Service):
     @overload
     async def edit_chat_message(
         self, user: User, chat: Dialog | ConferenceParticipation[User],
-        no: int, text: str, attachments: None
+        no: int, text: str, attachments_hashes: None
     ) -> Message: ...
     @overload  # noqa
     async def edit_chat_message(
         self, user: User, chat: Dialog | ConferenceParticipation[User],
-        no: int, text: str, attachments: List[Media]
+        no: int, text: str, attachments_hashes: list[str]
     ) -> Message: ...
     @overload  # noqa
     async def edit_chat_message(
         self, user: User, chat: Dialog | ConferenceParticipation[User],
-        no: int, text: None, attachments: List[Media]
+        no: int, text: None, attachments_hashes: list[str]
     ) -> Message: ...
 
     async def edit_chat_message(
@@ -353,12 +365,17 @@ class Chats(Service):
         chat: Dialog | ConferenceParticipation[User],
         no: int,
         text: str | None = None,
-        attachments: List[Media] | None = None
+        attachments_hashes: List[str] | None = None
     ) -> Message:
         message = await self.get_chat_message(user, chat, no)
         sender = await message.sender
         if sender != user:
             raise AccessDenied("Can't edit other user's messages")
+        attachments = None
+        if attachments_hashes:
+            attachments = await self.uow.media.get_by_hashes(
+                user, attachments_hashes
+            )
         updated = await self.uow.chats.edit_message(message, text, attachments)
         return updated
 
@@ -488,7 +505,8 @@ class Conferences(Service):
         return permissions
 
     async def edit_member_permissions(
-        self, user: User | Bot, conference: Conference,
+        self,
+        user: User | Bot, conference: Conference,
         no: int | User | Bot,
         read: bool | None = None,
         send: bool | None = None,
@@ -544,11 +562,7 @@ class Files(Service):
             chunk = await reader.read(chunk_size)
 
     async def materialize(
-        self,
-        user: User,
-        file: TempFile,
-        name: str,
-        mime_repr: str
+        self, user: User, file: TempFile, name: str, mime_repr: str
     ) -> Media:
         mime = self._parse_mime_repr(mime_repr)
         media = await self.uow.media.save_media(user, file, name, mime)
