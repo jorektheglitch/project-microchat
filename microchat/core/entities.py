@@ -215,7 +215,7 @@ class Message(Entity):  # , Generic[C]):
     reply_to: Message | None
 
 
-class Attachment(Generic[M]):
+class Attachment(Entity, Generic[M]):
     no: int  # index of attachment in all of attachments in dialog
     media: M
 
