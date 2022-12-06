@@ -1,35 +1,29 @@
 from __future__ import annotations
 
-from typing import Awaitable, Callable, Sequence
-
-from aiohttp import web
+from typing import Awaitable, Callable, Generic, Protocol, TypeVar
 
 from microchat.services import ServiceSet
-from microchat.core.entities import Entity, User
+from microchat.core.entities import User
 
-from .exceptions import APIError
-from .request import APIRequest
-from .response import APIResponse, APIResponseEncoder
-
-
-JSON = str | int | float | list["JSON"] | dict[str, "JSON"] | None
-APIResponseBody = Entity | Sequence[Entity] | dict[str, Entity]
+from .exceptions import APIError  # noqa: F401
+from .request import APIRequest, Authenticated
+from .response import APIResponse, APIResponseEncoder, JSON  # noqa: F401
 
 
-Handler = Callable[
-    [web.Request],
-    Awaitable[web.StreamResponse]
-]
+T = TypeVar("T")
+T_co = TypeVar("T_co", covariant=True)
+R = TypeVar("R", bound=APIRequest, contravariant=True)
+AR = TypeVar("AR", bound=Authenticated, contravariant=True)
+
+
+class AuthenticatedHandler(Protocol, Generic[AR, T_co]):
+    async def __call__(
+        self, request: AR, services: ServiceSet, user: User | None = None
+    ) -> T_co:
+        pass
+
 
 APIHandler = Callable[
-    [web.Request, ServiceSet],
-    Awaitable[APIResponse]
-]
-AuthenticatedHandler = Callable[
-    [web.Request, ServiceSet, User],
-    Awaitable[APIResponse]
-]
-Middleware = Callable[
-    [web.Request, Handler],
-    Awaitable[web.StreamResponse]
+    [APIRequest],
+    Awaitable[APIResponse[T]]
 ]

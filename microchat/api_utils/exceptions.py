@@ -3,15 +3,13 @@ from __future__ import annotations
 from abc import ABC
 
 from typing import ClassVar
-from typing import TYPE_CHECKING
-if TYPE_CHECKING:
-    from .types import JSON
 
 from microchat.services import ServiceError
-from .response import APIResponse
+
+from .response import APIResponse, JSON
 
 
-class APIError(ABC, Exception, APIResponse):
+class APIError(ABC, Exception, APIResponse[JSON]):
     status_code: ClassVar[int]
 
     def __init__(
@@ -23,9 +21,9 @@ class APIError(ABC, Exception, APIResponse):
     ) -> None:
         super().__init__(msg)
         if payload is None and msg is not None:
-            self.payload = {"error": msg}
+            self.payload = msg
         else:
-            self.payload = {"error": payload}
+            self.payload = payload
         self.reason = reason
 
     @classmethod

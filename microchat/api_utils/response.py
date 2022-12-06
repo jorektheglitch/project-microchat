@@ -6,13 +6,18 @@ import enum
 import json
 import functools
 
-from typing import Any, AsyncIterable
-from typing import TYPE_CHECKING
-if TYPE_CHECKING:
-    from .types import APIResponseBody, JSON
+from typing import Any, AsyncIterable, Generic, Sequence, TypeVar
 
 from microchat.core.entities import Entity
 from microchat.core.events import Event
+from microchat.core.types import JSON
+
+
+APIResponseBody = Entity | Sequence[Entity] | dict[str, Entity]
+# Sequence used instead of list because list is invariant (and then it is
+# list[EntityChildClass] is not matched by theese union)
+
+P = TypeVar("P", bound=APIResponseBody | JSON | AsyncIterable[bytes] | Queue[Event], contravariant=True)
 
 
 class Status(enum.Enum):
@@ -27,22 +32,20 @@ class HEADER(enum.Enum):
 
 
 @dataclass
-class APIResponse:
-    payload: dict[str, APIResponseBody | JSON] | AsyncIterable[bytes] | Queue[Event]
+class APIResponse(Generic[P]):
+    payload: P
     status: Status = Status.OK
     reason: str | None = None
     headers: dict[str, str] | None = None
 
     def __init__(
         self,
-        payload: APIResponseBody | JSON | AsyncIterable[bytes] = None,
+        payload: P | None = None,
         status: Status = Status.OK,
         reason: str | None = None,
         headers: dict[HEADER, str] | None = None,
     ) -> None:
-        if not isinstance(payload, AsyncIterable):
-            self.payload = {"response": payload}
-        else:
+        if payload is not None:
             self.payload = payload
         self.status = status
         self.reason = reason
