@@ -3,12 +3,12 @@ from dataclasses import dataclass
 
 from typing import AsyncIterable
 
-from microchat.api_utils.handler import authenticated
+from microchat.api_utils.handler import authenticated, cookie_authenticated
 
 from microchat.services import ServiceSet
 from microchat.core.entities import Animation, Image, Media, User, Video
 
-from microchat.api_utils.request import APIRequest, Authenticated
+from microchat.api_utils.request import APIRequest, Authenticated, CookieAuthenticated  # noqa
 from microchat.api_utils.response import HEADER, APIResponse, Status
 from microchat.api_utils.exceptions import BadRequest, NotFound
 
@@ -50,12 +50,12 @@ class GetMediaInfo(MediaRequest):
 
 
 @dataclass
-class DownloadMedia(MediaRequest):
+class DownloadMedia(MediaRequest, CookieAuthenticated):
     pass
 
 
 @dataclass
-class DownloadPreview(MediaRequest):
+class DownloadPreview(MediaRequest, CookieAuthenticated):
     pass
 
 
@@ -98,7 +98,7 @@ async def get_media_info(
 
 
 # @router.get(r"/{hash:[\da-fA-F]+}/content")
-# TODO: add media authentication
+@cookie_authenticated
 async def get_content(
     request: DownloadMedia, services: ServiceSet, user: User
 ) -> APIResponse[AsyncIterable[bytes]]:
@@ -115,7 +115,7 @@ async def get_content(
 
 
 # @router.get(r"/{hash:[\da-fA-F]+}/preview")
-# TODO: add media authentication
+@cookie_authenticated
 async def get_preview(
     request: DownloadPreview, services: ServiceSet, user: User
 ) -> APIResponse[AsyncIterable[bytes]]:
