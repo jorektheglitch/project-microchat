@@ -6,7 +6,7 @@ from microchat.services import ServiceSet
 from microchat.core.entities import User
 
 from .exceptions import APIError  # noqa: F401
-from .request import APIRequest, Authenticated
+from .request import APIRequest, Authenticated, CookieAuthenticated
 from .response import APIResponse, APIResponseEncoder, JSON  # noqa: F401
 
 
@@ -14,6 +14,7 @@ T = TypeVar("T")
 T_co = TypeVar("T_co", covariant=True)
 R = TypeVar("R", bound=APIRequest, contravariant=True)
 AR = TypeVar("AR", bound=Authenticated, contravariant=True)
+CAR = TypeVar("CAR", bound=CookieAuthenticated, contravariant=True)
 
 
 class AuthenticatedHandler(Protocol, Generic[AR, T_co]):

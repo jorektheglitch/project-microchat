@@ -14,7 +14,7 @@ from microchat.storages import UoW
 
 if TYPE_CHECKING:
     from .types import AuthenticatedHandler
-    from .types import R, AR
+    from .types import R, AR, CAR
 
 from .response import APIResponse, P
 
@@ -37,6 +37,28 @@ def authenticated(
             if not jwt:
                 raise Unauthorized(MISSING_HEADER)
             session = await services.auth.resolve_token(jwt)
+            if session.closed:
+                raise Unauthorized(REVOKED)
+            user = session.auth.user
+        return await handler(request, services, user)
+    return wrapped
+
+
+async def cookie_authenticated(
+    handler: Callable[[CAR, ServiceSet, User], Awaitable[T]]
+) -> AuthenticatedHandler[CAR, T]:
+    REVOKED = "Token was revoked"
+
+    @functools.wraps(handler)
+    async def wrapped(
+        request: CAR, services: ServiceSet, user: User | None = None
+    ) -> T:
+        if user is None:
+            auth_cookie = request.access_token
+            csrf_token = request.csrf_token
+            session = await services.auth.resolve_media_token(
+                auth_cookie, csrf_token
+            )
             if session.closed:
                 raise Unauthorized(REVOKED)
             user = session.auth.user
