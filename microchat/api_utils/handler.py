@@ -84,7 +84,7 @@ def inject_services(
 ) -> Callable[[R], Awaitable[APIResponse[P]]]:
     async def with_services(request: R) -> APIResponse[P]:
         async with uow_factory() as uow:
-            services = ServiceSet(uow)
+            services = ServiceSet(uow, jwt_manager)
             response = await executor(request, services)
         return response
     return with_services
