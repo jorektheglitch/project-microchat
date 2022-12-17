@@ -1,28 +1,10 @@
-from dataclasses import dataclass
-
-from typing import Any, TypedDict, cast
+from typing import Any, cast
 
 from aiohttp import web
 
+from microchat.api.misc import Disposition, PermissionsPatch
 from microchat.core.entities import PERMISSIONS_FIELDS
 from microchat.api_utils.exceptions import BadRequest
-
-
-@dataclass
-class Disposition:
-    offset: int | None
-    count: int | None
-
-
-class PermissionsPatch(TypedDict):
-    read: bool | None
-    send: bool | None
-    delete: bool | None
-    send_media: bool | None
-    send_mediamessage: bool | None
-    add_user: bool | None
-    pin_message: bool | None
-    edit_conference: bool | None
 
 
 def int_param(string: str, name: str | None = None) -> int:
