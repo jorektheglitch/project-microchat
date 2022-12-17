@@ -4,7 +4,7 @@ from aiohttp import web
 
 from microchat.api.misc import Disposition, PermissionsPatch
 from microchat.core.entities import PERMISSIONS_FIELDS
-from microchat.api_utils.exceptions import BadRequest
+from microchat.api_utils.exceptions import BadRequest, Unauthorized
 
 
 def int_param(string: str, name: str | None = None) -> int:
@@ -15,6 +15,19 @@ def int_param(string: str, name: str | None = None) -> int:
             raise BadRequest(f"'{name}' parameter must be int")
         else:
             raise BadRequest
+
+
+def get_access_token(request: web.Request) -> str:
+    auth_header = request.headers.get("Authentication")
+    if auth_header is None:
+        raise Unauthorized("Missing 'Authentication' header")
+    if not auth_header.startswith("Bearer "):
+        raise Unauthorized(
+            "Incorrect 'Authentication' header value. "
+            "Make sure that value matches pattern 'Bearer {token}'."
+        )
+    _, token = auth_header.split(" ", maxsplit=1)
+    return token
 
 
 def get_disposition(request: web.Request) -> Disposition:
