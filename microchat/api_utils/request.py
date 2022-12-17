@@ -13,5 +13,5 @@ class Authenticated:
 
 @dataclass
 class CookieAuthenticated(Authenticated):
-    access_token: str
-    csrf_token: str
+    access_token: str  # cookie
+    csrf_token: str  # query parameter
