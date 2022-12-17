@@ -1,15 +1,16 @@
 from aiohttp import web
 
 from microchat.api_utils.exceptions import BadRequest
-from microchat.api.auth_ import GetSessions, AddSession, CloseSession
+from microchat.api.auth import GetSessions, AddSession, CloseSession
 
-from .misc import get_disposition
+from .misc import get_access_token, get_disposition
 from .misc import get_request_payload
 
 
 async def sessions_request_params(request: web.Request) -> GetSessions:
+    access_token = get_access_token(request)
     disposition = get_disposition(request)
-    return GetSessions(disposition)
+    return GetSessions(access_token, disposition)
 
 
 async def session_add_params(request: web.Request) -> AddSession:
@@ -24,4 +25,5 @@ async def session_add_params(request: web.Request) -> AddSession:
 
 
 async def session_close_params(request: web.Request) -> CloseSession:
-    return CloseSession()
+    access_token = get_access_token(request)
+    return CloseSession(access_token)
