@@ -73,8 +73,12 @@ class ServiceSet:
     files: Files
     agents: Agents
 
-    def __init__(self, uow: UoW) -> None:
-        pass
+    def __init__(self, uow: UoW, jwt_manager: JWTManager) -> None:
+        self.auth = Auth(uow, jwt_manager)
+        self.chats = Chats(uow)
+        self.conferences = Conferences(uow)
+        self.files = Files(uow)
+        self.agents = Agents(uow)
 
 
 class Service(ABC):
@@ -87,6 +91,10 @@ class Service(ABC):
 
 class Auth(Service):
     jwt_manager: JWTManager
+
+    def __init__(self, uow: UoW, jwt_manager: JWTManager) -> None:
+        super().__init__(uow)
+        self.jwt_manager = jwt_manager
 
     async def new_session(self, username: str, password: str) -> str:
         entity = await self.uow.entities.get_by_alias(username)
