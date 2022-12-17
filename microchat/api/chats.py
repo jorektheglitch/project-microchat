@@ -1,9 +1,10 @@
 from dataclasses import dataclass
 from typing import AsyncIterable
 
-from microchat.api_utils.request import APIRequest, Authenticated
+from microchat.api_utils.exceptions import NotFound
+from microchat.api_utils.request import APIRequest, Authenticated, CookieAuthenticated
 from microchat.api_utils.response import APIResponse, Status
-from microchat.api_utils.handler import authenticated
+from microchat.api_utils.handler import authenticated, cookie_authenticated
 
 from microchat.core.entities import User, Dialog, ConferenceParticipation
 from microchat.core.entities import Message, Attachment
@@ -62,13 +63,13 @@ class DeleteMessage(ChatsAPIRequest):
 
 
 @dataclass
-class GetAttachmentPreview(ChatsAPIRequest):
+class GetAttachmentPreview(ChatsAPIRequest, CookieAuthenticated):
     message: GetMessage
     attachment_no: int
 
 
 @dataclass
-class GetAttachmentContent(ChatsAPIRequest):
+class GetAttachmentContent(ChatsAPIRequest, CookieAuthenticated):
     message: GetMessage
     attachment_no: int
 
@@ -195,7 +196,7 @@ async def remove_chat_message(
 
 # @router.get(r"/{entity_id:\d+}/messages/{message_id:\d+}/attachments/{id:\w+}/{view:(preview|content)}")
 # @router.get(r"/@{alias:\w+}/messages/{message_id:\d+}/attachments/{id:\w+}/{view:(preview|content)}")
-# TODO: add media request authorization
+@cookie_authenticated
 async def get_attachment_content(
     request: GetAttachmentContent, services: ServiceSet, user: User
 ) -> APIResponse[AsyncIterable[bytes]]:
