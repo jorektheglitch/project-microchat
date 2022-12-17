@@ -70,16 +70,11 @@ def services_injector(
     uow_factory: Callable[[], UoW],
     jwt_manager: JWTManager
 ) -> Callable[[Callable[[R, ServiceSet], Awaitable[APIResponse[P]]]], Callable[[R], Awaitable[APIResponse[P]]]]:
-    def inject_services(
+    def with_services(
         executor: Callable[[R, ServiceSet], Awaitable[APIResponse[P]]]
     ) -> Callable[[R], Awaitable[APIResponse[P]]]:
-        async def with_services(request: R) -> APIResponse[P]:
-            async with uow_factory() as uow:
-                services = ServiceSet(uow)
-                response = await executor(request, services)
-            return response
-        return with_services
-    return inject_services
+        return inject_services(executor, uow_factory, jwt_manager)
+    return with_services
 
 
 def inject_services(
