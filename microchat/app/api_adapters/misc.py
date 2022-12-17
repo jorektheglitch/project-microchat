@@ -52,7 +52,7 @@ async def get_request_payload(  # type: ignore
     return payload
 
 
-def get_permissions_patch(params: dict[str, Any]) -> PermissionsPatch:  # type: ignore
+def get_permissions_patch(params: dict[str, Any]) -> PermissionsPatch:  # type: ignore  # noqa
     patch = {key: params.get(key) for key in PERMISSIONS_FIELDS}
     if not all(isinstance(value, bool) for value in patch.values()):
         raise BadRequest("All parameters must be booleans")
