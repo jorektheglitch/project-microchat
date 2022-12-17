@@ -30,6 +30,16 @@ def get_access_token(request: web.Request) -> str:
     return token
 
 
+def get_media_access_info(request: web.Request) -> tuple[str, str]:
+    auth_cookie = request.cookies.get("MEDIA_ACCESS_TOKEN")
+    csrf_token = request.query.get("csrf_token")
+    if not auth_cookie:
+        raise Unauthorized("Missing 'MEDIA_ACCESS_TOKEN' cookie")
+    if not csrf_token:
+        raise Unauthorized("Missing csrf_token URL paraneter")
+    return auth_cookie, csrf_token
+
+
 def get_disposition(request: web.Request) -> Disposition:
     offset, count = None, None
     offset_repr = request.query.get("offset")
