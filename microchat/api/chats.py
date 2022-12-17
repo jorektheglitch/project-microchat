@@ -198,12 +198,20 @@ async def remove_chat_message(
 # @router.get(r"/@{alias:\w+}/messages/{message_id:\d+}/attachments/{id:\w+}/{view:(preview|content)}")
 @cookie_authenticated
 async def get_attachment_content(
-    request: GetAttachmentContent, services: ServiceSet, user: User
+    request: GetAttachmentContent | GetAttachmentPreview,
+    services: ServiceSet,
+    user: User
 ) -> APIResponse[AsyncIterable[bytes]]:
     message_response = await get_chat_message(request.message, services, user)
     message = message_response.payload
     attachment = await message.attachments[request.attachment_no]
-    content = services.files.iter_content(user, attachment.media.file_info)
+    media = attachment.media
+    if isinstance(request, GetAttachmentPreview):
+        if not isinstance(media, (Image, Video, Animation)):
+            media_type = type(media).__name__
+            raise NotFound(f"Preview for '{media_type}' is unavailable")
+        media = media.preview
+    content = services.files.iter_content(user, media.file_info)
     return APIResponse(content)
 
 
