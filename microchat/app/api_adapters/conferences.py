@@ -1,75 +1,13 @@
-from dataclasses import dataclass
-
 from aiohttp import web
 
-from microchat.api_utils.request import APIRequest
+from microchat.api.conferences import GetConference, CreateConference
+from microchat.api.conferences import GetDefaultPermissions, EditDefaultPermissions
+from microchat.api.conferences import GetMembers, GetMember, AddMember, RemoveMember
+from microchat.api.conferences import GetMemberPermissions, EditMemberPermissions
 from microchat.api_utils.exceptions import BadRequest
-from .misc import Disposition, get_disposition
-from .misc import PermissionsPatch, get_permissions_patch
+
+from .misc import get_disposition, get_permissions_patch
 from .misc import get_request_payload, int_param
-
-
-@dataclass
-class ConferencesAPIRequest(APIRequest):
-    pass
-
-
-@dataclass
-class CreateConference(ConferencesAPIRequest):
-    alias: str | None
-    title: str
-    avatar: str | None
-    description: str | None
-
-
-@dataclass
-class GetConference(ConferencesAPIRequest):
-    conference: int | str
-
-
-@dataclass
-class GetDefaultPermissions(ConferencesAPIRequest):
-    conference_request: GetConference
-
-
-@dataclass
-class EditDefaultPermissions(ConferencesAPIRequest):
-    conference_request: GetConference
-    permissions_patch: PermissionsPatch
-
-
-@dataclass
-class GetMembers(ConferencesAPIRequest):
-    conference_request: GetConference
-    disposition: Disposition
-
-
-@dataclass
-class GetMember(ConferencesAPIRequest):
-    conference_request: GetConference
-    member: int | str
-
-
-@dataclass
-class AddMember(ConferencesAPIRequest):
-    conference_request: GetConference
-    invitee: int | str
-
-
-@dataclass
-class RemoveMember(ConferencesAPIRequest):
-    member_request: GetMember
-
-
-@dataclass
-class GetMemberPermissions(ConferencesAPIRequest):
-    member_request: GetMember
-
-
-@dataclass
-class EditMemberPermissions(ConferencesAPIRequest):
-    member_request: GetMember
-    permissions_patch: PermissionsPatch
 
 
 async def conference_request_params(request: web.Request) -> GetConference:
