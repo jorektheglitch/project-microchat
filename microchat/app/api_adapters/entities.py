@@ -1,87 +1,15 @@
-from dataclasses import dataclass
 from typing import Any, TypeGuard
 
 from aiohttp import web
+
+from microchat.api.entities import GetSelf, GetEntity, EditSelf, EditEntity
+from microchat.api.entities import RemoveSelf, RemoveEntity
+from microchat.api.entities import GetPermissions, EditPermissions
+from microchat.api.entities import GetAvatars, GetAvatar, SetAvatar, RemoveAvatar
 from microchat.api_utils.exceptions import BadRequest
 
-from microchat.api_utils.request import APIRequest
-from .misc import Disposition, get_disposition
-from .misc import PermissionsPatch, get_permissions_patch
+from .misc import get_disposition, get_permissions_patch
 from .misc import int_param, get_request_payload
-
-
-@dataclass
-class EntitiesAPIRequest(APIRequest):
-    pass
-
-
-@dataclass
-class GetSelf(EntitiesAPIRequest):
-    pass
-
-
-@dataclass
-class EditSelf(EntitiesAPIRequest):
-    alias: str | None
-    name: str | None
-    surname: str | None
-    bio: str | None
-    avatar: str | None
-
-
-@dataclass
-class RemoveSelf(EntitiesAPIRequest):
-    pass
-
-
-@dataclass
-class GetEntity(EntitiesAPIRequest):
-    entity: str | int
-
-
-@dataclass
-class EditEntity(EntitiesAPIRequest):
-    entity_request: GetEntity
-    update: dict[str, str]
-
-
-@dataclass
-class RemoveEntity(EntitiesAPIRequest):
-    entity_request: GetEntity
-
-
-@dataclass
-class GetAvatars(EntitiesAPIRequest):
-    entity_request: GetEntity
-    disposition: Disposition
-
-
-@dataclass
-class GetAvatar(EntitiesAPIRequest):
-    entity_request: GetEntity
-    avatar_id: int
-
-
-@dataclass
-class SetAvatar(EntitiesAPIRequest):
-    entity_request: GetEntity
-    avatar: str
-
-
-@dataclass
-class RemoveAvatar(EntitiesAPIRequest):
-    avatar_request: GetAvatar
-
-
-@dataclass
-class GetPermissions(EntitiesAPIRequest):
-    entity_request: GetEntity
-
-
-@dataclass
-class EditPermissions(EntitiesAPIRequest):
-    entity_request: GetEntity
-    permissions_patch: PermissionsPatch
 
 
 async def self_request_params(request: web.Request) -> GetSelf:
