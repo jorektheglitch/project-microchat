@@ -1,13 +1,17 @@
+from asyncio import Queue
+
+from typing import AsyncIterable, Awaitable, Callable, TypeVar
+
 from aiohttp import web
 from aiohttp import typedefs
-
-from typing import Awaitable, Callable, TypeVar
 
 from microchat.api_utils.exceptions import APIError
 from microchat.api_utils.handler import inject_services
 from microchat.api_utils.request import APIRequest
-from microchat.api_utils.response import APIResponse, DEFAULT_JSON_DUMPER, P
+from microchat.api_utils.response import APIResponse, DEFAULT_JSON_DUMPER
+from microchat.api_utils.response import P, APIResponseBody, JSON
 
+from microchat.core.events import Event
 from microchat.core.jwt_manager import JWTManager
 from microchat.services import ServiceError, ServiceSet
 from microchat.storages import UoW
@@ -24,7 +28,7 @@ class APIEndpoints:
         self,
         uow_factory: Callable[[], UoW],
         jwt_manager: JWTManager,
-        renderer: Callable[[APIResponse[P] | APIError], Awaitable[web.StreamResponse]]
+        renderer: Callable[[APIResponse[APIResponseBody | JSON | AsyncIterable[bytes] | Queue[Event]] | APIError], Awaitable[web.StreamResponse]]
     ) -> None:
         self.uow_factory = uow_factory
         self.jwt_manager = jwt_manager
