@@ -21,10 +21,13 @@ from microchat.api.chats import list_chats, get_chat
 from microchat.api.chats import list_messages, get_message, send_message, edit_message, remove_message
 from microchat.api.chats import list_chat_media, get_chat_media, remove_chat_media
 from microchat.api.chats import get_attachment_content
+from microchat.api.conferences import list_chat_members, add_chat_member, get_chat_member, remove_chat_member
+from microchat.api.conferences import get_chat_member_permissions, edit_chat_member_permissions
 
 from .rendering import renderer
 from .api_adapters import auth
 from .api_adapters import chats
+from .api_adapters import conferences
 
 
 R = TypeVar("R", bound=APIRequest, contravariant=True)
@@ -140,6 +143,37 @@ def _add_chats_routes(router: APIEndpoints) -> None:
         router.add_route(
             "DELETE", media_path,
             remove_chat_media, chats.media_delete_params
+        )
+
+
+def _add_conferences_routes(router: APIEndpoints) -> None:
+    for path in r"/{entity_id:\d+}", r"/@{alias:\w+}":
+        members_path = f"{path}/members"
+        router.add_route(
+            "GET", members_path,
+            list_chat_members, conferences.members_request_params
+        )
+        router.add_route(
+            "POST", members_path,
+            add_chat_member, conferences.member_add_params
+        )
+        member_path = members_path + r"/{member_no:\d+}"
+        router.add_route(
+            "GET", member_path,
+            get_chat_member, conferences.member_request_params
+        )
+        router.add_route(
+            "DELETE", member_path,
+            remove_chat_member, conferences.member_remove_params
+        )
+        permissions_path = f"{member_path}/permissions"
+        router.add_route(
+            "GET", permissions_path,
+            get_chat_member_permissions, conferences.member_permissions_request_params
+        )
+        router.add_route(
+            "PATCH", permissions_path,
+            edit_chat_member_permissions, conferences.member_permissions_edit_params
         )
 
 
