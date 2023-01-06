@@ -44,7 +44,7 @@ def authenticated(
     return wrapped
 
 
-async def cookie_authenticated(
+def cookie_authenticated(
     handler: Callable[[CAR, ServiceSet, User], Awaitable[T]]
 ) -> AuthenticatedHandler[CAR, T]:
     REVOKED = "Token was revoked"
