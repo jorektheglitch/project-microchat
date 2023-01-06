@@ -27,12 +27,14 @@ from microchat.api.entities import get_self, edit_self, remove_self
 from microchat.api.entities import get_entity, edit_entity, remove_entity
 from microchat.api.entities import list_entity_avatars, get_entity_avatar, set_entity_avatar, remove_entity_avatar
 from microchat.api.entities import get_entity_permissions, edit_entity_permissions
+from microchat.api.media import store, get_media_info, get_content, get_preview
 
 from .rendering import renderer
 from .api_adapters import auth
 from .api_adapters import chats
 from .api_adapters import conferences
 from .api_adapters import entities
+from .api_adapters import media
 
 
 R = TypeVar("R", bound=APIRequest, contravariant=True)
@@ -199,6 +201,13 @@ def _add_entities_routes(router: APIEndpoints) -> None:
         permissions_path = f"{entity_path}/permissions"
         router.add_route("GET", permissions_path, get_entity_permissions, entities.permissions_request_params)
         router.add_route("PATCH", permissions_path, edit_entity_permissions, entities.permissions_edit_params)
+
+
+def _add_media_routes(router: APIEndpoints) -> None:
+    router.add_route("POST", "/media/", store, media.upload_media_params)
+    router.add_route("GET", r"/media/{hash:[\da-fA-F]+}", get_media_info, media.get_media_info_params)
+    router.add_route("GET", r"/media/{hash:[\da-fA-F]+}/content", get_content, media.download_media_params)
+    router.add_route("GET", r"/media/{hash:[\da-fA-F]+}/preview", get_preview, media.download_preview_params)
 
 
 def endpoint(
