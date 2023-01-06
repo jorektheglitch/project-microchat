@@ -16,7 +16,10 @@ from microchat.core.jwt_manager import JWTManager
 from microchat.services import ServiceError, ServiceSet
 from microchat.storages import UoW
 
+from microchat.api.auth import add_session, list_sessions, terminate_session
+
 from .rendering import renderer
+from .api_adapters import auth
 
 
 R = TypeVar("R", bound=APIRequest, contravariant=True)
@@ -55,6 +58,21 @@ def get_api_router(
     routes = APIEndpoints(uow_factory, jwt_manager, render)
     # TODO: add all routes 
     return routes._router
+
+
+def _add_auth_routes(router: APIEndpoints) -> None:
+    router.add_route(
+        "GET", "/auth/sessions",
+        list_sessions, auth.sessions_request_params
+    )
+    router.add_route(
+        "POST", "/auth/sessions",
+        add_session, auth.session_add_params
+    )
+    router.add_route(
+        "DELETE", r"/auth/sessions/{session_id:\w+}",
+        terminate_session, auth.session_close_params
+    )
 
 
 def endpoint(
