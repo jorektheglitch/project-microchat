@@ -9,9 +9,9 @@
 ## Overview
 
 - Service ❌
-  - `/api/v0/supported_versions`: `GET` ❌
+  - `/api/supported_versions`: `GET` ❌ (unauthenticated access)
 - Authentication ✅
-  - `/api/v0/auth/sessions`: `GET` ✅, `POST` ✅
+  - `/api/v0/auth/sessions`: `GET` ✅, `POST` ✅ (unauthenticated access)
   - `/api/v0/auth/sessions/{session_id}`: `DELETE` ✅
 - Users and bots ❌
   - `/api/v0/users`: `POST` ❌ (unauthenticated access)
