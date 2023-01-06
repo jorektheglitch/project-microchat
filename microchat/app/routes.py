@@ -17,9 +17,14 @@ from microchat.services import ServiceError, ServiceSet
 from microchat.storages import UoW
 
 from microchat.api.auth import add_session, list_sessions, terminate_session
+from microchat.api.chats import list_chats, get_chat
+from microchat.api.chats import list_messages, get_message, send_message, edit_message, remove_message
+from microchat.api.chats import list_chat_media, get_chat_media, remove_chat_media
+from microchat.api.chats import get_attachment_content
 
 from .rendering import renderer
 from .api_adapters import auth
+from .api_adapters import chats
 
 
 R = TypeVar("R", bound=APIRequest, contravariant=True)
@@ -73,6 +78,69 @@ def _add_auth_routes(router: APIEndpoints) -> None:
         "DELETE", r"/auth/sessions/{session_id:\w+}",
         terminate_session, auth.session_close_params
     )
+
+
+def _add_chats_routes(router: APIEndpoints) -> None:
+    router.add_route(
+        "GET", "/chats/",
+        list_chats, chats.chats_request_params
+    )
+    router.add_route(
+        "GET", "/chats/",
+        list_chats, chats.chats_request_params
+    )
+    for path in r"/chats/{entity_id:\d+}", r"/chats/@{alias:\w+}":
+        router.add_route(
+            "GET", path,
+            get_chat, chats.chat_request_params
+        )
+    for path in r"/chats/{entity_id:\d+}/messages", r"/chats/@{alias:\w+}/messages":
+        router.add_route(
+            "GET", path,
+            list_messages, chats.messages_request_params
+        )
+        router.add_route(
+            "POST", path,
+            send_message, chats.message_send_params
+        )
+        message_path = path + r"/{id:\d+}"
+        router.add_route(
+            "GET", message_path,
+            get_message, chats.message_request_params
+        )
+        router.add_route(
+            "PATCH", message_path,
+            edit_message, chats.message_edit_params
+        )
+        router.add_route(
+            "DELETE", message_path,
+            remove_message, chats.message_delete_params
+        )
+        attachment_content_path = path + r"/{message_id:\d+}/attachments/{id:\w+}/content"
+        router.add_route(
+            "GET", attachment_content_path,
+            get_attachment_content, chats.attachment_content_params
+        )
+        attachment_content_path = path + r"/{message_id:\d+}/attachments/{id:\w+}/preview"
+        router.add_route(
+            "GET", attachment_content_path,
+            get_attachment_content, chats.attachment_preview_params
+        )
+        media_types = r"{media_type:(photo|video|audio|animation|file)s}"
+        medias_path = f"{path}/{media_types}"
+        router.add_route(
+            "GET", medias_path,
+            list_chat_media, chats.medias_request_params
+        )
+        media_path = medias_path + r"/{id:\d+}"
+        router.add_route(
+            "GET", media_path,
+            get_chat_media, chats.media_request_params
+        )
+        router.add_route(
+            "DELETE", media_path,
+            remove_chat_media, chats.media_delete_params
+        )
 
 
 def endpoint(
