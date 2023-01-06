@@ -118,7 +118,7 @@ async def get_chat(
 # @router.get(r"/{entity_id:\d+}/messages")
 # @router.get(r"/@{alias:\w+}/messages")
 @authenticated
-async def list_chat_messages(
+async def list_messages(
     request: GetMessages, services: ServiceSet, user: User
 ) -> APIResponse[list[Message]]:
     offset = request.disposition.offset
@@ -151,7 +151,7 @@ async def send_message(
 # @router.get(r"/{entity_id:\d+}/messages/{id:\d+}")
 # @router.get(r"/@{alias:\w+}/messages/{id:\d+}")
 @authenticated
-async def get_chat_message(
+async def get_message(
     request: GetMessage, services: ServiceSet, user: User
 ) -> APIResponse[Message]:
     id = request.message_no
@@ -165,7 +165,7 @@ async def get_chat_message(
 # @router.patch(r"/{entity_id:\d+}/messages/{id:\d+}")
 # @router.patch(r"/@{alias:\w+}/messages/{id:\d+}")
 @authenticated
-async def edit_chat_message(
+async def edit_message(
     request: EditMessage, services: ServiceSet, user: User
 ) -> APIResponse[Message]:
     message_no = request.message.message_no
@@ -183,7 +183,7 @@ async def edit_chat_message(
 # @router.delete(r"/{entity_id:\d+}/messages/{id:\d+}")
 # @router.delete(r"/@{alias:\w+}/messages/{id:\d+}")
 @authenticated
-async def remove_chat_message(
+async def remove_message(
     request: DeleteMessage, services: ServiceSet, user: User
 ) -> APIResponse[None]:
     message_no = request.message.message_no
@@ -202,7 +202,7 @@ async def get_attachment_content(
     services: ServiceSet,
     user: User
 ) -> APIResponse[AsyncIterable[bytes]]:
-    message_response = await get_chat_message(request.message, services, user)
+    message_response = await get_message(request.message, services, user)
     message = message_response.payload
     attachment = await message.attachments[request.attachment_no]
     media = attachment.media
