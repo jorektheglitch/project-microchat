@@ -23,11 +23,16 @@ from microchat.api.chats import list_chat_media, get_chat_media, remove_chat_med
 from microchat.api.chats import get_attachment_content
 from microchat.api.conferences import list_chat_members, add_chat_member, get_chat_member, remove_chat_member
 from microchat.api.conferences import get_chat_member_permissions, edit_chat_member_permissions
+from microchat.api.entities import get_self, edit_self, remove_self
+from microchat.api.entities import get_entity, edit_entity, remove_entity
+from microchat.api.entities import list_entity_avatars, get_entity_avatar, set_entity_avatar, remove_entity_avatar
+from microchat.api.entities import get_entity_permissions, edit_entity_permissions
 
 from .rendering import renderer
 from .api_adapters import auth
 from .api_adapters import chats
 from .api_adapters import conferences
+from .api_adapters import entities
 
 
 R = TypeVar("R", bound=APIRequest, contravariant=True)
@@ -175,6 +180,25 @@ def _add_conferences_routes(router: APIEndpoints) -> None:
             "PATCH", permissions_path,
             edit_chat_member_permissions, conferences.member_permissions_edit_params
         )
+
+
+def _add_entities_routes(router: APIEndpoints) -> None:
+    router.add_route("GET", "/entities/self", get_self, entities.self_request_params)
+    router.add_route("PATCH", "/entities/self", edit_self, entities.self_edit_params)
+    router.add_route("DELETE", "/entities/self", remove_self, entities.self_remove_params)
+    for entity_path in r"/entities/{entity_id:\d+}", r"/entities/@{alias:\w+}":
+        router.add_route("GET", entity_path, get_entity, entities.entity_request_params)
+        router.add_route("PATCH", entity_path, edit_entity, entities.entity_edit_params)
+        router.add_route("DELETE", entity_path, remove_entity, entities.entity_remove_params)
+        avatars_path = f"{entity_path}/avatars"
+        router.add_route("GET", avatars_path, list_entity_avatars, entities.avatars_request_params)
+        router.add_route("POST", avatars_path, set_entity_avatar, entities.avatar_set_params)
+        avatar_path = avatars_path + r"{id:\d+}"
+        router.add_route("GET", avatar_path, get_entity_avatar, entities.avatar_request_params)
+        router.add_route("DELETE", avatar_path, remove_entity_avatar, entities.avatar_delete_params)
+        permissions_path = f"{entity_path}/permissions"
+        router.add_route("GET", permissions_path, get_entity_permissions, entities.permissions_request_params)
+        router.add_route("PATCH", permissions_path, edit_entity_permissions, entities.permissions_edit_params)
 
 
 def endpoint(
