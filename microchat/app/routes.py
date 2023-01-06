@@ -71,7 +71,11 @@ def get_api_router(
 ) -> web.UrlDispatcher:
     render = renderer(DEFAULT_JSON_DUMPER)
     routes = APIEndpoints(uow_factory, jwt_manager, render)
-    # TODO: add all routes 
+    _add_auth_routes(routes)
+    _add_chats_routes(routes)
+    _add_conferences_routes(routes)
+    _add_entities_routes(routes)
+    _add_media_routes(routes)
     return routes._router
 
 
