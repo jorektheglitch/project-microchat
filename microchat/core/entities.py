@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from datetime import datetime as dt
+from datetime import datetime as dt, timedelta as td
 from enum import Enum, auto
 from hashlib import sha3_512
 
@@ -149,12 +149,14 @@ class Image(Media):
 class Video(Media):
     type: Literal[MIMEType.VIDEO]
     subtype: VideosMIME
+    length: td
     preview: Preview
 
 
 class Audio(Media):
     type: Literal[MIMEType.AUDIO]
     subtype: AudiosMIME
+    length: td
 
 
 class Animation(Media):
