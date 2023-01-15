@@ -20,7 +20,7 @@ class JWTManager:
         self.secret = secret
 
     def decode_access_token(self, token: str) -> SessionInfo:
-        return cast(SessionInfo, jwt.decode(token, self.secret))
+        return cast(SessionInfo, jwt.decode(token, self.secret, "HS256"))
 
     def decode_csrf_token(self, token: str) -> SessionInfo:
         return cast(SessionInfo, jwt.decode(token, self.secret))
