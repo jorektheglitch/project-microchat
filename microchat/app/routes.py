@@ -99,10 +99,6 @@ def _add_chats_routes(router: APIEndpoints) -> None:
         "GET", "/chats/",
         list_chats, chats.chats_request_params
     )
-    router.add_route(
-        "GET", "/chats/",
-        list_chats, chats.chats_request_params
-    )
     for path in r"/chats/{entity_id:\d+}", r"/chats/@{alias:\w+}":
         router.add_route(
             "GET", path,
