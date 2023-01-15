@@ -46,7 +46,7 @@ class APIEndpoints:
         self,
         uow_factory: Callable[[], UoW],
         jwt_manager: JWTManager,
-        renderer: Callable[[APIResponse[APIResponseBody | JSON | AsyncIterable[bytes] | Queue[Event]] | APIError], Awaitable[web.StreamResponse]]
+        renderer: Callable[[web.Request, APIResponse[APIResponseBody | JSON | AsyncIterable[bytes] | Queue[Event]] | APIError], Awaitable[web.StreamResponse]]
     ) -> None:
         self.uow_factory = uow_factory
         self.jwt_manager = jwt_manager
@@ -213,7 +213,7 @@ def _add_media_routes(router: APIEndpoints) -> None:
 def endpoint(
     executor: Callable[[R], Awaitable[APIResponse[P]]],
     extractor: Callable[[web.Request], Awaitable[R]],
-    renderer: Callable[[APIResponse[P] | APIError], Awaitable[web.StreamResponse]],
+    renderer: Callable[[web.Request, APIResponse[P] | APIError], Awaitable[web.StreamResponse]],
 ) -> typedefs.Handler:
     async def handler(request: web.Request) -> web.StreamResponse:
         api_response: APIResponse[P] | APIError
@@ -225,6 +225,6 @@ def endpoint(
         except ServiceError as service_exc:
             exc_info = APIError.from_service_exc(service_exc)
             api_response = exc_info
-        reponse = await renderer(api_response)
+        reponse = await renderer(request, api_response)
         return reponse
     return handler

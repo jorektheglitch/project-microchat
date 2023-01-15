@@ -13,8 +13,9 @@ from microchat.api_utils.types import JSON
 
 def renderer(
     dumps: typedefs.JSONEncoder
-) -> Callable[[APIResponse[P] | APIError], Awaitable[web.StreamResponse]]:
+) -> Callable[[web.Request, APIResponse[P] | APIError], Awaitable[web.StreamResponse]]:
     async def render(
+        request: web.Request,
         api_response: APIResponse[P] | APIError
     ) -> web.StreamResponse:
         if isinstance(api_response.payload, AsyncIterable):
@@ -23,10 +24,10 @@ def renderer(
                 reason=api_response.reason,
                 headers=api_response.headers
             )
+            await response.prepare(request)
             async for chunk in api_response.payload:
                 await response.write(chunk)
         elif isinstance(api_response.payload, asyncio.Queue):
-            request = web.Request()
             events_response = sse_response(
                 request,
                 status=api_response.status_code,
