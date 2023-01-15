@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from contextlib import asynccontextmanager
 
-from typing import AsyncGenerator, Iterable, List
+from typing import AsyncGenerator, Iterable, Sequence
 
 from microchat.core.entities import User, Media
 from microchat.core.entities import FileInfo, TempFile, MIME_TUPLES
@@ -23,7 +23,7 @@ class Files(Service):
 
     async def get_infos(
         self, user: User, hashes: Iterable[str]
-    ) -> List[Media]:
+    ) -> Sequence[Media]:
         return await self.uow.media.get_by_hashes(user, hashes)
 
     async def iter_content(

@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import AsyncIterable
+from typing import AsyncIterable, Sequence
 
 from microchat.api_utils.exceptions import NotFound
 from microchat.api_utils.request import APIRequest, Authenticated, CookieAuthenticated
@@ -97,7 +97,7 @@ class RemoveChatMedia(GetChatMedia):
 @authenticated
 async def list_chats(
     request: GetChats, services: ServiceSet, user: User
-) -> APIResponse[list[Dialog | ConferenceParticipation[User]]]:
+) -> APIResponse[Sequence[Dialog | ConferenceParticipation[User]]]:
     offset = request.disposition.offset
     count = request.disposition.count
     chats = await services.chats.list_chats(user, offset, count)
@@ -120,7 +120,7 @@ async def get_chat(
 @authenticated
 async def list_messages(
     request: GetMessages, services: ServiceSet, user: User
-) -> APIResponse[list[Message]]:
+) -> APIResponse[Sequence[Message]]:
     offset = request.disposition.offset
     count = request.disposition.count
     chat_response = await get_chat(request.chat, services, user)
@@ -223,7 +223,7 @@ MEDIA_TYPE = r"{media_type:(photo|video|audio|animation|file)s}"
 @authenticated
 async def list_chat_media(
     request: GetChatMedias, services: ServiceSet, user: User
-) -> APIResponse[list[Attachment[Media]]]:
+) -> APIResponse[Sequence[Attachment[Media]]]:
     media_type = request.media_type
     offset = request.disposition.offset
     count = request.disposition.count

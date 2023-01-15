@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-
+from typing import Sequence
 
 from microchat.core.entities import User, Dialog, ConferenceParticipation
 from microchat.core.entities import Bot, Conference, Permissions
@@ -99,7 +99,7 @@ async def get_actor(
 @authenticated
 async def list_chat_members(
     request: GetMembers, services: ServiceSet, user: User
-) -> APIResponse[list[ConferenceParticipation[User | Bot]]]:
+) -> APIResponse[Sequence[ConferenceParticipation[User | Bot]]]:
     identity = request.conference_request.identity
     offset = request.disposition.offset
     count = request.disposition.count

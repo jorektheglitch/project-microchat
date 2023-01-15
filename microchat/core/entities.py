@@ -29,7 +29,7 @@ class Named(ABC):
     id: int
     alias: str
     title: str
-    avatar: Image
+    avatar: Image | None
     avatars: BoundSequence[Image]
     default_permissions: Permissions
 
@@ -59,7 +59,7 @@ class Bot(Entity, Named, Owned[User]):
     conferences: BoundSequence[Conference]
 
 
-Actor = TypeVar("Actor", bound=User | Bot)
+Actor = TypeVar("Actor", bound=User | Bot, covariant=True)
 
 
 class Relation(Entity, ABC, Generic[Actor]):

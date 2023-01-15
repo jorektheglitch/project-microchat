@@ -1,6 +1,7 @@
 from __future__ import annotations
+from typing import Sequence, TypeVar
 
-from microchat.core.entities import Bot, Conference, User, Actor
+from microchat.core.entities import Bot, Conference, User
 from microchat.core.entities import ConferenceParticipation, Dialog
 from microchat.core.entities import Permissions
 
@@ -8,12 +9,15 @@ from .base_service import Service
 from .general_exceptions import DoesNotExists, AccessDenied
 
 
+Actor = TypeVar("Actor", bound=User | Bot)
+
+
 class Conferences(Service):
 
     async def list_members(
         self, user: User | Bot, conference: Conference,
         offset: int, count: int
-    ) -> list[ConferenceParticipation[User | Bot]]:
+    ) -> Sequence[ConferenceParticipation[User | Bot]]:
         if conference.private:
             relation = await self.uow.relations.get_relation(
                 user, conference.id

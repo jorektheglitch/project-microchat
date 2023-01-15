@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TypeVar, overload
+from typing import Sequence, TypeVar, overload
 
 from microchat.core.entities import User
 from microchat.core.entities import ConferenceParticipation, Dialog
@@ -18,7 +18,7 @@ class Chats(Service):
 
     async def list_chats(
         self, user: User, offset: int, count: int
-    ) -> list[Dialog | ConferenceParticipation[User]]:
+    ) -> Sequence[Dialog | ConferenceParticipation[User]]:
         chats = await self.uow.chats.get_user_chats(user, offset, count)
         return chats
 
@@ -26,7 +26,7 @@ class Chats(Service):
         self,
         user: User, chat: Dialog | ConferenceParticipation[User],
         offset: int, count: int
-    ) -> list[Message]:
+    ) -> Sequence[Message]:
         chats = self.uow.chats
         if isinstance(chat, Dialog):
             messages = await chats.get_dialog_messages(
@@ -159,7 +159,7 @@ class Chats(Service):
         user: User, chat: Dialog | ConferenceParticipation[User],
         media_type: type[M],
         offset: int, count: int
-    ) -> list[Attachment[M]]:
+    ) -> Sequence[Attachment[M]]:
         chats = self.uow.chats
         if isinstance(chat, Dialog):
             medias = await chats.get_dialog_medias(

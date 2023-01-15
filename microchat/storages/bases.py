@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 
-from typing import Any, Iterable, TypeVar
+from typing import Any, Iterable, Sequence, TypeVar
 
 from microchat.core.entities import Authentication, Permissions, Session
 from microchat.core.entities import User, Bot, Conference, Dialog
@@ -102,13 +102,13 @@ class ChatsStorage(ABC):
     @abstractmethod
     async def get_user_chats(
         self, user: User, offset: int, count: int
-    ) -> list[Dialog | ConferenceParticipation[User]]:
+    ) -> Sequence[Dialog | ConferenceParticipation[User]]:
         pass
 
     @abstractmethod
     async def get_dialog_messages(
         self, user: User, chat: Dialog, offset: int, count: int
-    ) -> list[Message]:
+    ) -> Sequence[Message]:
         pass
 
     @abstractmethod
@@ -116,7 +116,7 @@ class ChatsStorage(ABC):
         self,
         user: User, chat: ConferenceParticipation[User],
         offset: int, count: int,
-    ) -> list[Message]:
+    ) -> Sequence[Message]:
         pass
 
     @abstractmethod
@@ -127,7 +127,7 @@ class ChatsStorage(ABC):
         offset: int,
         count: int,
         presences: AsyncSequence[ConferencePresence]
-    ) -> list[Message]:
+    ) -> Sequence[Message]:
         pass
 
     @abstractmethod
@@ -135,7 +135,7 @@ class ChatsStorage(ABC):
         self,
         user: User, chat: Dialog | ConferenceParticipation[User],
         text: str | None,
-        attachments: list[Media] | None,
+        attachments: Sequence[Media] | None,
         reply_to: Message | None
     ) -> Message:
         pass
@@ -145,7 +145,7 @@ class ChatsStorage(ABC):
         self,
         message: Message,
         text: str | None,
-        attachments: list[Media] | None
+        attachments: Sequence[Media] | None
     ) -> Message:
         pass
 
@@ -161,7 +161,7 @@ class ChatsStorage(ABC):
         media_type: type[M],
         offset: int,
         count: int
-    ) -> list[Attachment[M]]:
+    ) -> Sequence[Attachment[M]]:
         pass
 
     @abstractmethod
@@ -170,7 +170,7 @@ class ChatsStorage(ABC):
         user: User, chat: ConferenceParticipation[User],
         media_type: type[M],
         offset: int, count: int,
-    ) -> list[Attachment[M]]:
+    ) -> Sequence[Attachment[M]]:
         pass
 
     @abstractmethod
@@ -182,7 +182,7 @@ class ChatsStorage(ABC):
         offset: int,
         count: int,
         presences: AsyncSequence[ConferencePresence]
-    ) -> list[Attachment[M]]:
+    ) -> Sequence[Attachment[M]]:
         pass
 
     @abstractmethod
@@ -195,7 +195,7 @@ class ConferencesStorage(ABC):
     @abstractmethod
     async def list_members(
         self, conference: Conference, offset: int, count: int
-    ) -> list[ConferenceParticipation[User | Bot]]:
+    ) -> Sequence[ConferenceParticipation[User | Bot]]:
         pass
 
     @abstractmethod
@@ -232,7 +232,7 @@ class MediaStorage(ABC):
     @abstractmethod
     async def get_by_hashes(
         self, user: User, hashes: Iterable[str]
-    ) -> list[Media]:
+    ) -> Sequence[Media]:
         pass
 
     @abstractmethod
