@@ -5,6 +5,7 @@ from .agents import Agents
 from .auth import Auth
 from .chats import Chats
 from .conferences import Conferences
+from .events import Events
 from .files import Files
 from .general_exceptions import ServiceError  # noqa: F401
 
@@ -16,6 +17,7 @@ class ServiceSet:
     conferences: Conferences
     files: Files
     agents: Agents
+    events: Events
 
     def __init__(self, uow: UoW, jwt_manager: JWTManager) -> None:
         self.auth = Auth(uow, jwt_manager)

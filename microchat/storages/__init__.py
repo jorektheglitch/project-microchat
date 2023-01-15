@@ -9,6 +9,7 @@ from .bases import RelationsStorage
 from .bases import ChatsStorage
 from .bases import ConferencesStorage
 from .bases import MediaStorage
+from .bases import EventsManager
 
 
 T = TypeVar("T")
@@ -18,6 +19,7 @@ class UoW:
 
     auth: AuthenticationStorage
     entities: EntitiesStorage
+    events: EventsManager
     relations: RelationsStorage
     chats: ChatsStorage
     conferences: ConferencesStorage

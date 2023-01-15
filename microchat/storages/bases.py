@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
+from asyncio import Queue
 
 from typing import Any, Iterable, Sequence, TypeVar
 
@@ -9,6 +10,7 @@ from microchat.core.entities import User, Bot, Conference, Dialog
 from microchat.core.entities import ConferenceParticipation, ConferencePresence
 from microchat.core.entities import Message, Attachment
 from microchat.core.entities import Media, Image, TempFile, FileInfo
+from microchat.core.events import Event
 from microchat.core.types import AsyncReader, AsyncSequence, MIMETuple
 
 
@@ -247,4 +249,19 @@ class MediaStorage(ABC):
 
     @abstractmethod
     async def open(self, file: FileInfo) -> AsyncReader:
+        pass
+
+
+class EventsManager(ABC):
+
+    @abstractmethod
+    async def emit(self, event: Event) -> None:
+        pass
+
+    @abstractmethod
+    async def get_event_stream(self, actor: User | Bot) -> Queue[Event]:
+        pass
+
+    @abstractmethod
+    async def publish(self) -> None:
         pass
