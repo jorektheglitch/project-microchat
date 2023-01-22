@@ -8,7 +8,7 @@ from hashlib import sha3_512
 from pathlib import Path
 
 from types import TracebackType
-from typing import Literal
+from typing import Literal, NamedTuple
 from typing import Generic, TypeVar
 
 from .types import Bound, BoundSequence
@@ -118,11 +118,17 @@ class Authentication:
         )
 
 
+class Location(NamedTuple):
+    continent: str
+    country: str
+    city: str
+
+
 class Session(Entity):
     id: int
     name: str
     last_active: dt
-    location: tuple[str, str, str] | None  # continent, country, city
+    location: Location | None
     ip_address: str
     auth: Authentication
     closed: bool
