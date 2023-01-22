@@ -1,8 +1,8 @@
+from dataclasses import asdict
 from pathlib import Path
 from typing import Callable
 
 from aiohttp import web
-
 
 from .app import app
 from .core.jwt_manager import JWTManager
@@ -17,7 +17,7 @@ def create_uow_factory(config: Config) -> Callable[[], UoW]:
 def run(config: Config) -> None:
     uow_factory = create_uow_factory(config)
     jwt_manager = JWTManager(config.jwt_secret)
-    web.run_app(app(uow_factory, jwt_manager))
+    web.run_app(app(uow_factory, jwt_manager), **asdict(config.app))
 
 
 if __name__ == "__main__":
