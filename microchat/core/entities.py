@@ -146,15 +146,22 @@ class Media(Entity, ABC):
 M = TypeVar("M", bound=Media)
 
 
+class Resolution(NamedTuple):
+    width: int
+    height: int
+
+
 class Image(Media):
     type: Literal[MIMEType.IMAGE]
     subtype: ImagesMIME
+    resolution: Resolution
     preview: Preview
 
 
 class Video(Media):
     type: Literal[MIMEType.VIDEO]
     subtype: VideosMIME
+    resolution: Resolution
     length: td
     preview: Preview
 
@@ -168,6 +175,7 @@ class Audio(Media):
 class Animation(Media):
     type: Literal[MIMEType.VIDEO]
     subtype: Literal[VideosMIME.WEBM]
+    resolution: Resolution
     preview: Preview
 
 
