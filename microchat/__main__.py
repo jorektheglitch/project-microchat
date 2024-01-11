@@ -3,6 +3,7 @@ from pathlib import Path
 from typing import Callable
 
 from aiohttp import web
+from adaptix import Retort
 
 from .app import app
 from .core.jwt_manager import JWTManager
@@ -35,9 +36,10 @@ if __name__ == "__main__":
     args = parser.parse_args()
     config_path: Path | None = args.config
     if config_path:
+        retort = Retort()
         with config_path.open() as config_file:
             config_toml = tomlkit.load(config_file)
-        config = Config.from_mapping(config_toml)
+        config = retort.load(config_toml, Config)
         run(config)
     else:
         parser.print_help()

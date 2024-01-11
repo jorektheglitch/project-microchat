@@ -1,3 +1,4 @@
+adaptix>=3.0.0b1
 aiohttp~=3.8.3
 aiohttp-sse~=2.1.0
 PyJWT~=2.6.0
