@@ -7,11 +7,11 @@ class APIRequest:
 
 
 @dataclass
-class Authenticated:
+class AuthenticatedRequest(APIRequest):
     access_token: str
 
 
 @dataclass
-class CookieAuthenticated(Authenticated):
+class CookieAuthenticatedRequest(AuthenticatedRequest):
     access_token: str  # cookie
     csrf_token: str  # query parameter

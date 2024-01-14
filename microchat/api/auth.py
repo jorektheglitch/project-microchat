@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 
-from microchat.api_utils.request import APIRequest, Authenticated
+from microchat.api_utils.request import APIRequest, AuthenticatedRequest
 from microchat.api_utils.response import APIResponse, Status
 from microchat.api_utils.handler import authenticated
 from microchat.core.entities import Session, User
@@ -15,7 +15,7 @@ class AuthAPIRequest(APIRequest):
 
 
 @dataclass
-class GetSessions(AuthAPIRequest, Authenticated):
+class GetSessions(AuthAPIRequest, AuthenticatedRequest):
     disposition: Disposition
 
 
@@ -26,7 +26,7 @@ class AddSession(AuthAPIRequest):
 
 
 @dataclass
-class CloseSession(AuthAPIRequest, Authenticated):
+class CloseSession(AuthAPIRequest, AuthenticatedRequest):
     id: int | None
 
 

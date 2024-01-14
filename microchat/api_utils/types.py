@@ -1,30 +1,42 @@
 from __future__ import annotations
 
-from typing import Awaitable, Callable, Generic, Protocol, TypeVar
+from asyncio import Queue
 
-from microchat.services import ServiceSet
+from typing import AsyncIterable, Protocol, TypeVar
+
+from microchat.core.events import Event
 from microchat.core.entities import User
+from microchat.services import ServiceSet
 
 from .exceptions import APIError  # noqa: F401
-from .request import APIRequest, Authenticated, CookieAuthenticated
-from .response import APIResponse, APIResponseEncoder, JSON  # noqa: F401
+from .request import APIRequest, AuthenticatedRequest, CookieAuthenticatedRequest
+from .response import APIResponse, APIResponseEncoder  # noqa: F401
+from .response import APIResponseBody, JSON
 
 
 T = TypeVar("T")
-T_co = TypeVar("T_co", covariant=True)
+P = TypeVar("P", bound=APIResponseBody | JSON | AsyncIterable[bytes] | Queue[Event], covariant=True)
 R = TypeVar("R", bound=APIRequest, contravariant=True)
-AR = TypeVar("AR", bound=Authenticated, contravariant=True)
-CAR = TypeVar("CAR", bound=CookieAuthenticated, contravariant=True)
+AR = TypeVar("AR", bound=AuthenticatedRequest, contravariant=True)
+CAR = TypeVar("CAR", bound=CookieAuthenticatedRequest, contravariant=True)
 
 
-class AuthenticatedHandler(Protocol, Generic[AR, T_co]):
+class APIHandler(Protocol[R, P]):
     async def __call__(
-        self, request: AR, services: ServiceSet, user: User | None = None
-    ) -> T_co:
+        self, request: R
+    ) -> APIResponse[P]:
         pass
 
 
-APIHandler = Callable[
-    [APIRequest],
-    Awaitable[APIResponse[T]]
-]
+class Handler(Protocol[R, P]):
+    async def __call__(
+        self, request: R, services: ServiceSet
+    ) -> APIResponse[P]:
+        pass
+
+
+class AuthenticatedHandler(Handler[AR, P], Protocol[AR, P]):
+    async def __call__(
+        self, request: AR, services: ServiceSet, user: User | None = None
+    ) -> APIResponse[P]:
+        pass

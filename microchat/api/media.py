@@ -8,7 +8,7 @@ from microchat.api_utils.handler import authenticated, cookie_authenticated
 from microchat.services import ServiceSet
 from microchat.core.entities import Animation, Image, Media, User, Video
 
-from microchat.api_utils.request import APIRequest, Authenticated, CookieAuthenticated  # noqa
+from microchat.api_utils.request import AuthenticatedRequest, CookieAuthenticatedRequest  # noqa
 from microchat.api_utils.response import HEADER, APIResponse, Status
 from microchat.api_utils.exceptions import BadRequest, NotFound
 
@@ -30,7 +30,7 @@ class PartReader(ABC):
 
 
 @dataclass
-class MediaAPIRequest(APIRequest, Authenticated):
+class MediaAPIRequest(AuthenticatedRequest):
     pass
 
 
@@ -50,12 +50,12 @@ class GetMediaInfo(MediaRequest):
 
 
 @dataclass
-class DownloadMedia(MediaRequest, CookieAuthenticated):
+class DownloadMedia(MediaRequest, CookieAuthenticatedRequest):
     pass
 
 
 @dataclass
-class DownloadPreview(MediaRequest, CookieAuthenticated):
+class DownloadPreview(MediaRequest, CookieAuthenticatedRequest):
     pass
 
 

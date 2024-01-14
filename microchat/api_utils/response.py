@@ -17,7 +17,7 @@ APIResponseBody = Entity | Sequence[Entity] | dict[str, Entity]
 # Sequence used instead of list because list is invariant (and then it is
 # list[EntityChildClass] is not matched by theese union)
 
-P = TypeVar("P", bound=APIResponseBody | JSON | AsyncIterable[bytes] | Queue[Event], contravariant=True)
+P = TypeVar("P", bound=APIResponseBody | JSON | AsyncIterable[bytes] | Queue[Event], covariant=True)
 
 
 class Status(enum.Enum):

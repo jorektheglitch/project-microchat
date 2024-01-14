@@ -7,7 +7,7 @@ from microchat.core.entities import User, Bot, ConferenceParticipation
 from microchat.core.entities import Conference, Permissions
 from microchat.core.entities import Image
 
-from microchat.api_utils.request import APIRequest, Authenticated
+from microchat.api_utils.request import AuthenticatedRequest
 from microchat.api_utils.response import APIResponse, Status
 from microchat.api_utils.exceptions import BadRequest
 from microchat.api_utils.handler import authenticated
@@ -16,7 +16,7 @@ from .misc import Disposition, PermissionsPatch
 
 
 @dataclass
-class EntitiesAPIRequest(APIRequest, Authenticated):
+class EntitiesAPIRequest(AuthenticatedRequest):
     pass
 
 

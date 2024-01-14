@@ -6,7 +6,7 @@ from microchat.core.entities import Bot, Conference, Permissions
 
 from microchat.services import ServiceSet
 from microchat.api_utils.handler import authenticated
-from microchat.api_utils.request import APIRequest, Authenticated
+from microchat.api_utils.request import AuthenticatedRequest
 from microchat.api_utils.response import APIResponse, Status
 from microchat.api_utils.exceptions import BadRequest, NotFound
 
@@ -14,7 +14,7 @@ from .misc import Disposition, PermissionsPatch
 
 
 @dataclass
-class ConferencesAPIRequest(APIRequest, Authenticated):
+class ConferencesAPIRequest(AuthenticatedRequest):
     pass
 
 

@@ -7,6 +7,7 @@ from typing import Awaitable, Callable
 from typing import TYPE_CHECKING
 
 from microchat.api_utils.exceptions import Unauthorized
+from microchat.api_utils.types import APIHandler, Handler
 from microchat.core.jwt_manager import JWTManager
 from microchat.core.entities import User
 from microchat.services import ServiceSet
@@ -23,15 +24,15 @@ T = TypeVar("T")
 
 
 def authenticated(
-    handler: Callable[[AR, ServiceSet, User], Awaitable[T]]
-) -> AuthenticatedHandler[AR, T]:
+    handler: Callable[[AR, ServiceSet, User], Awaitable[APIResponse[P]]]
+) -> AuthenticatedHandler[AR, P]:
     MISSING_HEADER = "Missing access token"
     REVOKED = "Token was revoked"
 
     @functools.wraps(handler)
     async def wrapped(
         request: AR, services: ServiceSet, user: User | None = None
-    ) -> T:
+    ) -> APIResponse[P]:
         if user is None:
             jwt = request.access_token
             if not jwt:
@@ -45,14 +46,14 @@ def authenticated(
 
 
 def cookie_authenticated(
-    handler: Callable[[CAR, ServiceSet, User], Awaitable[T]]
-) -> AuthenticatedHandler[CAR, T]:
+    handler: Callable[[CAR, ServiceSet, User], Awaitable[APIResponse[P]]]
+) -> AuthenticatedHandler[CAR, P]:
     REVOKED = "Token was revoked"
 
     @functools.wraps(handler)
     async def wrapped(
         request: CAR, services: ServiceSet, user: User | None = None
-    ) -> T:
+    ) -> APIResponse[P]:
         if user is None:
             auth_cookie = request.access_token
             csrf_token = request.csrf_token
@@ -69,19 +70,19 @@ def cookie_authenticated(
 def services_injector(
     uow_factory: Callable[[], UoW],
     jwt_manager: JWTManager
-) -> Callable[[Callable[[R, ServiceSet], Awaitable[APIResponse[P]]]], Callable[[R], Awaitable[APIResponse[P]]]]:
+) -> Callable[[Handler[R, P]], APIHandler[R, P]]:
     def with_services(
-        executor: Callable[[R, ServiceSet], Awaitable[APIResponse[P]]]
-    ) -> Callable[[R], Awaitable[APIResponse[P]]]:
+        executor: Handler[R, P]
+    ) -> APIHandler[R, P]:
         return inject_services(executor, uow_factory, jwt_manager)
     return with_services
 
 
 def inject_services(
-    executor: Callable[[R, ServiceSet], Awaitable[APIResponse[P]]],
+    executor: Handler[R, P],
     uow_factory: Callable[[], UoW],
     jwt_manager: JWTManager
-) -> Callable[[R], Awaitable[APIResponse[P]]]:
+) -> APIHandler[R, P]:
     async def with_services(request: R) -> APIResponse[P]:
         async with uow_factory() as uow:
             services = ServiceSet(uow, jwt_manager)

@@ -2,7 +2,7 @@ from dataclasses import dataclass
 from typing import AsyncIterable, Sequence
 
 from microchat.api_utils.exceptions import NotFound
-from microchat.api_utils.request import APIRequest, Authenticated, CookieAuthenticated
+from microchat.api_utils.request import AuthenticatedRequest, CookieAuthenticatedRequest
 from microchat.api_utils.response import APIResponse, Status
 from microchat.api_utils.handler import authenticated, cookie_authenticated
 
@@ -16,7 +16,7 @@ from .misc import Disposition
 
 
 @dataclass
-class ChatsAPIRequest(APIRequest, Authenticated):
+class ChatsAPIRequest(AuthenticatedRequest):
     pass
 
 
@@ -63,13 +63,13 @@ class DeleteMessage(ChatsAPIRequest):
 
 
 @dataclass
-class GetAttachmentPreview(ChatsAPIRequest, CookieAuthenticated):
+class GetAttachmentPreview(ChatsAPIRequest, CookieAuthenticatedRequest):
     message: GetMessage
     attachment_no: int
 
 
 @dataclass
-class GetAttachmentContent(ChatsAPIRequest, CookieAuthenticated):
+class GetAttachmentContent(ChatsAPIRequest, CookieAuthenticatedRequest):
     message: GetMessage
     attachment_no: int
 

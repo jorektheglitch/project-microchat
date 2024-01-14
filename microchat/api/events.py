@@ -5,13 +5,13 @@ from microchat.services import ServiceSet
 from microchat.core.entities import User
 from microchat.core.events import Event
 
-from microchat.api_utils.request import APIRequest, Authenticated
+from microchat.api_utils.request import AuthenticatedRequest
 from microchat.api_utils.response import APIResponse
 from microchat.api_utils.handler import authenticated
 
 
 @dataclass
-class EventsSubscribe(APIRequest, Authenticated):
+class EventsSubscribe(AuthenticatedRequest):
     pass
 
 
