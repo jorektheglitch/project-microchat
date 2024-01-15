@@ -56,5 +56,6 @@ async def terminate_session(
     session_id = request.id
     if session_id is not None:
         session = await services.auth.get_session(user, session_id)
+    # TODO: select current session if session_id is None
     await services.auth.terminate_session(user, session)
     return APIResponse(status=Status.NO_CONTENT)
