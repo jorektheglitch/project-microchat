@@ -1,7 +1,13 @@
+from typing import Any, Sequence
 from aiohttp import web
 
-from microchat.api_utils.exceptions import BadRequest
+from microchat import api
 from microchat.api.auth import GetSessions, AddSession, CloseSession
+from microchat.api_utils.exceptions import BadRequest
+from microchat.api_utils.response import APIResponse
+from microchat.app.route import Route, HTTPMethod, InternalHandler
+from microchat.core.entities import Entity
+from microchat.services import ServiceSet
 
 from .misc import get_access_token, get_disposition
 from .misc import get_request_payload
@@ -26,4 +32,24 @@ async def session_add_params(request: web.Request) -> AddSession:
 
 async def session_close_params(request: web.Request) -> CloseSession:
     access_token = get_access_token(request)
-    return CloseSession(access_token)
+    session_id_repr = request.match_info.get("session_id")
+    session_id: int | None = None
+    if session_id_repr is not None:
+        session_id = int(session_id_repr)
+    return CloseSession(access_token, id=session_id)
+
+
+routes: list[Route[Any, ServiceSet, APIResponse[str | None | Entity | Sequence[Entity]]]] = [
+    Route(
+        "/auth/sessions", HTTPMethod.POST,
+        InternalHandler(api.auth.add_session, session_add_params)
+    ),
+    Route(
+        "/auth/sessions", HTTPMethod.GET,
+        InternalHandler(api.auth.list_sessions, sessions_request_params)
+    ),
+    Route(
+        r"/auth/sessions/{session_id:\w+}", HTTPMethod.DELETE,
+        InternalHandler(api.auth.terminate_session, session_close_params)
+    ),
+]

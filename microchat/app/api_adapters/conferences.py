@@ -1,10 +1,16 @@
+from itertools import chain
+
+from typing import Any
+
 from aiohttp import web
 
+from microchat import api
 from microchat.api.conferences import GetConference, CreateConference
 from microchat.api.conferences import GetDefaultPermissions, EditDefaultPermissions
 from microchat.api.conferences import GetMembers, GetMember, AddMember, RemoveMember
 from microchat.api.conferences import GetMemberPermissions, EditMemberPermissions
 from microchat.api_utils.exceptions import BadRequest
+from microchat.app.route import Route, APIRoute, HTTPMethod, InternalHandler
 
 from .misc import get_disposition, get_permissions_patch
 from .misc import get_request_payload, int_param
@@ -118,3 +124,21 @@ async def member_permissions_edit_params(
     return EditMemberPermissions(
         access_token, member_request, permissions_patch
     )
+
+
+routes: list[APIRoute[Any]] = list(chain.from_iterable((
+    Route(fr"{path}/members", HTTPMethod.GET,
+          InternalHandler(api.conferences.list_chat_members, members_request_params)),
+    Route(fr"{path}/members", HTTPMethod.POST,
+          InternalHandler(api.conferences.add_chat_member, member_add_params)),
+    Route(fr"{path}/members/{{member_no:\d+}}", HTTPMethod.GET,
+          InternalHandler(api.conferences.get_chat_member, member_request_params)),
+    Route(fr"{path}/members/{{member_no:\d+}}", HTTPMethod.DELETE,
+          InternalHandler(api.conferences.remove_chat_member, member_remove_params)),
+    Route(fr"{path}/members/{{member_no:\d+}}/permissions", HTTPMethod.GET,
+          InternalHandler(api.conferences.get_chat_member_permissions, member_permissions_request_params)),
+    Route(fr"{path}/members/{{member_no:\d+}}/permissions", HTTPMethod.PATCH,
+          InternalHandler(api.conferences.edit_chat_member_permissions, member_permissions_edit_params)),
+    )
+    for path in (r"/{entity_id:\d+}", r"/@{alias:\w+}")
+))
