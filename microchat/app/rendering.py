@@ -4,22 +4,26 @@ from typing import AsyncIterable, Awaitable, Callable
 
 from aiohttp import web
 from aiohttp import typedefs
-from aiohttp_sse import sse_response
+from aiohttp_sse import sse_response  # type: ignore
 
 from microchat.api_utils.exceptions import APIError
-from microchat.api_utils.response import APIResponse, P
+from microchat.api_utils.response import APIResponse, APIResponseBody
 from microchat.api_utils.types import JSON
+from microchat.core.events import Event
+
+
+APIResponseContent = APIResponseBody | JSON | AsyncIterable[bytes] | asyncio.Queue[Event]
 
 
 def renderer(
     dumps: typedefs.JSONEncoder
-) -> Callable[[web.Request, APIResponse[P] | APIError], Awaitable[web.StreamResponse]]:
+) -> Callable[[web.Request, APIResponse[APIResponseContent]], Awaitable[web.Response]]:
     async def render(
         request: web.Request,
-        api_response: APIResponse[P] | APIError
-    ) -> web.StreamResponse:
+        api_response: APIResponse[APIResponseContent]
+    ) -> web.Response:
         if isinstance(api_response.payload, AsyncIterable):
-            response = web.StreamResponse(
+            response = web.Response(
                 status=api_response.status_code,
                 reason=api_response.reason,
                 headers=api_response.headers
@@ -46,7 +50,7 @@ def renderer(
                     event_kind = event.__class__.__name__
                     events_response.send(body, event=event_kind)
         else:
-            payload: dict[str, JSON | P]
+            payload: dict[str, JSON | APIResponseBody]
             if isinstance(api_response, APIError):
                 payload = {"error": api_response.payload}
             else:
