@@ -73,3 +73,7 @@ MIMETuple = Union[
     tuple[Literal[MIMEType.VIDEO], VideosMIME],
     tuple[GeneralMIMEType | str, str],
 ]
+AnimationMIMETuple = Union[
+    tuple[Literal[MIMEType.IMAGE], Literal[ImagesMIME.WEBP, ImagesMIME.GIF]],
+    tuple[Literal[MIMEType.VIDEO], VideosMIME],
+]

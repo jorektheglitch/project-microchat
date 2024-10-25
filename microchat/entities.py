@@ -6,7 +6,8 @@ from dataclasses import dataclass
 from datetime import datetime as dt
 from typing import Generic, Literal, Protocol, TypeAlias, TypeVar
 
-from microchat.mime import MIMEType, MIMETuple, GeneralMIMEType, AudiosMIME, ImagesMIME, VideosMIME
+from microchat.mime import MIMEType, MIMETuple, GeneralMIMEType, AnimationMIMETuple
+from microchat.mime import AudiosMIME, ImagesMIME, VideosMIME
 from microchat.hashing import HashableItem, Reference, ExternalReference
 
 
@@ -160,13 +161,18 @@ class Image(MediaBase):
 
 
 @dataclass(frozen=True)
+class Animation(MediaBase):
+    type: AnimationMIMETuple
+
+
+@dataclass(frozen=True)
 class Video(MediaBase):
     type: tuple[Literal[MIMEType.VIDEO], VideosMIME]
 
 
 @dataclass(frozen=True)
 class Sticker(HashableItem):
-    image: Reference[Image | Video]
+    image: Reference[Image | Animation]
     emoji: Emoji
 
 
