@@ -79,7 +79,7 @@ def hash_primitive(primitive: int | str | bytes | dt | None) -> Hash:
         case bytes():
             conversed = primitive
         case dt():
-            conversed = primitive.isoformat().encode(encoding='utf-8')
+            conversed = primitive.isoformat(timespec='milliseconds').encode(encoding='utf-8')
     return hash_function(conversed)
 
 
