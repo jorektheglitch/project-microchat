@@ -49,6 +49,9 @@ class Reference(HashableItem, Generic[Target]):
         return self.key
 
 
+References = tuple[Reference[Target], ...]
+
+
 @dataclass(frozen=True)
 class ExternalReference(HashableItem, Generic[ExtTarget]):
     key: Hash

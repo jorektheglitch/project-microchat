@@ -1,5 +1,5 @@
 from enum import StrEnum
-from typing import Literal, Union
+from typing import Literal, TypeAlias, Union
 
 
 class MIMEType(StrEnum):
@@ -56,8 +56,8 @@ class VideosMIME(StrEnum):
     ThirdGPP2 = "3gpp2"             # .3gpp2 .3g2
 
 
-MIMESubtype = ImagesMIME | AudiosMIME | VideosMIME | str
-GeneralMIMEType = Literal[
+MIMESubtype: TypeAlias = ImagesMIME | AudiosMIME | VideosMIME | str
+GeneralMIMEType: TypeAlias = Literal[
     MIMEType.APPLICATION,
     MIMEType.CHEMICAL,
     MIMEType.EXAMPLE,
@@ -67,13 +67,13 @@ GeneralMIMEType = Literal[
     MIMEType.MULTIPART,
     MIMEType.TEXT,
 ]
-MIMETuple = Union[
+MIMETuple: TypeAlias = Union[
     tuple[Literal[MIMEType.IMAGE], ImagesMIME],
     tuple[Literal[MIMEType.AUDIO], AudiosMIME],
     tuple[Literal[MIMEType.VIDEO], VideosMIME],
     tuple[GeneralMIMEType | str, str],
 ]
-AnimationMIMETuple = Union[
+AnimationMIMETuple: TypeAlias = Union[
     tuple[Literal[MIMEType.IMAGE], Literal[ImagesMIME.WEBP, ImagesMIME.GIF]],
     tuple[Literal[MIMEType.VIDEO], VideosMIME],
 ]

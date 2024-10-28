@@ -1,14 +1,13 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from collections.abc import Sequence
 from dataclasses import dataclass
 from datetime import datetime as dt
 from typing import Generic, Literal, Protocol, TypeAlias, TypeVar
 
 from microchat.mime import MIMEType, MIMETuple, GeneralMIMEType, AnimationMIMETuple
 from microchat.mime import AudiosMIME, ImagesMIME, VideosMIME
-from microchat.hashing import HashableItem, Reference, ExternalReference
+from microchat.hashing import HashableItem, Reference, References, ExternalReference
 
 
 PubKey: TypeAlias = str
@@ -37,7 +36,7 @@ class OriginationEvent(EventBase, ABC):
 
 @dataclass(frozen=True)
 class Event(EventBase, ABC):
-    last_event: Reference[EventBase]
+    leaf_events: References[EventBase]
 
 
 @dataclass(frozen=True)
@@ -52,8 +51,8 @@ class ConferenceStart(OriginationEvent):
 
 @dataclass(frozen=True)
 class Invite(Event):
+    leaf_events: References[ConferenceStart | ConferenceEvent]
     conference: Reference[ConferenceStart]
-    last_event: Reference[ConferenceStart | ConferenceEvent]
     invitee: Identity
 
     @property
@@ -63,7 +62,7 @@ class Invite(Event):
 
 @dataclass(frozen=True)
 class InviteAccept(Event):
-    last_event: Reference[ConferenceEvent]
+    leaf_events: References[ConferenceEvent]
     invite: Reference[Invite]
 
 
@@ -97,7 +96,7 @@ class MessageDeleteEvent(Event):
 @dataclass(frozen=True)
 class TextMessage(HashableItem):
     text: str
-    attachments: Sequence[Reference[MediaBase]] | None
+    attachments: References[MediaBase] | None = None
 
 
 @dataclass(frozen=True)
@@ -117,7 +116,7 @@ class VideoMessage(HashableItem):
 
 @dataclass(frozen=True)
 class Forward(HashableItem):
-    messages: tuple[MessageEvent[Message], ...]
+    messages: References[MessageEvent[Message]]
 
 
 @dataclass(frozen=True)
@@ -178,7 +177,7 @@ class Sticker(HashableItem):
 
 class Reader(Protocol):
     @abstractmethod
-    def read(self, chunk_size: int | None = None):
+    def read(self, chunk_size: int | None = None) -> bytes:
         raise NotImplementedError
 
 
