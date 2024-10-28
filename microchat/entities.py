@@ -10,10 +10,20 @@ from microchat.mime import AudiosMIME, ImagesMIME, VideosMIME
 from microchat.hashing import HashableItem, Reference, References, ExternalReference
 
 
-PubKey: TypeAlias = str
 Signature: TypeAlias = bytes
 
 Emoji: TypeAlias = str
+
+
+class PubKey(Protocol):
+    @property
+    @abstractmethod
+    def raw(self) -> bytes:
+        raise NotImplementedError
+
+    @abstractmethod
+    def verify(self, data: bytes, signature: Signature) -> None:
+        raise NotImplementedError
 
 
 # NOTE: decide on types of identites, e.g. Anonymous, Bridge, Puppet, etc
