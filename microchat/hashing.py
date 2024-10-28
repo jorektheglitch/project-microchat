@@ -80,6 +80,8 @@ def hash_primitive(primitive: int | str | bytes | dt | None) -> Hash:
             conversed = primitive
         case dt():
             conversed = primitive.isoformat(timespec='milliseconds').encode(encoding='utf-8')
+        case unsupported:
+            raise TypeError(f"Cant hash a {type(unsupported)}")
     return hash_function(conversed)
 
 
