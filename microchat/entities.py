@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime as dt
 from typing import Generic, Literal, Protocol, TypeAlias, TypeVar
 
@@ -84,8 +84,8 @@ class MessageEvent(Event, Generic[AnyMessage]):
     conference_acceptance: Reference[InviteAccept]
     last_others_message: Reference[MessageEvent[Message] | InviteAccept]
     last_own_message: Reference[MessageEvent[Message] | InviteAccept]
-    reply_to: Reference[MessageEvent[Message] | InviteAccept | None]
-    message: AnyMessage
+    reply_to: Reference[MessageLikeEvent] | None = None
+    message: AnyMessage = field(kw_only=True)
 
     @property
     def sent_at(self) -> dt:
@@ -140,6 +140,7 @@ EditableMessage: TypeAlias = TextMessage
 MessageEdit: TypeAlias = (
     MessageEditEvent[TextMessage]
 )
+MessageLikeEvent: TypeAlias = MessageEvent[Message] | MessageEdit | InviteAccept
 ConferenceEvent: TypeAlias = (
     Invite | InviteAccept |
     MessageEvent[Message] | MessageEdit | MessageDeleteEvent |
