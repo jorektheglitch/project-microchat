@@ -7,7 +7,7 @@ from typing import Generic, Literal, Protocol, TypeAlias, TypeVar
 
 from microchat.mime import MIMEType, MIMETuple, GeneralMIMEType, AnimationMIMETuple
 from microchat.mime import AudiosMIME, ImagesMIME, VideosMIME
-from microchat.hashing import HashableItem, Reference, References, ExternalReference
+from microchat.hashing import Hash, HashableItem, Reference, References, ExternalReference
 
 
 Signature: TypeAlias = bytes
@@ -30,6 +30,10 @@ class PubKey(Protocol):
 @dataclass(frozen=True)
 class Identity(HashableItem):
     pubkey: PubKey
+
+    @property
+    def hash(self) -> Hash:
+        return Hash(b"stub")
 
 
 @dataclass(frozen=True)
@@ -58,6 +62,10 @@ class ConferenceStart(OriginationEvent):
     def creator(self) -> Identity:
         return self.actor
 
+    @property
+    def hash(self) -> Hash:
+        return Hash(b"stub")
+
 
 @dataclass(frozen=True)
 class Invite(Event):
@@ -69,11 +77,19 @@ class Invite(Event):
     def inviter(self) -> Identity:
         return self.actor
 
+    @property
+    def hash(self) -> Hash:
+        return Hash(b"stub")
+
 
 @dataclass(frozen=True)
 class InviteAccept(Event):
     leaf_events: References[ConferenceEvent]
     invite: Reference[Invite]
+
+    @property
+    def hash(self) -> Hash:
+        return Hash(b"stub")
 
 
 AnyMessage = TypeVar("AnyMessage", bound='Message')
@@ -91,16 +107,28 @@ class MessageEvent(Event, Generic[AnyMessage]):
     def sent_at(self) -> dt:
         return self.datetime
 
+    @property
+    def hash(self) -> Hash:
+        return Hash(b"stub")
+
 
 @dataclass(frozen=True)
 class MessageEditEvent(Event, Generic[AnyMessage]):
     edited: Reference[MessageEvent[AnyMessage] | MessageEditEvent[AnyMessage]]
     edit: AnyMessage
 
+    @property
+    def hash(self) -> Hash:
+        return Hash(b"stub")
+
 
 @dataclass(frozen=True)
 class MessageDeleteEvent(Event):
     deleted: Reference[MessageEvent[Message]]
+
+    @property
+    def hash(self) -> Hash:
+        return Hash(b"stub")
 
 
 @dataclass(frozen=True)
@@ -108,20 +136,36 @@ class TextMessage(HashableItem):
     text: str
     attachments: References[MediaBase] | None = None
 
+    @property
+    def hash(self) -> Hash:
+        return Hash(b"stub")
+
 
 @dataclass(frozen=True)
 class StickerMessage(HashableItem):
     sticker: Sticker
+
+    @property
+    def hash(self) -> Hash:
+        return Hash(b"stub")
 
 
 @dataclass(frozen=True)
 class VoiceMessage(HashableItem):
     audio: Audio
 
+    @property
+    def hash(self) -> Hash:
+        return Hash(b"stub")
+
 
 @dataclass(frozen=True)
 class VideoMessage(HashableItem):
     video: Video
+
+    @property
+    def hash(self) -> Hash:
+        return Hash(b"stub")
 
 
 @dataclass(frozen=True)
@@ -153,6 +197,10 @@ class MediaBase(HashableItem, ABC):
     content: ExternalReference[BLOB]
     name: str  # displayed file name
     type: MIMETuple  # MIME type
+
+    @property
+    def hash(self) -> Hash:
+        return Hash(b"stub")
 
 
 @dataclass(frozen=True)
