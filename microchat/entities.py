@@ -40,7 +40,9 @@ class Identity(HashableItem):
 class EventBase(HashableItem, ABC):
     actor: Identity
     datetime: dt
-    signature: Signature
+
+
+AnyEvent = TypeVar("AnyEvent", bound=EventBase)
 
 
 @dataclass(frozen=True)
@@ -51,6 +53,15 @@ class OriginationEvent(EventBase, ABC):
 @dataclass(frozen=True)
 class Event(EventBase, ABC):
     leaf_events: References[EventBase]
+
+
+@dataclass(frozen=True)
+class SignedEventContainer(Generic[AnyEvent]):
+    event: AnyEvent
+    signature: Signature
+
+    def verify(self) -> None:
+        self.event.actor.pubkey.verify(self.signature, self.event.hash.raw)
 
 
 @dataclass(frozen=True)
