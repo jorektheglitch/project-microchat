@@ -42,7 +42,12 @@ class EventBase(HashableItem, ABC):
     datetime: dt
 
 
-AnyEvent = TypeVar("AnyEvent", bound=EventBase)
+@dataclass(frozen=True)
+class Flag(HashableItem, ABC):
+    actor: Identity
+
+
+AnyEvent = TypeVar("AnyEvent", bound=EventBase | Flag)
 
 
 @dataclass(frozen=True)
