@@ -4,7 +4,7 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from datetime import datetime as dt
 from itertools import chain
-from typing import Generic, Literal, Protocol, TypeAlias, TypeVar
+from typing import ContextManager, Generic, Literal, Protocol, TypeAlias, TypeVar
 
 from microchat.mime import MIMEType, MIMETuple, GeneralMIMEType, AnimationMIMETuple
 from microchat.mime import AudiosMIME, ImagesMIME, VideosMIME
@@ -206,10 +206,17 @@ EditableMessage: TypeAlias = TextMessage
 MessageEdit: TypeAlias = (
     MessageEditEvent[TextMessage]
 )
-MessageLikeEvent: TypeAlias = MessageEvent[Message] | MessageEdit | InviteAccept
+MessageEventType: TypeAlias = (
+    MessageEvent[TextMessage] |
+    MessageEvent[StickerMessage] |
+    MessageEvent[VoiceMessage] |
+    MessageEvent[VideoMessage] |
+    MessageEvent[Forward]
+)
+MessageLikeEvent: TypeAlias = MessageEventType | MessageEdit | InviteAccept
 ConferenceEvent: TypeAlias = (
     Invite | InviteAccept |
-    MessageEvent[Message] | MessageEdit | MessageDeleteEvent |
+    MessageEventType | MessageEdit | MessageDeleteEvent |
     Reaction
 )
 
@@ -267,5 +274,5 @@ class Reader(Protocol):
 
 class BLOB(Protocol):
     @abstractmethod
-    def open(self) -> Reader:
+    def open(self) -> ContextManager[Reader]:
         raise NotImplementedError
