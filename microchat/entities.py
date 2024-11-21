@@ -150,7 +150,7 @@ class MessageDeleteEvent(Event):
 @dataclass(frozen=True)
 class TextMessage(HashableItem):
     text: str
-    attachments: References[MediaBase] | None = None
+    attachments: References[Media] | None = None
 
     @property
     def hash(self) -> Hash:
@@ -242,6 +242,9 @@ class Animation(MediaBase):
 @dataclass(frozen=True)
 class Video(MediaBase):
     type: tuple[Literal[MIMEType.VIDEO], VideosMIME]
+
+
+Media: TypeAlias = Audio | Image | Animation | Video | File
 
 
 @dataclass(frozen=True)
