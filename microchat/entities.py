@@ -3,6 +3,7 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from datetime import datetime as dt
+from itertools import chain
 from typing import Generic, Literal, Protocol, TypeAlias, TypeVar
 
 from microchat.mime import MIMEType, MIMETuple, GeneralMIMEType, AnimationMIMETuple
@@ -57,7 +58,16 @@ class OriginationEvent(EventBase, ABC):
 
 @dataclass(frozen=True)
 class Event(EventBase, ABC):
-    leaf_events: References[EventBase]
+    leaf_events: EventOrdering[ConferenceStart | ConferenceEvent]
+
+
+@dataclass(frozen=True)
+class EventOrdering(References[AnyEvent]):
+    others_events: References[AnyEvent]
+    own_events: References[AnyEvent]
+
+    def __new__(cls, others_events: References[AnyEvent], own_events: References[AnyEvent]):
+        return super().__new__(cls, chain(others_events, own_events))
 
 
 @dataclass(frozen=True)
@@ -85,7 +95,6 @@ class ConferenceStart(OriginationEvent):
 
 @dataclass(frozen=True)
 class Invite(Event):
-    leaf_events: References[ConferenceStart | ConferenceEvent]
     conference: Reference[ConferenceStart]
     invitee: Identity
 
@@ -100,7 +109,6 @@ class Invite(Event):
 
 @dataclass(frozen=True)
 class InviteAccept(Event):
-    leaf_events: References[ConferenceEvent]
     invite: Reference[Invite]
 
     @property
@@ -114,8 +122,6 @@ AnyMessage = TypeVar("AnyMessage", bound='Message')
 @dataclass(frozen=True)
 class MessageEvent(Event, Generic[AnyMessage]):
     conference_acceptance: Reference[InviteAccept]
-    last_others_message: Reference[MessageEvent[Message] | InviteAccept]
-    last_own_message: Reference[MessageEvent[Message] | InviteAccept]
     reply_to: Reference[MessageLikeEvent] | None = None
     message: AnyMessage = field(kw_only=True)
 
