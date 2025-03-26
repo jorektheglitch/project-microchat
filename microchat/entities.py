@@ -155,8 +155,13 @@ class MessageDeleteEvent(Event):
 
 @dataclass(frozen=True)
 class TextMessage(HashableItem):
-    text: str
+    # TODO: somehow separate error case (both text and attachments is empty)
+    text: str | None
     attachments: References[Media] | None = None
+
+    def __post_init__(self) -> None:
+        if not (self.text or self.attachments):
+            raise ValueError(f"{type(self).__name__} cannot be instantiated with empty 'text' and 'attachments'")
 
     @property
     def hash(self) -> Hash:
