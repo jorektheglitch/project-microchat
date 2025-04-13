@@ -9,6 +9,8 @@ from typing import ContextManager, Generic, Literal, Protocol, TypeAlias, TypeVa
 from microchat.mime import MIMEType, MIMETuple, GeneralMIMEType, AnimationMIMETuple
 from microchat.mime import AudiosMIME, ImagesMIME, VideosMIME
 from microchat.hashing import Hash, HashableItem, Reference, References, ExternalReference
+from microchat.hashing import hash_dataclass, hash_primitive, hash_sequence
+from microchat.hashing import NULL_HASH
 
 
 Signature: TypeAlias = bytes
@@ -34,13 +36,17 @@ class Identity(HashableItem):
 
     @property
     def hash(self) -> Hash:
-        return Hash(b"stub")
+        return hash_primitive(self.pubkey.raw)
 
 
 @dataclass(frozen=True)
 class EventBase(HashableItem, ABC):
     actor: Identity
     datetime: dt
+
+    @property
+    def hash(self):
+        return hash_dataclass(self)
 
 
 @dataclass(frozen=True)
@@ -62,12 +68,19 @@ class Event(EventBase, ABC):
 
 
 @dataclass(frozen=True)
-class EventOrdering(References[AnyEvent]):
+class EventOrdering(References[AnyEvent], HashableItem):
     others_events: References[AnyEvent]
     own_events: References[AnyEvent]
 
     def __new__(cls, others_events: References[AnyEvent], own_events: References[AnyEvent]):
         return super().__new__(cls, chain(others_events, own_events))
+
+    @property
+    def hash(self) -> Hash:
+        hashes = tuple(e.hash for e in self)
+        if not hashes:
+            return NULL_HASH
+        return hash_sequence(hashes)
 
 
 @dataclass(frozen=True)
@@ -88,10 +101,6 @@ class ConferenceStart(OriginationEvent):
     def creator(self) -> Identity:
         return self.actor
 
-    @property
-    def hash(self) -> Hash:
-        return Hash(b"stub")
-
 
 @dataclass(frozen=True)
 class Invite(Event):
@@ -102,18 +111,10 @@ class Invite(Event):
     def inviter(self) -> Identity:
         return self.actor
 
-    @property
-    def hash(self) -> Hash:
-        return Hash(b"stub")
-
 
 @dataclass(frozen=True)
 class InviteAccept(Event):
     invite: Reference[Invite]
-
-    @property
-    def hash(self) -> Hash:
-        return Hash(b"stub")
 
 
 AnyMessage = TypeVar("AnyMessage", bound='Message')
@@ -129,28 +130,16 @@ class MessageEvent(Event, Generic[AnyMessage]):
     def sent_at(self) -> dt:
         return self.datetime
 
-    @property
-    def hash(self) -> Hash:
-        return Hash(b"stub")
-
 
 @dataclass(frozen=True)
 class MessageEditEvent(Event, Generic[AnyMessage]):
     edited: Reference[MessageEvent[AnyMessage] | MessageEditEvent[AnyMessage]]
     edit: AnyMessage
 
-    @property
-    def hash(self) -> Hash:
-        return Hash(b"stub")
-
 
 @dataclass(frozen=True)
 class MessageDeleteEvent(Event):
     deleted: Reference[MessageEvent[Message]]
-
-    @property
-    def hash(self) -> Hash:
-        return Hash(b"stub")
 
 
 @dataclass(frozen=True)
@@ -165,7 +154,7 @@ class TextMessage(HashableItem):
 
     @property
     def hash(self) -> Hash:
-        return Hash(b"stub")
+        return hash_dataclass(self)
 
 
 @dataclass(frozen=True)
@@ -174,7 +163,7 @@ class StickerMessage(HashableItem):
 
     @property
     def hash(self) -> Hash:
-        return Hash(b"stub")
+        return hash_dataclass(self)
 
 
 @dataclass(frozen=True)
@@ -183,7 +172,7 @@ class VoiceMessage(HashableItem):
 
     @property
     def hash(self) -> Hash:
-        return Hash(b"stub")
+        return hash_dataclass(self)
 
 
 @dataclass(frozen=True)
@@ -192,12 +181,16 @@ class VideoMessage(HashableItem):
 
     @property
     def hash(self) -> Hash:
-        return Hash(b"stub")
+        return hash_dataclass(self)
 
 
 @dataclass(frozen=True)
 class Forward(HashableItem):
     messages: References[MessageEvent[Message]]
+
+    @property
+    def hash(self) -> Hash:
+        return hash_dataclass(self)
 
 
 @dataclass(frozen=True)
@@ -234,7 +227,7 @@ class MediaBase(HashableItem, ABC):
 
     @property
     def hash(self) -> Hash:
-        return Hash(b"stub")
+        return hash_dataclass(self)
 
 
 @dataclass(frozen=True)
@@ -269,6 +262,10 @@ Media: TypeAlias = Audio | Image | Animation | Video | File
 class Sticker(HashableItem):
     image: Reference[Image | Animation]
     emoji: Emoji
+
+    @property
+    def hash(self) -> Hash:
+        return hash_dataclass(self)
 
 
 class Reader(Protocol):
