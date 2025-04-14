@@ -38,6 +38,9 @@ class Identity(HashableItem):
     def hash(self) -> Hash:
         return hash_primitive(self.pubkey.raw)
 
+    def __repr__(self):
+        return f"<{type(self).__name__} {self.pubkey.raw[:4].hex().upper()}>"
+
 
 @dataclass(frozen=True)
 class EventBase(HashableItem, ABC):
