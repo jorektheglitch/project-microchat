@@ -109,7 +109,7 @@ class SignedEventContainer(Generic[AnyEvent]):
     signature: Signature
 
     def verify(self) -> None:
-        self.event.actor.pubkey.verify(self.signature, self.event.hash.raw)
+        self.event.actor.pubkey.verify(self.event.hash.raw, self.signature)
 
 
 @dataclass(frozen=True)
