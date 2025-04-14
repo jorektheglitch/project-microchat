@@ -83,7 +83,7 @@ class OriginationEvent(EventBase, ABC):
 
 @dataclass(frozen=True)
 class Event(EventBase, ABC):
-    leaf_events: EventOrdering[ConferenceStart | ConferenceEvent]
+    leaf_events: EventOrdering[ConferenceEvent]
 
     @property
     def references(self) -> frozenset[Reference[HashableItem]]:
@@ -162,10 +162,13 @@ class MessageEvent(Event, Generic[AnyMessage]):
         return super().references
 
 
+AnyEditableMessage = TypeVar('AnyEditableMessage', bound='TextMessage')
+
+
 @dataclass(frozen=True)
-class MessageEditEvent(Event, Generic[AnyMessage]):
-    edited: Reference[MessageEvent[AnyMessage] | MessageEditEvent[AnyMessage]]
-    edit: AnyMessage
+class MessageEditEvent(Event, Generic[AnyEditableMessage]):
+    edited: Reference[MessageEvent[AnyEditableMessage] | MessageEditEvent[AnyEditableMessage]]
+    edit: AnyEditableMessage
 
 
 @dataclass(frozen=True)
@@ -231,10 +234,6 @@ class Reaction(Event):
 
 
 Message: TypeAlias = TextMessage | StickerMessage | VoiceMessage | VideoMessage | Forward
-EditableMessage: TypeAlias = TextMessage
-MessageEdit: TypeAlias = (
-    MessageEditEvent[TextMessage]
-)
 MessageEventType: TypeAlias = (
     MessageEvent[TextMessage] |
     MessageEvent[StickerMessage] |
@@ -242,10 +241,13 @@ MessageEventType: TypeAlias = (
     MessageEvent[VideoMessage] |
     MessageEvent[Forward]
 )
-MessageLikeEvent: TypeAlias = MessageEventType | MessageEdit | InviteAccept
+MessageEditEventType: TypeAlias = (
+    MessageEditEvent[TextMessage]
+)
+MessageLikeEvent: TypeAlias = MessageEventType | MessageEditEventType | InviteAccept
 ConferenceEvent: TypeAlias = (
-    Invite | InviteAccept |
-    MessageEventType | MessageEdit | MessageDeleteEvent |
+    ConferenceStart | Invite | InviteAccept |
+    MessageEventType | MessageEditEventType | MessageDeleteEvent |
     Reaction
 )
 
