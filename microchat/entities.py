@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, fields
 from datetime import datetime as dt
 from itertools import chain
 from typing import ContextManager, Generic, Literal, Protocol, TypeAlias, TypeVar
@@ -48,23 +48,43 @@ class EventBase(HashableItem, ABC):
     def hash(self):
         return hash_dataclass(self)
 
+    @property
+    def references(self) -> frozenset[Reference[HashableItem]]:
+        attrs = (getattr(self, field.name) for field in fields(self))
+        reference_attrs = frozenset(attr for attr in attrs if isinstance(attr, Reference))
+        hashable_attrs_refs = frozenset(attr.reference() for attr in attrs if isinstance(attr, HashableItem))
+        return frozenset().union(reference_attrs).union(hashable_attrs_refs)
+
 
 @dataclass(frozen=True)
 class Flag(HashableItem, ABC):
     actor: Identity
 
+    @property
+    def references(self) -> frozenset[Reference[HashableItem]]:
+        attrs = (getattr(self, field.name) for field in fields(self))
+        reference_attrs = frozenset(attr for attr in attrs if isinstance(attr, Reference))
+        hashable_attrs_refs = frozenset(attr.reference() for attr in attrs if isinstance(attr, HashableItem))
+        return frozenset().union(reference_attrs).union(hashable_attrs_refs)
 
 AnyEvent = TypeVar("AnyEvent", bound=EventBase | Flag)
 
 
 @dataclass(frozen=True)
 class OriginationEvent(EventBase, ABC):
-    pass
+    @property
+    @abstractmethod
+    def references(self) -> frozenset[Reference[HashableItem]]:
+        return super().references
 
 
 @dataclass(frozen=True)
 class Event(EventBase, ABC):
     leaf_events: EventOrdering[ConferenceStart | ConferenceEvent]
+
+    @property
+    def references(self) -> frozenset[Reference[HashableItem]]:
+        return super().references.union(self.leaf_events)
 
 
 @dataclass(frozen=True)
@@ -101,6 +121,10 @@ class ConferenceStart(OriginationEvent):
     def creator(self) -> Identity:
         return self.actor
 
+    @property
+    def references(self) -> frozenset[Reference]:
+        return super().references
+
 
 @dataclass(frozen=True)
 class Invite(Event):
@@ -129,6 +153,10 @@ class MessageEvent(Event, Generic[AnyMessage]):
     @property
     def sent_at(self) -> dt:
         return self.datetime
+
+    @property
+    def references(self) -> frozenset[Reference]:
+        return super().references
 
 
 @dataclass(frozen=True)
