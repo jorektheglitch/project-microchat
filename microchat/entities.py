@@ -252,8 +252,9 @@ ConferenceEvent: TypeAlias = (
 
 @dataclass(frozen=True)
 class MediaBase(HashableItem, ABC):
+    # NOTE: decide how and where to add captions for medias
     content: ExternalReference[BLOB]
-    name: str  # displayed file name
+    name: str | None  # displayed file name
     type: MIMETuple  # MIME type
 
     @property
@@ -274,6 +275,7 @@ class Audio(MediaBase):
 @dataclass(frozen=True)
 class Image(MediaBase):
     type: tuple[Literal[MIMEType.IMAGE], ImagesMIME]
+    caption: str | None = None
 
 
 @dataclass(frozen=True)
