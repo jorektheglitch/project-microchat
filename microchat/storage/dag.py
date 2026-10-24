@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from collections.abc import Sequence
 from dataclasses import InitVar, dataclass, field
 from functools import cached_property
 from itertools import chain
@@ -32,6 +33,20 @@ class HashableItemWrapper(Generic[AnyHashableItem]):
 
 
 @dataclass(frozen=True)
+class FoundCycles(ValueError):
+    message: str = "Found one or more cycles"
+    participants: Sequence[Any] | None = None
+
+    def __str__(self):
+        msg = ""
+        if self.message is not None:
+            msg = self.message
+        if self.participants is not None:
+            msg = f"{msg}\nParticipants: {self.participants}"
+        return msg
+
+
+@dataclass(frozen=True)
 class DAG(Generic[Node]):
     links: Mapping[Node, frozenset[Node]] = field(default_factory=empty_mapping)  # outer links for nodes
     unsafe: InitVar[bool] = False
@@ -44,7 +59,7 @@ class DAG(Generic[Node]):
             if item in successors
         )
         if cycles_participants:
-            raise ValueError(f"Found one or more cycles with following nodes: {', '.join(map(str, cycles_participants))}")
+            raise FoundCycles(participants=cycles_participants)
         return None
 
     @property
