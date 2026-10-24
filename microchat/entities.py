@@ -64,7 +64,7 @@ class EventBase(HashableItem, ABC):
 
     @property
     def references(self) -> frozenset[Reference[HashableItem]]:
-        attrs = (getattr(self, field.name) for field in fields(self))
+        attrs = tuple(getattr(self, field.name) for field in fields(self))
         reference_attrs = frozenset(attr for attr in attrs if isinstance(attr, Reference))
         hashable_attrs_refs = frozenset(attr.reference() for attr in attrs if isinstance(attr, HashableItem))
         return frozenset().union(reference_attrs).union(hashable_attrs_refs)
@@ -76,10 +76,11 @@ class Flag(HashableItem, ABC):
 
     @property
     def references(self) -> frozenset[Reference[HashableItem]]:
-        attrs = (getattr(self, field.name) for field in fields(self))
+        attrs = tuple(getattr(self, field.name) for field in fields(self))
         reference_attrs = frozenset(attr for attr in attrs if isinstance(attr, Reference))
         hashable_attrs_refs = frozenset(attr.reference() for attr in attrs if isinstance(attr, HashableItem))
         return frozenset().union(reference_attrs).union(hashable_attrs_refs)
+
 
 AnyEvent = TypeVar("AnyEvent", bound=EventBase | Flag)
 
