@@ -82,7 +82,7 @@ class Flag(HashableItem, ABC):
         return frozenset().union(reference_attrs).union(hashable_attrs_refs)
 
 
-AnyEvent = TypeVar("AnyEvent", bound=EventBase | Flag)
+AnyEvent = TypeVar("AnyEvent", bound=EventBase | Flag, covariant=True)
 
 
 @dataclass(frozen=True)
