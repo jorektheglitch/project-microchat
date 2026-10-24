@@ -29,6 +29,17 @@ class PubKey(Protocol):
         raise NotImplementedError
 
 
+class PrivKey(Protocol):
+    @property
+    @abstractmethod
+    def public_key(self) -> PubKey:
+        raise NotImplementedError
+
+    @abstractmethod
+    def sign(self, data: bytes) -> Signature:
+        raise NotImplementedError
+
+
 # NOTE: decide on types of identites, e.g. Anonymous, Bridge, Puppet, etc
 @dataclass(frozen=True)
 class Identity(HashableItem):
@@ -250,6 +261,8 @@ ConferenceEvent: TypeAlias = (
     MessageEventType | MessageEditEventType | MessageDeleteEvent |
     Reaction
 )
+
+AnyConferenceEvent = TypeVar("AnyConferenceEvent", bound=ConferenceEvent)
 
 
 @dataclass(frozen=True)

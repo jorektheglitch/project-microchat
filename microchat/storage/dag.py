@@ -77,9 +77,29 @@ class DAG(Generic[Node]):
                 if all(successor in visited for successor in successors[node])
             }
 
+    def levels_from(self, start: Node) -> Generator[set[Node], Any, None]:
+        if start not in self.links:
+            return
+        nodes = self.nodes
+        successors = self.successors
+        visited: set[Node] = set()
+        level = {start}
+        while level:
+            yield level
+            visited.update(level)
+            nodes.difference_update(level)
+            level = {
+                node for node in nodes
+                if all(successor in visited for successor in successors[node])
+            }
+
     @property
     def topological_order(self) -> Generator[Node, Any, None]:
         for level in self.levels:
+            yield from level
+
+    def topological_order_from(self, start: Node) -> Generator[Node, Any, None]:
+        for level in self.levels_from(start):
             yield from level
 
     @property

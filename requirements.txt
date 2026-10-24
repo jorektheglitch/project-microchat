@@ -1,4 +1,6 @@
+adaptix==3.0.0b12
 aiohttp==3.14.5
 aiohttp-sse==3.0
 aiohttp-remotes==1.4.0
 async-lru==2.4.0
+cryptography==49.0.0
