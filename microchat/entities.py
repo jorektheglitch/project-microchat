@@ -161,7 +161,8 @@ AnyMessage = TypeVar("AnyMessage", bound='Message')
 
 @dataclass(frozen=True)
 class MessageEvent(Event, Generic[AnyMessage]):
-    conference_acceptance: Reference[InviteAccept]
+    # TODO: Decide how to add first member (or how to check chat creator messages)
+    conference_acceptance: Reference[InviteAccept | ConferenceStart]
     reply_to: Reference[MessageLikeEvent] | None = None
     message: AnyMessage = field(kw_only=True)
 
