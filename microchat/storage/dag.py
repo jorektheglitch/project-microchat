@@ -39,8 +39,10 @@ class DAG(Generic[Node]):
     def __post_init__(self, unsafe: bool) -> None:
         if unsafe:
             return None
-        # TODO: done checking for cycles
-        cycles_participants = {}
+        cycles_participants = tuple(
+            item for item, successors in self.successors.items()
+            if item in successors
+        )
         if cycles_participants:
             raise ValueError(f"Found one or more cycles with following nodes: {', '.join(map(str, cycles_participants))}")
         return None
