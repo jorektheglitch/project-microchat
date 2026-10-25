@@ -25,14 +25,6 @@ from microchat.app.crypto import Ed25519PrivateKey, Ed25519PublicKey, pubkey_dum
 from microchat.hashing import Reference
 
 
-log_formatter = logging.Formatter('[%(asctime)s] %(levelname)s (%(name)s): %(message)s')
-console_handler = logging.StreamHandler()
-console_handler.setLevel(logging.DEBUG)
-console_handler.setFormatter(log_formatter)
-log.addHandler(console_handler)
-log.setLevel(logging.DEBUG)
-
-
 _retort = serialization._retort.extend(recipe=[
     dumper(P[Identity].pubkey, pubkey_dump),
     loader(P[Identity].pubkey, pubkey_load),
@@ -247,4 +239,11 @@ def server_main(host: str, port: int, private_key: Ed25519PrivateKey) -> None:
 
 
 if __name__ == "__main__":
+    log_formatter = logging.Formatter('[%(asctime)s] %(levelname)s (%(name)s): %(message)s')
+    console_handler = logging.StreamHandler()
+    console_handler.setLevel(logging.DEBUG)
+    console_handler.setFormatter(log_formatter)
+    log.addHandler(console_handler)
+    log.setLevel(logging.DEBUG)
+
     main(argv)
