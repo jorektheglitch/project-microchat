@@ -37,6 +37,7 @@ _retort = serialization._retort.extend(recipe=[
     dumper(P[Identity].pubkey, pubkey_dump),
     loader(P[Identity].pubkey, pubkey_load),
 ])
+_codec = serialization.Codec(_retort)
 
 
 @dataclass
@@ -76,7 +77,7 @@ class SocketConnection(Thread, Connection):
         self._client = client
 
     def send(self, event: SignedEventContainer) -> None:
-        raw = serialization.dump(event)
+        raw = _codec.dump(event)
         legth = len(raw)
         raw = legth.to_bytes(4, byteorder='big', signed=False) + raw
         self._sock.send(raw)
@@ -86,7 +87,7 @@ class SocketConnection(Thread, Connection):
             length_raw = recv_exact(sock=self._sock, size=4)
             length = int.from_bytes(length_raw, byteorder='big', signed=False)
             payload = recv_exact(sock=self._sock, size=length)
-            event = serialization.load(payload)
+            event = _codec.load(payload)
             if not isinstance(event, SignedEventContainer):
                 logging.warning(f"Неизвестная хуйня типа {type(event).__name__}")
                 continue
