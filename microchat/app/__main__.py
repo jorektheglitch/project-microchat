@@ -39,7 +39,7 @@ class Actor:
     event_callblack: Callable[[ConferenceEvent], Any] = (lambda event: None)
     client: Client = field(init=False)
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         self.client = Client(storage=self.storage, signing_key=self.private_key, event_callblack=self.event_callblack)
 
     @property
@@ -177,7 +177,7 @@ class ServerNetworking(Thread):
             self._peers[peer_identity.reference()] = connection
 
 
-def example():
+def example() -> None:
     creator = Actor(Storage(), Ed25519PrivateKey())
     member = Actor(Storage(), Ed25519PrivateKey())
 
