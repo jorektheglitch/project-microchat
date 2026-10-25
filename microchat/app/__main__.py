@@ -14,13 +14,14 @@ from time import sleep
 from adaptix import P, dumper, loader
 from cryptography.hazmat.primitives.asymmetric import ed25519  # Ed25519PrivateKey, Ed25519PublicKey
 
-from microchat.entities import InviteAccept, PrivKey, PubKey, Identity
+from microchat.entities import InviteAccept, PrivKey, Identity
 from microchat.entities import ConferenceEvent, ConferenceStart, Invite, MessageEvent
 from microchat.entities import SignedEventContainer
 from microchat import serialization
 
 from microchat.app import Storage, Client, Conference, Connection
 from microchat.app import log
+from microchat.app.crypto import Ed25519PrivateKey, Ed25519PublicKey, pubkey_dump, pubkey_load, privkey_load
 from microchat.hashing import Reference
 
 
@@ -30,56 +31,6 @@ console_handler.setLevel(logging.DEBUG)
 console_handler.setFormatter(log_formatter)
 log.addHandler(console_handler)
 log.setLevel(logging.DEBUG)
-
-
-@dataclass(frozen=True)
-class Ed25519PrivateKey(PrivKey):
-    _key: ed25519.Ed25519PrivateKey = field(default_factory=ed25519.Ed25519PrivateKey.generate, repr=False)
-
-    def __repr__(self) -> str:
-        return f"<{type(self).__name__} {self.public_key.raw[:6].hex().upper()}>"
-
-    @property
-    def public_key(self) -> PubKey:
-        return Ed25519PublicKey(self._key.public_key())
-
-    def sign(self, data: bytes) -> bytes:
-        return self._key.sign(data)
-
-
-@dataclass(frozen=True)
-class Ed25519PublicKey(PubKey):
-    _key: ed25519.Ed25519PublicKey = field(repr=False)
-
-    def __repr__(self) -> str:
-        return f"<{type(self).__name__} {self.raw[:6].hex().upper()}>"
-
-    @property
-    def raw(self) -> bytes:
-        return self._key.public_bytes_raw()
-
-    def verify(self, data: bytes, signature: bytes) -> None:
-        return self._key.verify(signature, data)
-
-
-def pubkey_dump(pubkey: PubKey) -> str:
-    return pubkey.raw.hex()
-
-
-def pubkey_load(string: str) -> PubKey:
-    key_bytes = bytes.fromhex(string)
-    key = ed25519.Ed25519PublicKey.from_public_bytes(key_bytes)
-    return Ed25519PublicKey(key)
-
-
-def privkey_dump(privkey: Ed25519PrivateKey) -> str:
-    return privkey._key.private_bytes_raw().hex()
-
-
-def privkey_load(string: str) -> Ed25519PrivateKey:
-    key_bytes = bytes.fromhex(string)
-    key = ed25519.Ed25519PrivateKey.from_private_bytes(key_bytes)
-    return Ed25519PrivateKey(key)
 
 
 _retort = serialization._retort.extend(recipe=[
