@@ -121,6 +121,6 @@ if __name__ == "__main__":
     parser = ArgumentParser()
     args = parser.parse_args(namespace=Arguments())
 
-    args.testdata = Path(__file__) / "emoji-test.txt"
-    args.output = Path(__file__) / "tmp-out.py"
+    args.testdata = Path(__file__).parent / "emoji-test.txt"
+    args.output = Path(__file__).parent / "tmp-out.py"
     main(testdata=args.testdata, output=args.output)
