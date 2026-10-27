@@ -57,32 +57,46 @@ _retort = Retort(recipe=[
 ])
 
 
-def dump(entity: Entity, retort=_retort) -> bytes:
-    mark = hash_primitive(type(entity).__name__).raw
+class Codec:
+    def __init__(self, retort: Retort = _retort) -> None:
+        self.type_marks = {
+            hash_primitive(name).raw: type
+            for name, type in entities_types.items()
+        }
+        self.retort = retort
 
-    with io.BytesIO() as buffer:
-        buffer.write(mark)
-
-        with io.TextIOWrapper(buffer, encoding="utf-8", write_through=True) as text_view:
-            unparsed = retort.dump(entity, type(entity))
-            json.dump(unparsed, text_view)
-            dumped = buffer.getvalue()
-
-    return dumped
-
-
-def load(raw: bytes, retort=_retort) -> Entity:
-    with io.BytesIO(raw) as buffer:
-        mark = buffer.read(DIGEST_SIZE)
-
-        payload_type = marks.get(mark)
-        if payload_type is None:
+    def dump(self, entity: Entity) -> bytes:
+        mark = hash_primitive(type(entity).__name__).raw
+        if mark not in self.type_marks:
             raise ValueError(f"Mark {mark.hex().upper()} does not match any known type")
 
-        with io.TextIOWrapper(buffer, encoding="utf-8") as text_view:
-            unparsed = json.load(text_view)
+        with io.BytesIO() as buffer:
+            buffer.write(mark)
 
-    return retort.load(unparsed, payload_type)
+            with io.TextIOWrapper(buffer, encoding="utf-8", write_through=True) as text_view:
+                unparsed = self.retort.dump(entity, type(entity))
+                json.dump(unparsed, text_view)
+                dumped = buffer.getvalue()
+
+        return dumped
+
+    def load(self, raw: bytes) -> Entity:
+        with io.BytesIO(raw) as buffer:
+            mark = buffer.read(DIGEST_SIZE)
+
+            payload_type = self.type_marks.get(mark)
+            if payload_type is None:
+                raise ValueError(f"Mark {mark.hex().upper()} does not match any known type")
+
+            with io.TextIOWrapper(buffer, encoding="utf-8") as text_view:
+                unparsed = json.load(text_view)
+
+        return self.retort.load(unparsed, payload_type)
+
+
+DEFAULT_CODEC = Codec()
+dump = DEFAULT_CODEC.dump
+load = DEFAULT_CODEC.load
 
 
 if __name__ == "__main__":
